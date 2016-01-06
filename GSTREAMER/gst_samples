@@ -1,0 +1,127 @@
+gst-launch -e v4l2src ! ffmpegcolorspace ! video/x-raw-yuv,width=640,height=480 ! clockoverlay text="2012-04-25:" ! theoraenc quality=32 ! oggmux ! filesink location=test.ogg
+
+gst-launch -e v4l2src num-buffers=500 ! decodebin2 ! ffmpegcolorspace ! x264enc ! mp4mux ! filesink location=test.ts
+
+gst-launch v4l2src ! xvimagesink
+
+gst-launch v4l2src ! video/x-raw-yuv,width=320,height=240 ! xvimagesink
+
+gst-launch videotestsrc num-buffers=500 ! video/x-raw-yuv, framerate=25/1, width=640, height=360 ! x264enc ! mpegtsmux ! filesink location=test.ts
+
+gst-launch -e v4l2src ! video/x-raw-yuv, width=640, height=480 ! autovideosink
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480 ! videoconvert ! autovideosink
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! video/x-raw, framerate=25/1, width=640, height=480 ! xvimagesink
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! video/x-raw, framerate=25/1, width=640, height=480 ! tee name=t ! queue ! autovideosink t. ! queue ! x264enc ! mpegtsmux ! filesink location=test.ts ????
+
+gst-launch-1.0 -e v4l2src num-buffers=500 ! video/x-raw, width=640, height=480 ! x264enc ! mpegtsmux ! filesink location=test.ts
+
+gst-launch -e v4l2src ! video/x-raw-yuv, width=640, height=480, framerate=10/1 ! ffmpegcolorspace ! tee name="splitter" ! queue ! xvimagesink sync=false splitter. ! queue ! videorate ! video/x-raw-yuv,framerate=1/1 ! theoraenc bitrate=256 ! oggmux ! filesink location=webcam.ogg +++
+
+gst-launch -e v4l2src ! video/x-raw-yuv, width=640, height=480, framerate=10/1 ! ffmpegcolorspace ! tee name="splitter" ! queue ! autovideosink sync=false splitter. ! queue ! video/x-raw-yuv, width=640, height=480, framerate=10/1 ! theoraenc ! oggmux ! filesink location=webcam.ogg +++
+
+gst-launch -e v4l2src ! video/x-raw-yuv, width=640, height=480, framerate=10/1 ! ffmpegcolorspace ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! video/x-raw-yuv, width=640, height=480, framerate=10/1 ! x264enc ! mpegtsmux ! filesink location=webcam.ts
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, width=640, height=480, framerate=10/1 ! x264enc ! mpegtsmux ! filesink location=webcam.ts
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, width=640, height=480, framerate=10/1 ! avenc_mpeg2video ! mpegtsmux ! filesink location=webcam.mpg
+
+gst-launch-1.0 -m -t -v videotestsrc ! 'video/x-raw, format=BGRA, pixel-aspect-ratio=1/1, interlace-mode=progressive, width=1280, height=720, framerate=30/1' ! queue ! videoconvert ! avenc_mpeg2video bitrate=170000 gop-size=45 max-bframes=3 me-sub-cmp=2 mb-cmp=2 ! filesink location=webcam.mpg
+
+gst-launch-1.0 -v v4l2src ! videorate ! 'video/x-raw, pixel-aspect-ratio=1/1, interlace-mode=progressive, width=640, height=480, framerate=25/1' ! queue ! videoconvert ! video/x-raw,format=I420 ! avenc_mpeg2video bitrate=3000000 buffer-size=240 gop-size=25 max-bframes=2 me-sub-cmp=2 mb-cmp=2 ! queue ! filesink location=webcam.mpg
+
+gst-launch-1.0 -v v4l2src ! 'video/x-raw,  width=640, height=480, framerate=30/1' ! queue ! videoconvert ! video/x-raw,format=I420 ! avenc_mpeg2video bitrate=3000000 buffer-size=240 gop-size=25 max-bframes=2 me-sub-cmp=2 mb-cmp=2 ! queue ! filesink location=webcam.mpg
+
+gst-launch-1.0 -v v4l2src ! 'video/x-raw,  width=640, height=480, framerate=30/1' ! queue ! videoconvert ! video/x-raw,format=I420 ! avenc_mpeg2video bitrate=3000000 ! queue ! filesink location=webcam.mpg
+
+gst-launch-1.0 -v v4l2src ! 'video/x-raw,  width=640, height=480, framerate=30/1' ! queue ! videoconvert ! video/x-raw,format=I420 ! avenc_mpeg2video bitrate=3000000 ! mpegpsmux ! queue ! filesink location=webcam.mpg
+
+gst-launch-1.0 -v v4l2src ! videorate ! 'video/x-raw,  width=640, height=480, framerate=25/1' ! queue ! videoconvert ! video/x-raw,format=I420 ! avenc_mpeg2video bitrate=3000000 ! mpegpsmux ! queue ! filesink location=webcam.mpg +++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue !  video/x-raw, format=I420, width=640, height=480 ! x264enc bitrate=50000 ! matroskamux ! filesink location=webcam_H264.mkv
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! avimux ! filesink location=webcam_RGB3.avi
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=RGB, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! avimux ! filesink location=webcam_RGB3.avi  **** creates YUY2 file ?
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, format=RGB, width=640, height=480, framerate=10/1 ! videoconvert ! avimux ! filesink location=webcam_RGB3.avi sync=false *** gives RGB file  ??? depth=24, bpp=24
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, format=RGB, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue leaky=1 ! video/x-raw, format=RGB, width=640, height=480, framerate=10/1 ! videoconvert ! avimux ! filesink location=webcam_RGB3.avi sync=false *** fails
+
+
+
+RGB - uncomp BMP
+
+
+
+
+
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, width=640, height=480, framerate=10/1 ! avenc_mpeg4 bitrate=5000000 ! mpegtsmux ! filesink location=webcam.mp4 +++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, width=640, height=480, framerate=25/1 ! videoconvert ! tee name="splitter"ink sync=false splitter. ! queue ! videorate ! video/x-raw, width=640, height=480, framerate=10/1 ! theoraenc ! oggmux ! filesink location=webcam.ogg +++
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! avimux ! filesink location=webcam_yuv.avi +++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videoconvert ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! avimux ! filesink location=webcam_yuv.1.avi
+
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue !  video/x-raw, format=I420, width=640, height=480 ! x264enc speed-preset=veryfast ! matroskamux ! filesink location=webcam_H264.mkv +++ ** Must be I420
+
+*** OR ***
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! x264enc speed-preset=faster ! matroskamux ! filesink location=webcam_H264.2.mkv
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, format=RGB, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! autovideosink sync=false splitter. ! queue ! videoconvert ! avimux ! filesink location=webcam_RGB3.avi sync=false +++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert  ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! video/x-raw,format=I420 ! avenc_mpeg2video bitrate=3000000 ! mpegtsmux ! filesink location=webcam.mpg +++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, width=640, height=480, framerate=25/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! video/x-raw,format=I420 ! avenc_mpeg2video bitrate=3000000 ! mpegpsmux ! queue ! filesink location=webcam.mpg +++ frame rate !!!
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, width=640, height=480, framerate=25/1 ! avenc_mpeg2video bitrate=3000000 ! mpegtsmux ! filesink location=webcam.mpg +++ frame rate !!!
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, width=640, height=480, framerate=25/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! autovideosink sync=false splitter. ! queue ! videoconvert ! avenc_mpeg2video bitrate=3000000 ! mpegtsmux ! filesink location=webcam.mpg ++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, framerate=25/1 ! avenc_mpeg2video bitrate=3000000 ! mpegtsmux ! filesink location=webcam.mpg +++ fps
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, width=640, height=480, framerate=25/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! avenc_mpeg2video bitrate=3000000 ! mpegtsmux ! filesink location=webcam.mpg +++
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, width=640, height=480, framerate=10/1 ! y4menc ! filesink location=webcam_y4.avi +++
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! y4menc ! filesink location=webcam2_y4.avi  +++
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, width=640, height=480, framerate=10/1 ! theoraenc ! oggmux ! filesink location=webcam.ogg +++
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! avimux ! filesink location=webcam_yuv.avi +++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! videoconvert ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! avimux ! filesink location=webcam_yuv.1.avi
+
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue !  video/x-raw, format=I420, width=640, height=480 ! x264enc speed-preset=veryfast ! matroskamux ! filesink location=webcam_H264.mkv +++ ** Must be I420
+
+*** OR ***
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue ! x264enc speed-preset=faster ! matroskamux ! filesink location=webcam_H264.2.mkv
+
+gst-launch-1.0 -e v4l2src ! video/x-raw, format=RGB, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! autovideosink sync=false splitter. ! queue ! videoconvert ! avimux ! filesink location=webcam_RGB3.avi sync=false +++
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! tee name="splitter" ! queue leaky=1 ! autovideosink sync=false splitter. ! queue leaky=1 ! videoconvert ! video/x-raw, format=BGR, width=640, height=480, framerate=10/1 ! avimux ! filesink location=webcam_RGB3.1.avi sync=false +++ 24 bit RGB file
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, width=640, height=480, framerate=25/1 ! queue ! tee name="splitter" ! queue leaky=1 ! videoconvert ! autovideosink sync=false splitter. ! queue ! videoconvert ! avenc_mpeg2video bitrate=3000000 ! mpegtsmux ! filesink location=webcam.mpg +++
+
+
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! queue ! videoconvert ! xvimagesink sync=false 
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! theoraenc ! oggmux ! filesink location=webcam.ogg
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! queue ! tee name="splitter" ! queue ! videoconvert ! ximagesink sync=false splitter. ! queue leaky=1 ! theoraenc bitrate=256 ! oggmux ! filesink location=webcam.ogg
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! queue ! tee name="splitter" ! queue leaky=1 ! videoconvert ! ximagesink sync=false splitter. ! queue leaky=1 ! videoconvert ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! avimux ! filesink location=test.avi 
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! queue ! videoconvert ! ximagesink sync=false
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! queue ! tee name="splitter" ! queue leaky=1 ! videoconvert ! ximagesink sync=false splitter. ! queue leaky=1 ! videoconvert ! avimux ! filesink location=test.avi 
+

@@ -1,0 +1,25 @@
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! ximagesink sync=false splitter. ! queue leaky=1 ! videoconvert ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! avimux ! filesink location=test.avi
+
+*NB Cannot replace I420 with YUY2 above = freezes (ASUS camera only, Neximage & MS USB camera not capable of YUY2)
+*NB Cannot replace ximagesink with xvimagesink above = freezes (ASUS camera only)
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue ! videoconvert ! ximagesink sync=false splitter. ! queue leaky=1 ! theoraenc bitrate=256 ! oggmux ! filesink location=test.ogg
+
+*NB Cannot replace ximagesink with xvimagesink above = freezes (ASUS camera only)
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue ! videoconvert ! ximagesink sync=false splitter. ! queue leaky=1 ! videoconvert ! theoraenc bitrate=256 ! oggmux ! filesink location=test.ogg
+
+*NB Cannot replace ximagesink with xvimagesink above = freezes (ASUS camera only)
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=25/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! ximagesink sync=false splitter. ! queue ! videoconvert ! avenc_mpeg2video bitrate=3000000 ! mpegtsmux ! filesink location=test.mpg
+
+*NB Cannot replace ximagesink with xvimagesink above = freezes (ASUS camera only)
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! ximagesink sync=false splitter. ! queue ! videoconvert ! x264enc speed-preset=faster tune=zerolatency ! matroskamux ! filesink location=test.mkv
+
+*NB Cannot replace ximagesink with xvimagesink above = freezes (ASUS camera only)
+
+gst-launch-1.0 -e v4l2src ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! ximagesink sync=false splitter. ! queue ! videoconvert ! x264enc speed-preset=faster tune=zerolatency ! matroskamux ! filesink location=test.mkv
+
+*NB Cannot replace ximagesink with xvimagesink above = freezes (ASUS camera only, MS USB camera not capable of YUY2)
+

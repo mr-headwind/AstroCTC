@@ -1,0 +1,135 @@
+ LICENSE
+ -------
+    Copyright (C) 2016 Anthony Buckley
+
+    This file is part of AstroTWC.
+
+    AstroTWC is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    AstroTWC is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with AstroTWC.  If not, see <http://www.gnu.org/licenses/>.
+
+
+ DESCRIPTION
+ -----------
+    AstroTWC (Astronomical Telescope Webcam Capture) is an application designed for 
+    video and image capture of the Planets and the Moon. A suitable astronomical or
+    modified webcam will give the best results, however it will work with most webcams.
+
+    Numerous video and image formats are available, however FITS image support is
+    mostly basic and should only be used by those familiar with it.
+
+    AstroTWC is intended for use with Linux only.
+
+    While AstroTWC is primarily designed for astronomical use, it can also serve as a general
+    webcam program.
+
+ BUILD FROM SOURCE
+ -----------------
+    If you wish to build and/or work on AstroTWC separately, the source is located at:
+
+    	????????????????
+
+    Download the code package to a development directory and unpack
+    	
+    The GTK+ 3.0 and Gstreamer 1.0 libraries need to be installed and additionally the following
+    may be required:
+    	sudo apt-get install libv4l-dev
+    	sudo apt-get install libjpeg-dev
+    	sudo apt-get install libpng-dev
+    	See below for FITS details
+
+    The icon image file 'astrotwc.png' will need to be located appropriately:
+    	mkdir -P .local/share/icons/hicolor/48x48/apps
+    	mkdir -P .local/share/pixmaps/AstroTWC
+    	ln -s astrotwc.png .local/share/icons/hicolor/48x48/apps/astrotwc.png
+    	ln -s astrotwc.png .local/share/pixmaps/AstroTWC/astrotwc.png
+
+ BUILD FITS FROM SOURCE
+ ----------------------
+    If you need to build the FITS libaray separately, the source and instructions are located at:
+
+    	http://heasarc.gsfc.nasa.gov/docs/software/fitsio
+
+    Briefly, download the code package and do the following:
+    	cd /usr/local/src
+	mv ~/Downloads/cfitsio????.tar.gz .		(where ???? is the version, currently 3370)
+	tar zxvf cfitsio????.tar.gz
+	./configure --prefix=/usr
+	make
+	make install
+
+ THINGS TO BE DONE
+ -----------------
+    Web page - check out Launch Pad or add 'not ready' message
+    Set up GIT / Sourceforge
+    Set up gmail account (astrotwc_AB@gmail.com)
+    Install instructions (libraries, GTK, GST, Fits, set up desktop icon)
+    Find out how to build a .deb package for apt-get install astrotwc
+
+ THINGS TO BE CHECKED OR REVIEWED
+ --------------------------------
+
+ KNOWN ISSUES / BUGS
+ -------------------
+    . On some computers and some cameras (and sometimes), changing the resolution of the video area will
+      work the first time, but subsequent changes will be unpredictabe. The work-around is to
+      select 'Camera' -> 'Restart Video' on the menu.
+    . On some computers (probably where VAAPI is used) using 'autovideosink' will cause a core dump when
+      the pipeline is closed and restarted. 'xvimagesink' and / or 'ximagesink' are used instead.
+      A bug and test case have been submitted for this.
+    . There is a problem using 'xvimagesink' and setting the Reticule on. The problem appears to be 
+      after a 'return GST_PAD_PROBE_REMOVE;' probe command and will manifest with the message: 
+      'libv4l2: error turning on stream: Invalid argument' (sometimes) and the video will freeze. 
+      The work-around is to use 'ximagesink'. A bug and test case have been submitted for this.
+    . There is a bug in Preferences window trying to select the capture directory. Cannot select 
+      directory immediately. Need to shift selection a few times before 'Apply' is enabled.
+    . There is a bug editing encoder property values as follows:-
+      	 select cell, change value and click Save - value is lost unless cell selection is moved or user 
+      	 hits enter first (Investigate using GtkEntry signal "preedit-changed" and  GtkEntryBuffer 
+      	 signal "inserted-text").
+    . There is an occasional error when AstroTWC is run for the first time in a session where the program 
+      aborts with a core dump. This appears to be a problem with the driver and the camera not being ready.
+      Running again usually works, but the transient nature makes this difficult to narrow down.
+    . There is an issue using YUY2 in the video settings in combination with certain video capture
+      formats (eg. YUY2/YUY2, YUY2/Ogg). This has only occurred with an ASUS built-in laptop camera,
+      but there could possibly be others.
+
+ THE TECHNICAL STUFF
+ -------------------
+    AstroTWC has been developed in c and uses GTK+ 3.0 for user interfaces, GStreamer 1.0 for video
+    handling functions and video4linux2 (v4l2) for snapshots and camera details. There are also a
+    number of additional libraries required: cairo, png12, cfitsio, jpeg, pthread.
+
+ BUGS & SUGGESTIONS
+ ------------------
+    Email any bugs, requests or suggestions to astrotwc_AB@gmail.com
+
+ ITEMS FOR IMPROVEMENT
+ ---------------------
+    . Stepwise operations for cameras that can handle them are not supported. (low prioity)
+    . Sound is only an option if the camera (and driver) supports it. Could use sound card. (low priority)
+    . For video and snapshot capture, also create a 'meta' text file providing all the camera 
+      settings in place.
+    . FITS support is very basic. Add ascii / binary tables with camera and other settings info. eg Title
+    . Possibly change status information text at the bottom of the main window into a 
+      GtkStatusBar. (low priority)
+    . Only enable the Save button for presets (profiles) when the preset changes instead of 
+      always enabled. This can be done but its quite messy (hint: pass the main ui pointer (m_ui)). 
+      (low prioity)
+    . For Night View, add a slider widget to allow the user to choose the degree of shading.
+    . Add a facility to review recent snapshots as thumbnails and full view on selection. 
+      On mouseover also show the 'meta' data (above). (low priority)
+    . Investigate and include 'long exposure' options for cameras that support it.
+    . Add a function on the Codec Properties window eg. an info. button or right button mouse click 
+      to view a description of a particular property. Also the list a properties presented is not 
+      exhaustive.
+

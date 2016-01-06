@@ -1,0 +1,264 @@
+theoraenc :bitrate             : Compressed video bitrate (kbps)
+theoraenc :                      flags: readable, writable, changeable in NULL, READY, PAUSED or PLAYING state
+theoraenc :                      Integer. Range: 0 - 16777215 Default: 0
+theoraenc :quality             : Video quality
+theoraenc :                      flags: readable, writable, changeable in NULL, READY, PAUSED or PLAYING state
+theoraenc :                      Integer. Range: 0 - 63 Default: 48
+theoraenc :speed-level         : Controls the amount of motion vector searching done while encoding
+theoraenc :                      flags: readable, writable
+theoraenc :                      Integer. Range: 0 - 3 Default: 1
+theoraenc :drop-frames         : Allow or disallow frame dropping
+theoraenc :                      flags: readable, writable
+theoraenc :                      Boolean. Default: true
+theoraenc :rate-buffer         : Sets the size of the rate control buffer, in units of frames.  
+theoraenc :			The default value of 0 instructs the encoder to automatically select an appropriate value
+theoraenc :                      flags: readable, writable
+theoraenc :                      Integer. Range: 0 - 1000 Default: 0
+theoraenc :multipass-mode      : Single pass or first/second pass
+theoraenc :                      flags: readable, writable
+theoraenc :                      Enum "GstTheoraEncMultipassMode" Default: 0, "single-pass"
+theoraenc :                         (0): single-pass      - Single pass
+theoraenc :                         (1): first-pass       - First pass
+theoraenc :                         (2): second-pass      - Second pass
+
+
+x264enc :threads             : Number of threads used by the codec (0 for automatic)
+x264enc :                      flags: readable, writable
+x264enc :                      Unsigned Integer. Range: 0 - 4 Default: 0
+x264enc :sliced-threads      : Low latency but lower efficiency threading
+x264enc :                      flags: readable, writable
+x264enc :                      Boolean. Default: false
+x264enc :sync-lookahead      : Number of buffer frames for threaded lookahead (-1 for automatic)
+x264enc :                      flags: readable, writable
+x264enc :                      Integer. Range: -1 - 250 Default: -1
+x264enc :pass                : Encoding pass/type
+x264enc :                      flags: readable, writable
+x264enc :                      Enum "GstX264EncPass" Default: 0, "cbr"
+x264enc :                         (0): cbr              - Constant Bitrate Encoding
+x264enc :                         (4): quant            - Constant Quantizer (debugging only)
+x264enc :                         (5): qual             - Constant Quality
+x264enc :                         (17): pass1            - VBR Encoding - Pass 1
+x264enc :                         (18): pass2            - VBR Encoding - Pass 2
+x264enc :                         (19): pass3            - VBR Encoding - Pass 3
+x264enc :quantizer           : Constant quantizer or quality to apply
+x264enc :                      flags: readable, writable
+x264enc :                      Unsigned Integer. Range: 1 - 50 Default: 21
+x264enc :bitrate             : Bitrate in kbit/sec
+x264enc :                      flags: readable, writable, changeable in NULL, READY, PAUSED or PLAYING state
+x264enc :                      Unsigned Integer. Range: 1 - 102400 Default: 2048
+x264enc :noise-reduction     : Noise reduction strength
+x264enc :                      flags: readable, writable
+x264enc :                      Unsigned Integer. Range: 0 - 100000 Default: 0
+x264enc :interlaced          : Interlaced material
+x264enc :                      flags: readable, writable
+x264enc :                      Boolean. Default: false
+x264enc :option-string       : String of x264 options (overridden by element properties)
+x264enc :                      flags: readable, writable
+x264enc :                      String. Default: ""
+x264enc :speed-preset        : Preset name for speed/quality tradeoff options 
+				(can affect decode compatibility - impose restrictions separately 
+				for your target decoder)
+x264enc :                      flags: readable, writable
+x264enc :                      Enum "GstX264EncPreset" Default: 6, "medium"
+x264enc :                         (0): None             - No preset
+x264enc :                         (1): ultrafast        - ultrafast
+x264enc :                         (2): superfast        - superfast
+x264enc :                         (3): veryfast         - veryfast
+x264enc :                         (4): faster           - faster
+x264enc :                         (5): fast             - fast
+x264enc :                         (6): medium           - medium
+x264enc :                         (7): slow             - slow
+x264enc :                         (8): slower           - slower
+x264enc :                         (9): veryslow         - veryslow
+x264enc :                         (10): placebo          - placebo
+x264enc :psy-tune            : Preset name for psychovisual tuning options
+x264enc :                      flags: readable, writable
+x264enc :                      Enum "GstX264EncPsyTune" Default: 0, "none"
+x264enc :                         (0): none             - No tuning
+x264enc :                         (1): film             - Film
+x264enc :                         (2): animation        - Animation
+x264enc :                         (3): grain            - Grain
+x264enc :                         (4): psnr             - PSNR
+x264enc :                         (5): ssim             - SSIM
+x264enc :tune                : Preset name for non-psychovisual tuning options
+x264enc :                      flags: readable, writable
+x264enc :                      Flags "GstX264EncTune" Default: 0x00000000, "(none)"
+x264enc :                         (0x00000001): stillimage       - Still image
+x264enc :                         (0x00000002): fastdecode       - Fast decode
+x264enc :                         (0x00000004): zerolatency      - Zero latency
+
+
+avenc_mpeg2video :bitrate             : Target Video Bitrate
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 0 - 2147483647 Default: 300000 
+avenc_mpeg2video :gop-size            : Number of frames within one GOP
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 0 - 2147483647 Default: 15 
+avenc_mpeg2video :me-method           : Motion Estimation Method
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Enum "GstLibAVVidEncMeMethod" Default: 5, "epzs"
+avenc_mpeg2video :                         (1): zero             - None (Very low quality)
+avenc_mpeg2video :                         (2): full             - Full (Slow, unmaintained)
+avenc_mpeg2video :                         (3): logarithmic      - Logarithmic (Low quality, unmaintained)
+avenc_mpeg2video :                         (4): phods            - phods (Low quality, unmaintained)
+avenc_mpeg2video :                         (5): epzs             - EPZS (Best quality, Fast)
+avenc_mpeg2video :                         (6): x1               - X1 (Experimental)
+avenc_mpeg2video :buffer-size         : Size of the video buffers
+avenc_mpeg2video :                      flags: readable
+avenc_mpeg2video :                      Integer. Range: 0 - 2147483647 Default: 524288 
+avenc_mpeg2video :rtp-payload-size    : Target GOB length
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 0 - 2147483647 Default: 0 
+avenc_mpeg2video :compliance          : Adherence of the encoder to the specifications
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Enum "GstFFMpegCompliance" Default: 0, "normal"
+avenc_mpeg2video :                         (2): verystrict       - Strictly conform to older spec
+avenc_mpeg2video :                         (1): strict           - Strictly conform to current spec
+avenc_mpeg2video :                         (0): normal           - Normal behavior
+avenc_mpeg2video :                         (-1): unofficial       - Allow unofficial extensions
+avenc_mpeg2video :                         (-2): experimental     - Allow nonstandardized experimental things
+avenc_mpeg2video :pass                : Encoding pass/type
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Enum "GstLibAVEncPass" Default: 0, "cbr"
+avenc_mpeg2video :                         (0): cbr              - Constant Bitrate Encoding
+avenc_mpeg2video :                         (2): quant            - Constant Quantizer
+avenc_mpeg2video :                         (512): pass1            - VBR Encoding - Pass 1
+avenc_mpeg2video :                         (1024): pass2            - VBR Encoding - Pass 2
+avenc_mpeg2video :quantizer           : Constant Quantizer
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Float. Range:               0 -              30 Default:            0.01 
+avenc_mpeg2video :quant-type          : Quantizer Type
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Enum "GstLibAVEncQuantTypes" Default: 0, "h263"
+avenc_mpeg2video :                         (0): h263             - H263 quantization
+avenc_mpeg2video :                         (1): mpeg             - MPEG quantization
+avenc_mpeg2video :qmin                : Minimum Quantizer
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 1 - 31 Default: 2 
+avenc_mpeg2video :qmax                : Maximum Quantizer
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 1 - 31 Default: 31 
+avenc_mpeg2video :max-qdiff           : Maximum Quantizer Difference between frames
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 1 - 31 Default: 3 
+avenc_mpeg2video :qcompress           : Quantizer Change between easy and hard scenes
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Float. Range:               0 -               1 Default:             0.5 
+avenc_mpeg2video :qblur               : Quantizer Smoothing over time
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Float. Range:               0 -               1 Default:             0.5 
+avenc_mpeg2video :rc-qsquish          : 0 means limit by clipping, otherwise use nice continuous function
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Float. Range:               0 -              99 Default:               1 
+avenc_mpeg2video :rc-qmod-amp         : Ratecontrol Mod
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Float. Range:               0 -              99 Default:               0 
+avenc_mpeg2video :rc-qmod-freq        : Ratecontrol Freq
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 0 - 0 Default: 0 
+avenc_mpeg2video :rc-buffer-size      : Decoder bitstream buffer size
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 0 - 2147483647 Default: 0 
+avenc_mpeg2video :rc-buffer-aggressivity: Ratecontrol Buffer Aggressivity
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Float. Range:               0 -              99 Default:               1 
+avenc_mpeg2video :rc-max-rate         : Ratecontrol Maximum Bitrate
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 0 - 2147483647 Default: 0 
+avenc_mpeg2video :rc-min-rate         : Ratecontrol Minimum Bitrate
+avenc_mpeg2video :                      flags: readable, writable
+avenc_mpeg2video :                      Integer. Range: 0 - 2147483647 Default: 0 
+  noise-reduction     : Noise Reduction Strength
+                        flags: readable, writable
+                        Integer. Range: 0 - 1000000 Default: 0 
+
+
+  bitrate             : Target Video Bitrate
+                        flags: readable, writable
+                        Integer. Range: 0 - 2147483647 Default: 300000 
+  gop-size            : Number of frames within one GOP
+                        flags: readable, writable
+                        Integer. Range: 0 - 2147483647 Default: 15 
+  me-method           : Motion Estimation Method
+                        flags: readable, writable
+                        Enum "GstLibAVVidEncMeMethod" Default: 5, "epzs"
+                           (1): zero             - None (Very low quality)
+                           (2): full             - Full (Slow, unmaintained)
+                           (3): logarithmic      - Logarithmic (Low quality, unmaintained)
+                           (4): phods            - phods (Low quality, unmaintained)
+                           (5): epzs             - EPZS (Best quality, Fast)
+                           (6): x1               - X1 (Experimental)
+  buffer-size         : Size of the video buffers
+                        flags: readable
+                        Integer. Range: 0 - 2147483647 Default: 524288 
+  rtp-payload-size    : Target GOB length
+                        flags: readable, writable
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  compliance          : Adherence of the encoder to the specifications
+                        flags: readable, writable
+                        Enum "GstFFMpegCompliance" Default: 0, "normal"
+                           (2): verystrict       - Strictly conform to older spec
+                           (1): strict           - Strictly conform to current spec
+                           (0): normal           - Normal behavior
+                           (-1): unofficial       - Allow unofficial extensions
+                           (-2): experimental     - Allow nonstandardized experimental things
+  pass                : Encoding pass/type
+                        flags: readable, writable
+                        Enum "GstLibAVEncPass" Default: 0, "cbr"
+                           (0): cbr              - Constant Bitrate Encoding
+                           (2): quant            - Constant Quantizer
+                           (512): pass1            - VBR Encoding - Pass 1
+                           (1024): pass2            - VBR Encoding - Pass 2
+  quantizer           : Constant Quantizer
+                        flags: readable, writable
+                        Float. Range:               0 -              30 Default:            0.01 
+  multipass-cache-file: Filename for multipass cache file
+                        flags: readable, writable
+                        String. Default: "stats.log"
+  bitrate-tolerance   : Number of bits the bitstream is allowed to diverge from the reference
+                        flags: readable, writable
+                        Integer. Range: 0 - 100000000 Default: 8000000 
+  quant-type          : Quantizer Type
+                        flags: readable, writable
+                        Enum "GstLibAVEncQuantTypes" Default: 0, "h263"
+                           (0): h263             - H263 quantization
+                           (1): mpeg             - MPEG quantization
+  qmin                : Minimum Quantizer
+                        flags: readable, writable
+                        Integer. Range: 1 - 31 Default: 2 
+  qmax                : Maximum Quantizer
+                        flags: readable, writable
+                        Integer. Range: 1 - 31 Default: 31 
+  max-qdiff           : Maximum Quantizer Difference between frames
+                        flags: readable, writable
+                        Integer. Range: 1 - 31 Default: 3 
+  qcompress           : Quantizer Change between easy and hard scenes
+                        flags: readable, writable
+                        Float. Range:               0 -               1 Default:             0.5 
+  qblur               : Quantizer Smoothing over time
+                        flags: readable, writable
+                        Float. Range:               0 -               1 Default:             0.5 
+  rc-qsquish          : 0 means limit by clipping, otherwise use nice continuous function
+                        flags: readable, writable
+                        Float. Range:               0 -              99 Default:               1 
+  rc-qmod-amp         : Ratecontrol Mod
+                        flags: readable, writable
+                        Float. Range:               0 -              99 Default:               0 
+  rc-qmod-freq        : Ratecontrol Freq
+                        flags: readable, writable
+                        Integer. Range: 0 - 0 Default: 0 
+  rc-buffer-size      : Decoder bitstream buffer size
+                        flags: readable, writable
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  rc-buffer-aggressivity: Ratecontrol Buffer Aggressivity
+                        flags: readable, writable
+                        Float. Range:               0 -              99 Default:               1 
+  rc-max-rate         : Ratecontrol Maximum Bitrate
+                        flags: readable, writable
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  rc-min-rate         : Ratecontrol Minimum Bitrate
+                        flags: readable, writable
+                        Integer. Range: 0 - 2147483647 Default: 0 
+  noise-reduction     : Noise Reduction Strength
+                        flags: readable, writable
+                        Integer. Range: 0 - 1000000 Default: 0 
