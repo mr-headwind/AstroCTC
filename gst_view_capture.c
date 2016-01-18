@@ -150,7 +150,7 @@ GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 void debug_state(GstElement *, char *,  CamData *);
 
-extern log_msg(char*, char*, char*, GtkWidget*);
+extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void res_to_long(char *, long *, long *);
 extern void get_session(char*, char**);
 extern void dttm_stamp(char *, size_t);

@@ -148,10 +148,11 @@ extern int make_dir(char *);
 extern codec_t * get_codec_arr(int *);
 extern codec_t * get_codec_idx(int);
 extern int is_ui_reg(char *, int);
-extern codec_ui_main(int, GtkWidget *);
+extern int codec_ui_main(int, GtkWidget *);
 extern void init_codec_prop_prefs();
 extern int close_ui(char *);
 extern int val_str2numb(char *, int *, char *, GtkWidget *);
+extern void string_trim(char *);
 
 
 /* Globals */

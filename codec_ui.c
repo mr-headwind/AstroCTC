@@ -106,6 +106,9 @@ extern void get_pref_key(int, char *);
 extern int set_user_pref(char *, char *);
 extern int match_key_val_combo(char *, char *, int, char **);
 extern int write_user_prefs(GtkWidget *);
+extern void info_dialog(GtkWidget *, char *, char *);
+extern void register_window(GtkWidget *);
+extern void deregister_window(GtkWidget *);
 
 
 /* Globals */

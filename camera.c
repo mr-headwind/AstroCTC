@@ -110,9 +110,13 @@ extern void pxl2fourcc(pixelfmt, char *);
 extern void set_scale_val(GtkWidget *, char *, long);
 extern int set_session(char *, char *);
 extern void get_session_reset(char*, char**);
+extern void get_session(char*, char**);
 //extern GtkWidget * get_next_widget(GtkWidget *, int, GtkWidget *);
 extern GList * ctrl_widget_list(GtkWidget *, GtkWidget *);
 extern GtkWidget * find_parent(GtkWidget *);
+extern pixelfmt fourcc2pxl(char *);
+extern void res_to_long(char *, long *, long *);
+extern int calc_fps(pixelfmt, pixelfmt);
 
 
 /* Globals */
@@ -1207,7 +1211,8 @@ int cam_fmt_update(CamData *cam_data, char *res_str)
 {
     struct v4l2_fmtdesc *vfmt; 
     struct v4l2_format rfmt;
-    int width, height;
+    //int width, height;
+    long width, height;
     char *fourcc;
     pixelfmt pxlfmt;
 

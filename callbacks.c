@@ -146,6 +146,7 @@ extern void delete_menu_items(GtkWidget *, char *);
 extern void add_camera_list(GtkWidget**, MainUi *, CamData *);
 extern int snap_mutex_lock();	
 extern int snap_mutex_unlock();	
+extern int close_ui(char *);
 /*
 extern void lock_imgbuf();
 extern void unlock_imgbuf();

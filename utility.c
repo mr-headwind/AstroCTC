@@ -47,6 +47,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <errno.h>
@@ -101,6 +102,8 @@ GtkWidget * find_widget_by_parent(GtkWidget *, char *);
 GList * ctrl_widget_list(GtkWidget *, GtkWidget *);
 void delete_menu_items(GtkWidget *, char *);
 void debug_session();
+
+extern int find_ctl(camera_t *, char *);
 
 
 /* Globals */

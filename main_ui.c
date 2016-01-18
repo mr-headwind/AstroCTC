@@ -111,6 +111,8 @@ extern int cam_fps_update(CamData *, char *);
 extern void session_ctrl_val(struct v4l2_queryctrl *, char *, long *);
 extern void save_ctrl(struct v4l2_queryctrl *, char *, long, CamData *, GtkWidget *); 
 extern GtkWidget * find_widget_by_name(GtkWidget *, char *);
+extern void match_session(char *, char *, int, int *);
+extern int get_user_pref(char *, char **);
 //extern void debug_session();
 
 extern void OnSetProfile(GtkWidget*, gpointer);

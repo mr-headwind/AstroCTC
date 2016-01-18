@@ -70,6 +70,7 @@ extern void free_profiles();
 extern void close_log();
 extern void gst_view(CamData *, MainUi *);
 extern void capture_cleanup();
+extern void log_msg(char*, char*, char*, GtkWidget*);
 //extern void debug_session();
 
 

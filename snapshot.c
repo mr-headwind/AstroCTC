@@ -158,6 +158,10 @@ extern void get_file_name(char *, int, char *, char *, char, char, char);
 extern int64_t msec_time();
 extern void set_capture_btns(MainUi *, int, int);
 extern void printBits(size_t const, void const * const);
+extern int view_clear_pipeline(CamData *, MainUi *);
+extern void get_session(char*, char**);
+extern void res_to_long(char *, long *, long *);
+extern void pxl2fourcc(pixelfmt, char *);
 
 
 /* Globals */

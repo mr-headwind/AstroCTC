@@ -80,6 +80,7 @@ extern void register_window(GtkWidget *);
 extern void deregister_window(GtkWidget *);
 extern int snap_control(CamData *, MainUi *, int, int, int);
 extern int val_str2numb(char *, int *, char *, GtkWidget *);
+extern int get_user_pref(char *, char **);
 
 
 /* Globals */

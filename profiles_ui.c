@@ -87,12 +87,12 @@ void free_profiles();
 void reset_default_profile(char *, char *, ProfileUi *);
 int validate_profile_nm(char *, ProfileUi *);
 void add_profile_list(char *, ProfileUi *);
-int del_profile_list(ProfileUi *);
+void del_profile_list(ProfileUi *);
 char * profile_dir_path();
 void save_profile(char *);
 void load_profile(char *);
-int delete_profile(char *, ProfileUi *);
-int rename_profile(char *, char *, ProfileUi *);
+void delete_profile(char *, ProfileUi *);
+void rename_profile(char *, char *, ProfileUi *);
 void set_profile_nm(ProfileUi *);
 
 static void OnSetProfile(GtkWidget *, gpointer);
@@ -116,6 +116,9 @@ extern int read_saved_session(char *);
 extern int set_user_pref(char *, char *);
 extern int write_user_prefs(GtkWidget *);
 extern void load_profiles(GtkWidget *, char *, int, int);
+extern int get_user_pref(char *, char **);
+extern int save_session(char *);
+extern gint query_dialog(GtkWidget *, char *, char *);
 
 
 /* Globals */
@@ -641,7 +644,7 @@ void add_profile_list(char *new_nm, ProfileUi *p_ui)
 
 /* Remove from profile list and set new default if necessary */
 
-int del_profile_list(ProfileUi *p_ui)
+void del_profile_list(ProfileUi *p_ui)
 {
     int idx;
 
@@ -700,7 +703,7 @@ void load_profile(char *nm)
 
 /* Rename a profile */
 
-int rename_profile(char *old_nm, char *new_nm, ProfileUi *p_ui)
+void rename_profile(char *old_nm, char *new_nm, ProfileUi *p_ui)
 {
     char *profile_dir;
     char *fn_old, *fn_new;
@@ -727,7 +730,7 @@ int rename_profile(char *old_nm, char *new_nm, ProfileUi *p_ui)
 
 /* Delete a profile */
 
-int delete_profile(char *nm, ProfileUi *p_ui)
+void delete_profile(char *nm, ProfileUi *p_ui)
 {
     char *profile_dir;
     char *fn;
