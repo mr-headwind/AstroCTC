@@ -73,6 +73,7 @@
     Set up GIT / Sourceforge
     Set up gmail account (astrotwc_AB@gmail.com)
     Install instructions (libraries, GTK, GST, Fits, set up desktop icon)
+    Configure scripts etc (autoconf, automake, autoscan)
     Find out how to build a .deb package for apt-get install astrotwc
 
  THINGS TO BE CHECKED OR REVIEWED
