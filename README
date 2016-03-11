@@ -73,7 +73,6 @@
     Set up GIT / Sourceforge
     Set up gmail account (astrotwc_AB@gmail.com)
     Install instructions (libraries, GTK, GST, Fits, set up desktop icon)
-    Configure scripts etc (autoconf, automake, autoscan)
     Find out how to build a .deb package for apt-get install astrotwc
 
  THINGS TO BE CHECKED OR REVIEWED
@@ -120,6 +119,8 @@
     . Sound is only an option if the camera (and driver) supports it. Could use sound card. (low priority)
     . For video and snapshot capture, also create a 'meta' text file providing all the camera 
       settings in place.
+    . Add facility to note/record telescope, conditions and location to above meta file
+    . On Capture or Snapshot, check if title is blank and confirm Ok with a dialog (maybe also an option setting)
     . FITS support is very basic. Add ascii / binary tables with camera and other settings info. eg Title
     . Possibly change status information text at the bottom of the main window into a 
       GtkStatusBar. (low priority)
