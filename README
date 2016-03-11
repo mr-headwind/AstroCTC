@@ -2,41 +2,41 @@
  -------
     Copyright (C) 2016 Anthony Buckley
 
-    This file is part of AstroTWC.
+    This file is part of AstroCTC.
 
-    AstroTWC is free software: you can redistribute it and/or modify
+    AstroCTC is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    AstroTWC is distributed in the hope that it will be useful,
+    AstroCTC is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with AstroTWC.  If not, see <http://www.gnu.org/licenses/>.
+    along with AstroCTC.  If not, see <http://www.gnu.org/licenses/>.
 
 
  DESCRIPTION
  -----------
-    AstroTWC (Astronomical Telescope Webcam Capture) is an application designed for 
+    AstroCTC (Astronomical Telescope Webcam Capture) is an application designed for 
     video and image capture of the Planets and the Moon. A suitable astronomical or
     modified webcam will give the best results, however it will work with most webcams.
 
     Numerous video and image formats are available, however FITS image support is
     mostly basic and should only be used by those familiar with it.
 
-    AstroTWC is intended for use with Linux only.
+    AstroCTC is intended for use with Linux only.
 
-    While AstroTWC is primarily designed for astronomical use, it can also serve as a general
+    While AstroCTC is primarily designed for astronomical use, it can also serve as a general
     webcam program.
 
  BUILD FROM SOURCE
  -----------------
-    If you wish to build and/or work on AstroTWC separately, the source is located at:
+    If you wish to build and/or work on AstroCTC separately, the source is located at:
 
-    	https://github.com/mr-headwind/AstroTWC
+    	https://github.com/mr-headwind/AstroCTC
 
     Download the code package to a development directory and unpack
     	
@@ -49,9 +49,9 @@
 
     The icon image file 'astrotwc.png' will need to be located appropriately:
     	mkdir -P .local/share/icons/hicolor/48x48/apps
-    	mkdir -P .local/share/pixmaps/AstroTWC
+    	mkdir -P .local/share/pixmaps/AstroCTC
     	ln -s astrotwc.png .local/share/icons/hicolor/48x48/apps/astrotwc.png
-    	ln -s astrotwc.png .local/share/pixmaps/AstroTWC/astrotwc.png
+    	ln -s astrotwc.png .local/share/pixmaps/AstroCTC/astrotwc.png
 
  BUILD FITS FROM SOURCE
  ----------------------
@@ -96,7 +96,7 @@
       	 select cell, change value and click Save - value is lost unless cell selection is moved or user 
       	 hits enter first (Investigate using GtkEntry signal "preedit-changed" and  GtkEntryBuffer 
       	 signal "inserted-text").
-    . There is an occasional error when AstroTWC is run for the first time in a session where the program 
+    . There is an occasional error when AstroCTC is run for the first time in a session where the program 
       aborts with a core dump. This appears to be a problem with the driver and the camera not being ready.
       Running again usually works, but the transient nature makes this difficult to narrow down.
     . There is an issue using YUY2 in the video settings in combination with certain video capture
@@ -105,7 +105,7 @@
 
  THE TECHNICAL STUFF
  -------------------
-    AstroTWC has been developed in c and uses GTK+ 3.0 for user interfaces, GStreamer 1.0 for video
+    AstroCTC has been developed in c and uses GTK+ 3.0 for user interfaces, GStreamer 1.0 for video
     handling functions and video4linux2 (v4l2) for snapshots and camera details. There are also a
     number of additional libraries required: cairo, png12, cfitsio, jpeg, pthread.
 
