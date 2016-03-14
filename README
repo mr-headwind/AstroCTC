@@ -20,7 +20,7 @@
 
  DESCRIPTION
  -----------
-    AstroCTC (Astronomical Telescope Webcam Capture) is an application designed for 
+    AstroCTC (Astronomical CCD in Telescope Capture) is an application designed for 
     video and image capture of the Planets and the Moon. A suitable astronomical or
     modified webcam will give the best results, however it will work with most webcams.
 
@@ -47,11 +47,11 @@
     	sudo apt-get install libpng-dev
     	See below for FITS details
 
-    The icon image file 'astrotwc.png' will need to be located appropriately:
+    The icon image file 'astroctc.png' will need to be located appropriately:
     	mkdir -P .local/share/icons/hicolor/48x48/apps
     	mkdir -P .local/share/pixmaps/AstroCTC
-    	ln -s astrotwc.png .local/share/icons/hicolor/48x48/apps/astrotwc.png
-    	ln -s astrotwc.png .local/share/pixmaps/AstroCTC/astrotwc.png
+    	ln -s astroctc.png .local/share/icons/hicolor/48x48/apps/astroctc.png
+    	ln -s astroctc.png .local/share/pixmaps/AstroCTC/astroctc.png
 
  BUILD FITS FROM SOURCE
  ----------------------
@@ -71,9 +71,9 @@
  -----------------
     Web page - check out Launch Pad or add 'not ready' message
     Set up GIT / Sourceforge
-    Set up gmail account (astrotwc_AB@gmail.com)
+    Set up gmail account (astroctc@gmail.com)
     Install instructions (libraries, GTK, GST, Fits, set up desktop icon)
-    Find out how to build a .deb package for apt-get install astrotwc
+    Find out how to build a .deb package for apt-get install astroctc
 
  THINGS TO BE CHECKED OR REVIEWED
  --------------------------------
@@ -111,7 +111,7 @@
 
  BUGS & SUGGESTIONS
  ------------------
-    Email any bugs, requests or suggestions to astrotwc_AB@gmail.com
+    Email any bugs, requests or suggestions to astroctc_AB@gmail.com
 
  ITEMS FOR IMPROVEMENT
  ---------------------

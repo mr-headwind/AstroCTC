@@ -1,20 +1,20 @@
 /*
 **  Copyright (C) 2016 Anthony Buckley
 ** 
-**  This file is part of AstroTWC.
+**  This file is part of AstroCTC.
 ** 
-**  AstroTWC is free software: you can redistribute it and/or modify
+**  AstroCTC is free software: you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
 **  the Free Software Foundation, either version 3 of the License, or
 **  (at your option) any later version.
 **  
-**  AstroTWC is distributed in the hope that it will be useful,
+**  AstroCTC is distributed in the hope that it will be useful,
 **  but WITHOUT ANY WARRANTY; without even the implied warranty of
 **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 **  GNU General Public License for more details.
 **  
 **  You should have received a copy of the GNU General Public License
-**  along with AstroTWC.  If not, see <http://www.gnu.org/licenses/>.
+**  along with AstroCTC.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
@@ -81,7 +81,7 @@ static const char *about_text[][2] =
     { "License", "Copyright (C) 2016  Anthony Buckley\n\n"
     		 "This program comes with ABSOLUTELY NO WARRANTY.\n"
 		 "See the GNU General Public License, version 3 or later for details.\n" },
-    { "Credits", "Tony Buckley\t (astrotwc_AB@gmail.com)\n" }
+    { "Credits", "Tony Buckley\t (astroctc_AB@gmail.com)\n" }
 };
 static const int txt_max = 2;
 
@@ -215,7 +215,7 @@ GtkWidget * about_ui_hdr(AboutUi *p_ui)
     gtk_box_pack_start (GTK_BOX (tbox), label_v, FALSE, FALSE, 0);
 
     /* Icon */
-    app_icon = g_strconcat (PACKAGE_DATA_DIR, "/pixmaps/", TITLE, "/astrotwc.png",NULL);
+    app_icon = g_strconcat (PACKAGE_DATA_DIR, "/pixmaps/", TITLE, "/astroctc.png",NULL);
     p_ui->icon = gtk_image_new_from_file(app_icon);
     g_free(app_icon);
     gtk_widget_set_margin_end(GTK_WIDGET (p_ui->icon), 20);

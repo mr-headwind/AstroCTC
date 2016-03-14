@@ -1,31 +1,31 @@
 /*
 **  Copyright (C) 2016 Anthony Buckley
 ** 
-**  This file is part of AstroTWC.
+**  This file is part of AstroCTC.
 ** 
-**  AstroTWC is free software: you can redistribute it and/or modify
+**  AstroCTC is free software: you can redistribute it and/or modify
 **  it under the terms of the GNU General Public License as published by
 **  the Free Software Foundation, either version 3 of the License, or
 **  (at your option) any later version.
 **  
-**  AstroTWC is distributed in the hope that it will be useful,
+**  AstroCTC is distributed in the hope that it will be useful,
 **  but WITHOUT ANY WARRANTY; without even the implied warranty of
 **  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 **  GNU General Public License for more details.
 **  
 **  You should have received a copy of the GNU General Public License
-**  along with AstroTWC.  If not, see <http://www.gnu.org/licenses/>.
+**  along with AstroCTC.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
 
 /*
-** Application:	AstroTWC
+** Application:	AstroCTC
 **
 ** Author:	Anthony Buckley
 **
 ** Description:
-**  	Application control for AstroTWC. Allow connecting to a WebCam for capturing
+**  	Application control for AstroCTC. Allow connecting to a WebCam for capturing
 **	video. May be used for anything really, but ostensibly for use in creating astronomical images.
 **
 ** History
@@ -76,7 +76,7 @@ extern void log_msg(char*, char*, char*, GtkWidget*);
 
 /* Globals */
 
-static const char *debug_hdr = "DEBUG-astrotwc.c ";
+static const char *debug_hdr = "DEBUG-astroctc.c ";
 guintptr video_window_handle = 0;
 
 
