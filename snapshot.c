@@ -162,6 +162,7 @@ extern int view_clear_pipeline(CamData *, MainUi *);
 extern void get_session(char*, char**);
 extern void res_to_long(char *, long *, long *);
 extern void pxl2fourcc(pixelfmt, char *);
+extern int check_dir(char *);
 
 
 /* Globals */
@@ -366,6 +367,12 @@ int snap_init(capture_t *capt, snap_args_t *args, CamData *cam_data, MainUi *m_u
 
     /* Preferences */
     load_prefs(capt);
+
+    if (check_dir(capt->locn) == FALSE)
+    {
+	log_msg("APP0006", capt->locn, "APP0006", m_ui->window);
+    	return FALSE;
+    }
 
     if (args->delay != -1)
     	capt->delay = args->delay;

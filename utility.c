@@ -141,6 +141,7 @@ static const char *app_messages[][2] =
     { "APP0003", "Error: Please enter a value for %s. "},
     { "APP0004", "Error: %s is not unique. "},
     { "APP0005", "Debug: %s. "},
+    { "APP0006", "Error: Capture location %s does not exist. Please create and retry. "},
     { "SYS9000", "Failed to start application. "},
     { "SYS9001", "Failed to read $HOME variable. "},
     { "SYS9002", "Failed to create Application directory: %s "},

@@ -161,6 +161,7 @@ extern int codec_property_type(char *, char *);
 extern GstPadProbeReturn OnPadProbe (GstPad *, GstPadProbeInfo *, gpointer);
 extern void OnPrepReticule (GstElement *, GstCaps *, gpointer);
 extern void OnDrawReticule (GstElement *, cairo_t *, guint64, guint64, gpointer);
+extern int check_dir(char *);
 
 
 /* Globals */
@@ -420,6 +421,13 @@ int gst_capture_init(capture_t *capt, CamData *cam_data, MainUi *m_ui, int durat
 
     /* Timestamp */
     dttm_stamp(capt->tm_stmp, sizeof(capt->tm_stmp));
+
+    /* Capture location */
+    if (check_dir(capt->locn) == FALSE)
+    {
+	log_msg("APP0006", capt->locn, "APP0006", m_ui->window);
+    	return FALSE;
+    }
 
     /* Filename */
     if ((capt->codec_data = get_codec(capt->codec)) == NULL)
