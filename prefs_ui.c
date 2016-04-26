@@ -88,6 +88,7 @@ void video_capture(PrefUi *, PangoFontDescription **, PangoFontDescription **);
 void fn_template(PrefUi *, PangoFontDescription **, PangoFontDescription **);
 void file_location(PrefUi *, PangoFontDescription **, PangoFontDescription **);
 void audio_mute(PrefUi *, PangoFontDescription **, PangoFontDescription **);
+void empty_title(PrefUi *, PangoFontDescription **, PangoFontDescription **);
 void pref_label_1(char *, PangoFontDescription **, GtkWidget **, GtkAlign, const GdkRGBA *, int);
 void pref_label_2(char *, PangoFontDescription **, GtkWidget **, GtkAlign, int, int);
 void pref_label_3(char *, PangoFontDescription **, GtkWidget *, int *);
@@ -112,6 +113,7 @@ void init_dir_prefs();
 void init_fn_prefs();
 void init_profile_prefs();
 void init_audio_prefs();
+void init_title_prefs();
 void set_user_prefs(PrefUi *);
 int get_user_pref(char *, char **);
 void get_user_pref_idx(int, char *, char **);
@@ -228,7 +230,8 @@ void user_prefs_ui(PrefUi *p_ui)
     p_ui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(p_ui->window), USER_PREFS_UI);
     gtk_window_set_position(GTK_WINDOW(p_ui->window), GTK_WIN_POS_NONE);
-    gtk_window_set_default_size(GTK_WINDOW(p_ui->window), 475, 350);
+    gtk_window_set_default_size(GTK_WINDOW(p_ui->window), 475, 400);
+    //gtk_window_set_default_size(GTK_WINDOW(p_ui->window), 475, 350);
     gtk_container_set_border_width(GTK_CONTAINER(p_ui->window), 10);
     g_object_set_data (G_OBJECT (p_ui->window), "ui", p_ui);
 
@@ -310,6 +313,9 @@ void pref_control(PrefUi *p_ui)
 
     /* Audio mute */
     audio_mute(p_ui, &pf_body, &pf_hdr);
+
+    /* Audio mute */
+    empty_title(p_ui, &pf_body, &pf_hdr);
 
     /* Free font */
     pango_font_description_free (pf_body);
@@ -649,6 +655,43 @@ void audio_mute(PrefUi *p_ui,
     pref_boolean("Off", "On", i, &(*pf_body), &h_box);
     gtk_widget_set_tooltip_text (h_box, "This will only apply if the camera supports audio");
     gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), h_box, FALSE, FALSE, 0);
+
+    return;
+}
+
+
+/* Empty Title warning */
+
+void empty_title(PrefUi *p_ui,
+		 PangoFontDescription **pf_body,
+		 PangoFontDescription **pf_hdr)
+{  
+    int i;
+    char *p;
+    GtkWidget *h_box;
+
+    /* Heading */
+    pref_label_1("Empty Title Warning for Capture and Snapshot", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 10);
+
+    /* Put in horizontal box */
+    h_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+
+    /* Label */
+    pref_label_2("Display a warning message", &(*pf_body), &h_box, GTK_ALIGN_END, 20, 0);
+
+    /* Set up current preference */
+    get_user_pref(AUDIO_MUTE, &p);
+
+    i = TRUE;
+
+    if (p != NULL)
+    	if (atoi(p) == 0)
+	    i = FALSE;
+
+    pref_boolean("Off", "On", i, &(*pf_body), &h_box);
+    gtk_widget_set_tooltip_text (h_box, "This will only apply if the camera supports audio");
+    gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), h_box, FALSE, FALSE, 0);
+
 
     return;
 }
@@ -1258,6 +1301,12 @@ void set_default_prefs()
     if (p == NULL)
 	init_audio_prefs();
 
+    /* Empty Title warning default */
+    get_user_pref(WARN_EMPTY_TITLE, &p);
+
+    if (p == NULL)
+	init_title_prefs();
+
     /* Initial codec property defaults */
     init_codec_prop_prefs();
 
@@ -1343,6 +1392,16 @@ void init_profile_prefs()
 void init_audio_prefs()
 {
     add_user_pref(AUDIO_MUTE, "1");
+
+    return;
+}
+
+
+/* Default empty Title warning - on */
+
+void init_title_prefs()
+{
+    add_user_pref(WARN_EMPTY_TITLE, "1");
 
     return;
 }

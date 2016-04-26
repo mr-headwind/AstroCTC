@@ -43,6 +43,7 @@
 #include <main.h>
 #include <cam.h>
 #include <defs.h>
+#include <preferences.h>
 
 
 /* Defines */
@@ -87,6 +88,8 @@ gboolean OnNvExpose (GtkWidget *, cairo_t *, gpointer);
 GstPadProbeReturn OnPadProbe (GstPad *, GstPadProbeInfo *, gpointer);
 void OnPrepReticule (GstElement *, GstCaps *, gpointer);
 void OnDrawReticule (GstElement *, cairo_t *, guint64, guint64, gpointer);
+
+int title_empty(MainUi *);
 
 
 extern int gst_view(CamData *, MainUi *);
@@ -147,6 +150,8 @@ extern void add_camera_list(GtkWidget**, MainUi *, CamData *);
 extern int snap_mutex_lock();	
 extern int snap_mutex_unlock();	
 extern int close_ui(char *);
+extern gint query_dialog(GtkWidget *, char *, char *);
+extern int get_user_pref(char *, char **);
 /*
 extern void lock_imgbuf();
 extern void unlock_imgbuf();
@@ -333,9 +338,15 @@ void OnCamScan(GtkWidget *cam_scan, gpointer user_data)
 void OnStartCapUi(GtkWidget *capture_btn, gpointer user_data)
 {  
     GtkWidget *window;
+    MainUi *m_ui;
 
     /* Get data */
     window = (GtkWidget *) user_data;
+    m_ui = g_object_get_data (G_OBJECT(window), "ui");
+
+    /* Check for empty Title */
+    if (title_empty(m_ui) == FALSE)
+    	return;
 
     /* Check if already open */
     if (is_ui_reg(CAPTURE_UI, TRUE))
@@ -363,6 +374,11 @@ void OnStartCap(GtkWidget *capture_btn, gpointer user_data)
     cam_data = g_object_get_data (G_OBJECT(window), "cam_data");
     m_ui = g_object_get_data (G_OBJECT(window), "ui");
 
+    /* Check for empty Title */
+    if (title_empty(m_ui) == FALSE)
+    	return;
+
+    /* Duration */
     dur_str = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (m_ui->cbox_dur));
 
     if (val_str2numb(dur_str, &duration, "Duration", window) == FALSE)
@@ -441,9 +457,15 @@ void OnPauseCap(GtkWidget *capture_btn, gpointer user_data)
 void OnSnapUi(GtkWidget *snap_btn, gpointer user_data)
 {  
     GtkWidget *window;
+    MainUi *m_ui;
 
     /* Get data */
     window = (GtkWidget *) user_data;
+    m_ui = g_object_get_data (G_OBJECT(window), "ui");
+
+    /* Check for empty Title */
+    if (title_empty(m_ui) == FALSE)
+    	return;
 
     /* Check if already open */
     if (is_ui_reg(SNAP_UI, TRUE))
@@ -469,6 +491,10 @@ void OnSnapShot(GtkWidget *capture_btn, gpointer user_data)
     window = (GtkWidget *) user_data;
     cam_data = (CamData *) g_object_get_data (G_OBJECT(window), "cam_data");
     m_ui = (MainUi *) g_object_get_data (G_OBJECT(window), "ui");
+
+    /* Check for empty Title */
+    if (title_empty(m_ui) == FALSE)
+    	return;
 
     /* Check number of snapshots requested */
     idx = gtk_combo_box_get_active(GTK_COMBO_BOX (m_ui->cbox_seq));
@@ -1250,3 +1276,38 @@ void OnQuit(GtkWidget *window, gpointer user_data)
 
 /* CALLBACK other functions */
 
+
+/* Check for empty Title, if required */
+
+int title_empty(MainUi *m_ui)
+{
+    char *p;
+    int opt;
+    gint res;
+    const gchar *s;
+
+    /* If non-empty continue */
+    s = gtk_entry_get_text(GTK_ENTRY (m_ui->obj_title));
+
+    if (*s)
+	return TRUE;
+    
+    /* Check preferences to see if a warning is requested */
+    get_user_pref(WARN_EMPTY_TITLE, &p);
+
+    if (p == NULL)
+	return TRUE;
+
+    opt = atoi(p);
+
+    if (opt == 0)
+	return TRUE;
+
+    /* Warn for empty title */
+    res = query_dialog(m_ui->window, "Title is blank! Continue anyway?", (char *) NULL);
+
+    if (res == GTK_RESPONSE_NO)
+	return FALSE;
+
+    return TRUE;
+}
