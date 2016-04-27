@@ -70,6 +70,8 @@ typedef struct _prefs_ui
     GtkWidget *fn_grid;
     GtkWidget *fn_tmpl;
     GtkWidget *capt_dir;
+    GtkWidget *audio_hbox;
+    GtkWidget *title_hbox;
     int close_handler;
     int fn_err, qual_alloc_width;
     GList *hide_list;
@@ -632,16 +634,15 @@ void audio_mute(PrefUi *p_ui,
 {  
     int i;
     char *p;
-    GtkWidget *h_box;
 
     /* Heading */
     pref_label_1("Audio", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 10);
 
     /* Put in horizontal box */
-    h_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+    p_ui->audio_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Audio Mute", &(*pf_body), &h_box, GTK_ALIGN_END, 20, 0);
+    pref_label_2("Audio Mute", &(*pf_body), &p_ui->audio_hbox, GTK_ALIGN_END, 20, 0);
 
     /* Set up current preference */
     get_user_pref(AUDIO_MUTE, &p);
@@ -652,9 +653,9 @@ void audio_mute(PrefUi *p_ui,
     	if (atoi(p) == 0)
 	    i = FALSE;
 
-    pref_boolean("Off", "On", i, &(*pf_body), &h_box);
-    gtk_widget_set_tooltip_text (h_box, "This will only apply if the camera supports audio");
-    gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), h_box, FALSE, FALSE, 0);
+    pref_boolean("Off", "On", i, &(*pf_body), &p_ui->audio_hbox);
+    gtk_widget_set_tooltip_text (p_ui->audio_hbox, "This will only apply if the camera supports audio");
+    gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->audio_hbox, FALSE, FALSE, 0);
 
     return;
 }
@@ -668,19 +669,19 @@ void empty_title(PrefUi *p_ui,
 {  
     int i;
     char *p;
-    GtkWidget *h_box;
 
     /* Heading */
-    pref_label_1("Empty Title Warning for Capture and Snapshot", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 10);
+    pref_label_1("Empty Title Warning for Capture and Snapshot", &(*pf_hdr), &(p_ui->pref_cntr), 
+    		 GTK_ALIGN_START, &DARK_BLUE, 10);
 
     /* Put in horizontal box */
-    h_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+    p_ui->title_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Display a warning message", &(*pf_body), &h_box, GTK_ALIGN_END, 20, 0);
+    pref_label_2("Display a warning message", &(*pf_body), &p_ui->title_hbox, GTK_ALIGN_END, 20, 0);
 
     /* Set up current preference */
-    get_user_pref(AUDIO_MUTE, &p);
+    get_user_pref(WARN_EMPTY_TITLE, &p);
 
     i = TRUE;
 
@@ -688,9 +689,8 @@ void empty_title(PrefUi *p_ui,
     	if (atoi(p) == 0)
 	    i = FALSE;
 
-    pref_boolean("Off", "On", i, &(*pf_body), &h_box);
-    gtk_widget_set_tooltip_text (h_box, "This will only apply if the camera supports audio");
-    gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), h_box, FALSE, FALSE, 0);
+    pref_boolean("Off", "On", i, &(*pf_body), &p_ui->title_hbox);
+    gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->title_hbox, FALSE, FALSE, 0);
 
 
     return;
@@ -765,12 +765,9 @@ void pref_radio(char *nm, PangoFontDescription **pf, GtkWidget *grid, char activ
 {  
     int i;
     char s[10];
-    GtkWidget *h_box;
     GtkWidget *radio, *radio_grp;
     const char *rads[] = { "Prefix", "Mid", "Suffix", "None" };
     const int rad_count = 4;
-
-    h_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     for(i = 0; i < rad_count; i++)
     {
@@ -809,6 +806,8 @@ void pref_boolean(char *s1, char *s2, int active, PangoFontDescription **pf, Gtk
     radio = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (radio_grp), s2);
     gtk_widget_override_font (radio_grp, *pf);
     gtk_widget_override_font (radio, *pf);
+    gtk_widget_set_name(radio_grp, "rb_0");
+    gtk_widget_set_name(radio, "rb_1");
 
     if (active == FALSE)
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (radio_grp), TRUE);
@@ -1471,6 +1470,18 @@ void set_user_prefs(PrefUi *p_ui)
     s[2] = '\0';
     set_user_pref(FITS_BITS, s);
 
+    /* Audio Mute */
+    cc = find_active_by_parent(p_ui->audio_hbox, 'b');
+    s[0] = cc;
+    s[1] = '\0';
+    set_user_pref(AUDIO_MUTE, s);
+
+    /* Empty Title warning */
+    cc = find_active_by_parent(p_ui->title_hbox, 'b');
+    s[0] = cc;
+    s[1] = '\0';
+    set_user_pref(WARN_EMPTY_TITLE, s);
+
     return;
 }
 
@@ -1788,6 +1799,22 @@ int pref_save_reqd(PrefUi *p_ui)
     s[2] = '\0';
 
     if (pref_changed(FITS_BITS, s))
+    	return TRUE;
+
+    /* Audio */
+    cc = find_active_by_parent(p_ui->audio_hbox, 'b');
+    s[0] = cc;
+    s[1] = '\0';
+    
+    if (pref_changed(AUDIO_MUTE, s))
+    	return TRUE;
+
+    /* Empty Title */
+    cc = find_active_by_parent(p_ui->title_hbox, 'b');
+    s[0] = cc;
+    s[1] = '\0';
+    
+    if (pref_changed(WARN_EMPTY_TITLE, s))
     	return TRUE;
 
     return FALSE;
