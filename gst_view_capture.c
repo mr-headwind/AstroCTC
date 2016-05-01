@@ -1488,7 +1488,7 @@ void * monitor_duration(void *arg)
     {
     	sleep(1);
 
-    	/* Test if capture has ended maunally */
+    	/* Test if capture has been ended manually */
 	if (! G_IS_OBJECT(cam_data->gst_objs.tee_capt_pad))
 	    break;
 
@@ -1540,11 +1540,11 @@ void * monitor_frames(void *arg)
     	sleep(1);
 	frames = 0;
 
-    	/* Test if capture has ended maunally */
+    	/* Test if capture has been ended manually */
 	if (! G_IS_OBJECT(cam_data->gst_objs.tee_capt_pad))
 	    break;
 
-    	/* Check buffer limit has been reached */
+    	/* Check if buffer limit has been reached */
 	if (! G_IS_OBJECT(cam_data->gst_objs.vid_rate))
 	    break;
 
@@ -1594,7 +1594,7 @@ void * monitor_unltd(void *arg)
     {
     	sleep(1);
 
-    	/* Test if capture has ended maunally */
+    	/* Test if capture has ended manually */
 	if (! G_IS_OBJECT(cam_data->gst_objs.tee_capt_pad))
 	    break;
 
@@ -1660,7 +1660,7 @@ void * send_EOS(void *arg)
     if (cam_data->state == GST_STATE_PAUSED)
     	cam_set_state(cam_data, GST_STATE_PLAYING, m_ui->window);
 
-    /* Should be immediate, but wait eos processing to complete */
+    /* Should be immediate, but wait for eos processing to complete */
     pthread_cond_wait(&capt_eos_cv, &capt_lock_mutex);
     pthread_mutex_unlock (&capt_lock_mutex);
 
