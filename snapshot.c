@@ -72,31 +72,6 @@ struct buffer
 };
 
 
-typedef struct ImgCapture
-{
-    struct v4l2_format fmt;
-    struct v4l2_requestbuffers req;
-    struct v4l2_buffer buf;
-    struct buffer *buffers;
-    unsigned int n_buffers;
-    char io_method;
-    unsigned char *tmp_img_buf;
-    long width;
-    long height;
-    long img_sz_bytes;
-    const gchar *obj_title;
-    char *codec;					// Preferences
-    unsigned int jpeg_quality;				// Preferences
-    int delay;						// Preferences
-    int delay_grp;					// Preferences
-    int fits_bits;					// Preferences
-    char *locn;						// Preferences
-    char id;						// Preferences
-    char tt;						// Preferences
-    char ts;						// Preferences
-} capture_t;
-
-
 typedef struct SnapArgs
 {
     CamData *cam_data; 
@@ -116,33 +91,33 @@ void snap_status(CamData *, MainUi *);
 gboolean snap_main_loop_fn(gpointer);
 void cancel_snapshot(MainUi *);
 void * snap_main(void *);
-int snap_init(capture_t *, snap_args_t *, CamData *, MainUi *);
-static void load_prefs(capture_t *);
-int snap_image(capture_t *, CamData *, MainUi *);
-int streaming_io(capture_t *, CamData *, MainUi *);
-int mmap_io(capture_t *, CamData *, MainUi *);
-int usrptr_io(capture_t *, CamData *, MainUi *);
-int read_io(capture_t *, CamData *, MainUi *);
-int start_capture(capture_t *, CamData *, MainUi *);
+int snap_init(snap_capt_t *, snap_args_t *, CamData *, MainUi *);
+static void load_prefs(snap_capt_t *);
+int snap_image(snap_capt_t *, CamData *, MainUi *);
+int streaming_io(snap_capt_t *, CamData *, MainUi *);
+int mmap_io(snap_capt_t *, CamData *, MainUi *);
+int usrptr_io(snap_capt_t *, CamData *, MainUi *);
+int read_io(snap_capt_t *, CamData *, MainUi *);
+int start_capture(snap_capt_t *, CamData *, MainUi *);
 int stop_capture(CamData *, MainUi *);
-int image_capture(capture_t *, CamData *, MainUi *);
-int image_output(int, char *, capture_t *, MainUi *);
-int std_format(char *, capture_t *, MainUi *);
-int fits_file(char *, capture_t *, MainUi *);
-void jpeg_file(FILE *, capture_t *);
-void bmp_file(FILE *, capture_t *);
-int png_file(FILE *, capture_t *, MainUi *);
-void ppm_file(FILE *, capture_t *);
-char * bmp_header(capture_t *);
-char * dib_header(capture_t *);
-unsigned char * img_start_sz(int *, capture_t *);
+int image_capture(snap_capt_t *, CamData *, MainUi *);
+int image_output(int, char *, snap_capt_t *, MainUi *);
+int std_format(char *, snap_capt_t *, MainUi *);
+int fits_file(char *, snap_capt_t *, MainUi *);
+void jpeg_file(FILE *, snap_capt_t *);
+void bmp_file(FILE *, snap_capt_t *);
+int png_file(FILE *, snap_capt_t *, MainUi *);
+void ppm_file(FILE *, snap_capt_t *);
+char * bmp_header(snap_capt_t *);
+char * dib_header(snap_capt_t *);
+unsigned char * img_start_sz(int *, snap_capt_t *);
 void img_row(unsigned char *, unsigned char *, int);
-void snap_final(capture_t *, CamData *, MainUi *);
-void show_buffer(int, capture_t *, MainUi *, CamData *);
+void snap_final(snap_capt_t *, CamData *, MainUi *);
+void show_buffer(int, snap_capt_t *, MainUi *, CamData *);
 int check_cancel(int *, CamData *, MainUi *);
 GdkPixbufDestroyNotify destroy_px (guchar *, gpointer);
-int write_24_to_32_bpp(fitsfile *, long, long, capture_t *, MainUi *);
-int write_24_to_16_bpp(fitsfile *, long, long, capture_t *, MainUi *);
+int write_24_to_32_bpp(fitsfile *, long, long, snap_capt_t *, MainUi *);
+int write_24_to_16_bpp(fitsfile *, long, long, snap_capt_t *, MainUi *);
 int snap_mutex_lock();	
 int snap_mutex_trylock();
 int snap_mutex_unlock();	
@@ -315,7 +290,7 @@ void cancel_snapshot(MainUi *m_ui)
 void * snap_main(void *arg)
 {
     snap_args_t *args;
-    capture_t capt;
+    snap_capt_t capt;
 
     args = (snap_args_t *) arg;
     CamData *cam_data = args->cam_data; 
@@ -345,7 +320,7 @@ void * snap_main(void *arg)
 
 /* Close current pipeline, open the device and initialise it for snapshot */
 
-int snap_init(capture_t *capt, snap_args_t *args, CamData *cam_data, MainUi *m_ui)
+int snap_init(snap_capt_t *capt, snap_args_t *args, CamData *cam_data, MainUi *m_ui)
 {
     char *res_str;
     camera_t *cam;
@@ -465,7 +440,7 @@ int snap_init(capture_t *capt, snap_args_t *args, CamData *cam_data, MainUi *m_u
 
 /* Load user preferences for snapshot and filenames */
 
-static void load_prefs(capture_t *capt)
+static void load_prefs(snap_capt_t *capt)
 {
     char *p;
 
@@ -499,7 +474,7 @@ static void load_prefs(capture_t *capt)
 
 /* Release the device buffers, Close off, Rebuild the pipline and restart */
 
-void snap_final(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+void snap_final(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     int i;
 
@@ -549,7 +524,7 @@ void snap_final(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Take a snapshot */
 
-int snap_image(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int snap_image(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     camera_t *cam;
 
@@ -585,7 +560,7 @@ int snap_image(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Use Memory Map for preference, otherwise User Pointer to request buffers */
 
-int streaming_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int streaming_io(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     camera_t *cam;
 
@@ -637,7 +612,7 @@ int streaming_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Memory mapping io */
 
-int mmap_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int mmap_io(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     camera_t *cam;
 
@@ -689,7 +664,7 @@ int mmap_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* User Pointer io */
 
-int usrptr_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int usrptr_io(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     camera_t *cam;
     unsigned int page_size;
@@ -729,7 +704,7 @@ int usrptr_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Read / Write io method */
 
-int read_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int read_io(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     capt->io_method = 'R';
     capt->buffers = calloc(1, sizeof(*(capt->buffers)));
@@ -750,7 +725,7 @@ int read_io(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Start streaming */
 
-int start_capture(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int start_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     unsigned int i;
     camera_t *cam;
@@ -800,7 +775,7 @@ int start_capture(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Image capture */
 
-int image_capture(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int image_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 {
     camera_t *cam;
     fd_set fds;
@@ -966,7 +941,7 @@ int stop_capture(CamData *cam_data, MainUi *m_ui)
 
 /* Set up image output */
 
-int image_output(int img_id, char *tm_stmp, capture_t *capt, MainUi *m_ui)
+int image_output(int img_id, char *tm_stmp, snap_capt_t *capt, MainUi *m_ui)
 {
     char out_name[256];
     char fn[100];
@@ -985,7 +960,7 @@ int image_output(int img_id, char *tm_stmp, capture_t *capt, MainUi *m_ui)
 
 /* Write image output file, doing conversion if necessary */
 
-int std_format(char *out_name, capture_t *capt, MainUi *m_ui)
+int std_format(char *out_name, snap_capt_t *capt, MainUi *m_ui)
 {
     FILE *f_out;
 
@@ -1026,7 +1001,7 @@ int std_format(char *out_name, capture_t *capt, MainUi *m_ui)
 
 /* Write a jpeg image file */
 
-void jpeg_file(FILE *f_out, capture_t *capt)
+void jpeg_file(FILE *f_out, snap_capt_t *capt)
 {
     unsigned char *img;
     struct jpeg_compress_struct cinfo;
@@ -1089,7 +1064,7 @@ void jpeg_file(FILE *f_out, capture_t *capt)
 
 /* Write a portable pixmap file */
 
-void ppm_file(FILE *f_out, capture_t *capt)
+void ppm_file(FILE *f_out, snap_capt_t *capt)
 {
     fprintf(f_out, "P6\n%d %d 255\n", capt->fmt.fmt.pix.width, capt->fmt.fmt.pix.height);
 
@@ -1104,7 +1079,7 @@ void ppm_file(FILE *f_out, capture_t *capt)
 
 /* Write a bmp image file - Keep it simple as could use netpbm for format conversion */
 
-void bmp_file(FILE *f_out, capture_t *capt)
+void bmp_file(FILE *f_out, snap_capt_t *capt)
 {
     char *bmp_hdr;
     char *dib_hdr;
@@ -1164,7 +1139,7 @@ void bmp_file(FILE *f_out, capture_t *capt)
 
 /* Build BMP image header */
 
-char * bmp_header(capture_t *capt)
+char * bmp_header(snap_capt_t *capt)
 {
     int i;
     char *hdr;
@@ -1193,7 +1168,7 @@ char * bmp_header(capture_t *capt)
 
 /* Build DIB (information header) */
 
-char * dib_header(capture_t *capt)
+char * dib_header(snap_capt_t *capt)
 {
     int i;
     short j;
@@ -1247,7 +1222,7 @@ char * dib_header(capture_t *capt)
 
 /* Return the start of the image and its size */
 
-unsigned char * img_start_sz(int *sz, capture_t *capt)
+unsigned char * img_start_sz(int *sz, snap_capt_t *capt)
 {
     unsigned char* img;
 
@@ -1300,7 +1275,7 @@ void img_row(unsigned char *rgb_data, unsigned char *bgr_data, int row_sz)
 
 /* Write a portable network graphics file */
 
-int png_file(FILE *f_out, capture_t *capt, MainUi *m_ui)
+int png_file(FILE *f_out, snap_capt_t *capt, MainUi *m_ui)
 {
     png_structp png_ptr = NULL;
     png_infop info_ptr = NULL;
@@ -1387,7 +1362,7 @@ int png_file(FILE *f_out, capture_t *capt, MainUi *m_ui)
 
 /* Write a FITS format image file */
 
-int fits_file(char *out_name, capture_t *capt, MainUi *m_ui)
+int fits_file(char *out_name, snap_capt_t *capt, MainUi *m_ui)
 {
     fitsfile *f_out;
     int status;
@@ -1471,7 +1446,7 @@ print_bits(sizeof(uint32_t), pixel);
 
 /* Convert 24bpp in image data to 32bpp for FITS format */
 
-int write_24_to_32_bpp(fitsfile *f_out, long fpixel, long no_elements, capture_t *capt, MainUi *m_ui)
+int write_24_to_32_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt_t *capt, MainUi *m_ui)
 {
     int status, i, j;
     unsigned char *rgb_data;
@@ -1523,7 +1498,7 @@ int write_24_to_32_bpp(fitsfile *f_out, long fpixel, long no_elements, capture_t
 
 /* Convert 24bpp in image data to 16bpp for FITS format */
 
-int write_24_to_16_bpp(fitsfile *f_out, long fpixel, long no_elements, capture_t *capt, MainUi *m_ui)
+int write_24_to_16_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt_t *capt, MainUi *m_ui)
 {
     int status, i, j;
     unsigned char *rgb_data;
@@ -1575,7 +1550,7 @@ int write_24_to_16_bpp(fitsfile *f_out, long fpixel, long no_elements, capture_t
 
 /* Push image out to be picked up by main loop (thread) for viewing */
 
-void show_buffer(int i, capture_t *capt, MainUi *m_ui, CamData *cam_data)
+void show_buffer(int i, snap_capt_t *capt, MainUi *m_ui, CamData *cam_data)
 {
     unsigned char *img;
     GtkAllocation allocation;

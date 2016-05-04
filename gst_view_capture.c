@@ -89,28 +89,10 @@
 #include <cairo/cairo.h>
 #include <session.h>
 #include <main.h>
+#include <codec.h>
 #include <cam.h>
 #include <defs.h>
 #include <preferences.h>
-#include <codec.h>
-
-
-/* Structures, Typedefs, Enums required */
-
-typedef struct VideoCapture
-{
-    char tm_stmp[50];
-    char out_name[256];
-    char fn[100];
-    codec_t *codec_data;
-    const gchar *obj_title;
-    char cam_fcc[5];					// Preferences
-    char *codec;					// Preferences
-    char *locn;						// Preferences
-    char id;						// Preferences
-    char tt;						// Preferences
-    char ts;						// Preferences
-} capture_t;
 
 
 /* Prototypes */
@@ -120,12 +102,12 @@ int gst_view_elements(CamData *, MainUi *);
 int link_view_pipeline(CamData *, MainUi *);
 int start_view_pipeline(CamData *, MainUi *, int);
 int gst_capture(CamData *, MainUi *, int, int);
-int gst_capture_init(capture_t *, CamData *, MainUi *, int, int);
-int gst_capture_elements(capture_t *, CamData *, MainUi *);
-int link_enc_pipeline(capture_t *, CamData *, MainUi *);
-int link_caps_pipeline(capture_t *, CamData *, MainUi *);
+int gst_capture_init(CamData *, MainUi *, int, int);
+int gst_capture_elements(CamData *, MainUi *);
+int link_enc_pipeline(CamData *, MainUi *);
+int link_caps_pipeline(CamData *, MainUi *);
 int start_capt_pipeline(CamData *, MainUi *);
-void view_prepare_capt(CamData *, MainUi *, capture_t *);
+void view_prepare_capt(CamData *, MainUi *);
 void capt_prepare_view(CamData *, MainUi *);
 int view_clear_pipeline(CamData *, MainUi *);
 int cam_set_state(CamData *, GstState, GtkWidget *);
@@ -134,8 +116,8 @@ void check_unref(GstElement **, char *, int);
 void set_capture_btns(MainUi *, int, int);
 void swap_fourcc(char *, char *);
 void capture_limits(app_gst_objects *, MainUi *);
-void set_encoder_props(capture_t *, GstElement **, MainUi *); 
-static void load_prefs(capture_t *);
+void set_encoder_props(video_capt_t *, GstElement **, MainUi *); 
+static void load_prefs(video_capt_t *);
 void set_reticule(MainUi *, CamData *);
 int prepare_reticule(MainUi *, CamData *);
 int remove_reticule(MainUi *, CamData *);
@@ -367,16 +349,14 @@ int start_view_pipeline(CamData *cam_data, MainUi *m_ui, int init)
 
 int gst_capture(CamData *cam_data, MainUi *m_ui, int duration, int no_frames)
 {
-    capture_t capt;
-
     /* Initial */
-    if (gst_capture_init(&capt, cam_data, m_ui, duration, no_frames) == FALSE)
+    if (gst_capture_init(cam_data, m_ui, duration, no_frames) == FALSE)
     	return FALSE;
 
-    view_prepare_capt(cam_data, m_ui, &capt);
+    view_prepare_capt(cam_data, m_ui);
 
     /* GST setup */
-    if (gst_capture_elements(&capt, cam_data, m_ui) == FALSE)
+    if (gst_capture_elements(cam_data, m_ui) == FALSE)
     	return FALSE;
 
     /* Capture limits */
@@ -385,12 +365,12 @@ int gst_capture(CamData *cam_data, MainUi *m_ui, int duration, int no_frames)
     /* Capture pipeline element links */
     if (cam_data->pipeline_type == ENC_PIPELINE)
     {
-	if (link_enc_pipeline(&capt, cam_data, m_ui) == FALSE)
+	if (link_enc_pipeline(cam_data, m_ui) == FALSE)
 	    return FALSE;
     }
     else
     {
-	if (link_caps_pipeline(&capt, cam_data, m_ui) == FALSE)
+	if (link_caps_pipeline(cam_data, m_ui) == FALSE)
 	    return FALSE;
     }
 
@@ -404,8 +384,14 @@ int gst_capture(CamData *cam_data, MainUi *m_ui, int duration, int no_frames)
 
 /* Setup preferences and other video capture data */
 
-int gst_capture_init(capture_t *capt, CamData *cam_data, MainUi *m_ui, int duration, int no_frames)
+int gst_capture_init(CamData *cam_data, MainUi *m_ui, int duration, int no_frames)
 {
+    video_capt_t *capt;
+
+    /* Set up convenience pointer */
+    memset(&(cam_data->v_capt), 0, sizeof(video_capt_t));
+    capt = &(cam_data->v_capt);
+
     /* Preferences */
     load_prefs(capt);
 
@@ -456,11 +442,15 @@ int gst_capture_init(capture_t *capt, CamData *cam_data, MainUi *m_ui, int durat
 
 /* Create capture elements and add to pipeline */
 
-int gst_capture_elements(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int gst_capture_elements(CamData *cam_data, MainUi *m_ui)
 {
     long width, height;
     int fps;
     char *p;
+    video_capt_t *capt;
+
+    /* Convenience pointer */
+    capt = &(cam_data->v_capt);
 
     /* Fixed elements */
     if (! create_element(&(cam_data->gst_objs.tee), "tee", "split", NULL, m_ui))
@@ -557,7 +547,7 @@ int gst_capture_elements(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Set the required properties for the encoder */
 
-void set_encoder_props(capture_t *capt, GstElement **encoder, MainUi *m_ui) 
+void set_encoder_props(video_capt_t *capt, GstElement **encoder, MainUi *m_ui) 
 {
     int i, idx, pref_total, len, pr_type, i_val;
     double f_val;
@@ -647,7 +637,7 @@ void set_encoder_props(capture_t *capt, GstElement **encoder, MainUi *m_ui)
 
 /* Link the capture elements for a pileine that uses an encoder */
 
-int link_enc_pipeline(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int link_enc_pipeline(CamData *cam_data, MainUi *m_ui)
 {
     GstPadTemplate *tee_src_pad_template;
     GstPad *queue_capt_pad, *queue_video_pad;
@@ -716,7 +706,7 @@ int link_enc_pipeline(capture_t *capt, CamData *cam_data, MainUi *m_ui)
 // Link the capture elements for a pileine that requires a second caps filter */
 // (Certain formats require a second caps filter for capture)
 
-int link_caps_pipeline(capture_t *capt, CamData *cam_data, MainUi *m_ui)
+int link_caps_pipeline(CamData *cam_data, MainUi *m_ui)
 {
     GstPadTemplate *tee_src_pad_template;
     GstPad *queue_capt_pad, *queue_video_pad;
@@ -948,7 +938,7 @@ void swap_fourcc(char *fcc_in, char *fcc_out)
 
 /* Load user preferences for video capture and filenames */
 
-static void load_prefs(capture_t *capt)
+static void load_prefs(video_capt_t *capt)
 {
     char *p;
 
@@ -1028,7 +1018,7 @@ void capture_limits(app_gst_objects *gst_objs, MainUi *m_ui)
 // Prepare the pipeline for capture
 // Unlink as appropriate and reset the caps filter if mpeg2 is to be captured
 
-void view_prepare_capt(CamData *cam_data, MainUi *m_ui, capture_t *capt)
+void view_prepare_capt(CamData *cam_data, MainUi *m_ui)
 {
     char s[10];
     long width, height;
@@ -1051,7 +1041,7 @@ void view_prepare_capt(CamData *cam_data, MainUi *m_ui, capture_t *capt)
     
     if (cam_data->pipeline_type == ENC_PIPELINE)
     {
-	if (strcmp(capt->codec, MPEG2) == 0)
+	if (strcmp(cam_data->v_capt.codec, MPEG2) == 0)
 	{
 	    get_session(CLRFMT, &p);
 	    swap_fourcc(p, fourcc);

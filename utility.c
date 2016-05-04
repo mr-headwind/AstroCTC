@@ -697,6 +697,45 @@ void free_session()
 }
 
 
+/* Write the camera information and settings (meta data) for captures and snapshots to file */
+
+/*
+int write_meta_file(char *fn)
+{
+    FILE *sf = NULL;
+    char buf[256];
+    char *s_file;
+    int i;
+
+    if (fn == NULL)
+    	s_file = sessionfile;
+    else
+    	s_file = fn;
+
+    if ((sf = fopen(s_file, "w")) == (FILE *) NULL)
+	return FALSE;
+
+    for(i = 0; i < setting_count; i++)
+    {
+    	if (Settings[i].save_flg == FALSE)
+	    continue;
+
+    	sprintf(buf, "%s|%s\n", Settings[i].key, Settings[i].val);
+    	
+    	if ((fputs(buf, sf)) == EOF)
+    	{
+	    log_msg("SYS9005", s_file, NULL, NULL);
+	    return FALSE;
+	}
+    }
+
+    fclose(sf);
+
+    return TRUE;
+}
+*/
+
+
 /* Remove leading and trailing spaces from a string */
 
 void string_trim(char *s)
@@ -705,7 +744,6 @@ void string_trim(char *s)
     char *p;
 
     /* Trailing */
-
     for(i = strlen(s) - 1; i >= 0; i--)
     {
 	if (isspace(s[i]))
@@ -715,12 +753,10 @@ void string_trim(char *s)
     }
 
     /* Empty - all spaces */
-
     if (*s == '\0')
     	return;
 
     /* Leading */
-
     p = s;
 
     while(isspace(*p))

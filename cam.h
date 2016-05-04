@@ -42,6 +42,10 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
+#ifndef CODEC_HDR
+#include <codec.h>
+#endif
+
 
 /* Enums */
 
@@ -97,6 +101,52 @@ typedef struct _cairo_overlay_state
     int info_handler;
 } CairoOverlayState;
 
+
+/* Snapshot capture details */
+
+typedef struct _ImgCapture
+{
+    struct v4l2_format fmt;
+    struct v4l2_requestbuffers req;
+    struct v4l2_buffer buf;
+    struct buffer *buffers;
+    unsigned int n_buffers;
+    char io_method;
+    unsigned char *tmp_img_buf;
+    long width;
+    long height;
+    long img_sz_bytes;
+    const gchar *obj_title;
+    char *codec;					// Preferences
+    unsigned int jpeg_quality;				// Preferences
+    int delay;						// Preferences
+    int delay_grp;					// Preferences
+    int fits_bits;					// Preferences
+    char *locn;						// Preferences
+    char id;						// Preferences
+    char tt;						// Preferences
+    char ts;						// Preferences
+} snap_capt_t;
+
+
+/* Video capture details */
+
+typedef struct _VideoCapture
+{
+    char tm_stmp[50];
+    char out_name[256];
+    char fn[100];
+    codec_t *codec_data;
+    const gchar *obj_title;
+    char cam_fcc[5];					// Preferences
+    char *codec;					// Preferences
+    char *locn;						// Preferences
+    char id;						// Preferences
+    char tt;						// Preferences
+    char ts;						// Preferences
+} video_capt_t;
+
+
 /* Structure to group GST elements */
 
 typedef struct _app_gst_objects
@@ -114,6 +164,7 @@ typedef struct _app_gst_objects
     gulong probe_id;							// Reticule only
     CairoOverlayState *overlay_state;					// Reticule only
 } app_gst_objects; 
+
 
 /* Structure to contain all our information, so we can pass it around */
 
@@ -133,6 +184,7 @@ typedef struct _CamData
     int status;				/* General purpose */
     int cam_count;			/* General purpose */
     int cam_max;			/* General purpose */
+    video_capt_t v_capt;		/* Video capture details */
 } CamData;
 
 
