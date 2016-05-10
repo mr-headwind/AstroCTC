@@ -184,7 +184,11 @@ typedef struct _CamData
     int status;				/* General purpose */
     int cam_count;			/* General purpose */
     int cam_max;			/* General purpose */
-    video_capt_t v_capt;		/* Video capture details */
+    union
+    {
+	video_capt_t v_capt;		/* Video capture details */
+	snap_capt_t s_capt;		/* Snapshot capture details */
+    } u;
 } CamData;
 
 

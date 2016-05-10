@@ -699,22 +699,26 @@ void free_session()
 
 /* Write the camera information and settings (meta data) for captures and snapshots to file */
 
-/*
-int write_meta_file(char *fn)
+int write_meta_file(char capt, CamData *cam_data, int arg1, int arg2)
 {
-    FILE *sf = NULL;
+    FILE *mf = NULL;
     char buf[256];
-    char *s_file;
+    char *m_file;
     int i;
 
-    if (fn == NULL)
-    	s_file = sessionfile;
-    else
-    	s_file = fn;
+    /* Set file name */
+    m_file = cam_data->u.v_capt.out_name;
 
-    if ((sf = fopen(s_file, "w")) == (FILE *) NULL)
+    if ((mf = fopen(m_file, "w")) == (FILE *) NULL)
 	return FALSE;
 
+    /* Video file, date, camera name */
+
+    /* Capture details requested - duration, frames, snapshots ... */
+
+    /* Camera settings */
+
+    /*
     for(i = 0; i < setting_count; i++)
     {
     	if (Settings[i].save_flg == FALSE)
@@ -728,12 +732,12 @@ int write_meta_file(char *fn)
 	    return FALSE;
 	}
     }
+    */
 
-    fclose(sf);
+    fclose(mf);
 
     return TRUE;
 }
-*/
 
 
 /* Remove leading and trailing spaces from a string */

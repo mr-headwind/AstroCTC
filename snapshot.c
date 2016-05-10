@@ -91,9 +91,9 @@ void snap_status(CamData *, MainUi *);
 gboolean snap_main_loop_fn(gpointer);
 void cancel_snapshot(MainUi *);
 void * snap_main(void *);
-int snap_init(snap_capt_t *, snap_args_t *, CamData *, MainUi *);
+int snap_init(snap_args_t *, CamData *, MainUi *);
 static void load_prefs(snap_capt_t *);
-int snap_image(snap_capt_t *, CamData *, MainUi *);
+int snap_image(CamData *, MainUi *);
 int streaming_io(snap_capt_t *, CamData *, MainUi *);
 int mmap_io(snap_capt_t *, CamData *, MainUi *);
 int usrptr_io(snap_capt_t *, CamData *, MainUi *);
@@ -112,7 +112,7 @@ char * bmp_header(snap_capt_t *);
 char * dib_header(snap_capt_t *);
 unsigned char * img_start_sz(int *, snap_capt_t *);
 void img_row(unsigned char *, unsigned char *, int);
-void snap_final(snap_capt_t *, CamData *, MainUi *);
+void snap_final(CamData *, MainUi *);
 void show_buffer(int, snap_capt_t *, MainUi *, CamData *);
 int check_cancel(int *, CamData *, MainUi *);
 GdkPixbufDestroyNotify destroy_px (guchar *, gpointer);
@@ -290,29 +290,28 @@ void cancel_snapshot(MainUi *m_ui)
 void * snap_main(void *arg)
 {
     snap_args_t *args;
-    snap_capt_t capt;
 
     args = (snap_args_t *) arg;
     CamData *cam_data = args->cam_data; 
     MainUi *m_ui = args->m_ui; 
 
     /* Snapshot initial setup */
-    if (snap_init(&capt, args, cam_data, m_ui) == FALSE)
+    if (snap_init(args, cam_data, m_ui) == FALSE)
     {
 	free(args);
     	cam_data->status = SN_FAIL;
-	snap_final(&capt, cam_data, m_ui);
+	snap_final(cam_data, m_ui);
 	pthread_exit(&ret_snap);
     }
 
     free(args);
 
     /* Capture an image */
-    if (! snap_image(&capt, cam_data, m_ui))
+    if (! snap_image(cam_data, m_ui))
     	cam_data->status = SN_FAIL;
 
     /* Resume normal viewing */
-    snap_final(&capt, cam_data, m_ui);
+    snap_final(cam_data, m_ui);
 
     pthread_exit(&ret_snap);
 }
@@ -320,13 +319,17 @@ void * snap_main(void *arg)
 
 /* Close current pipeline, open the device and initialise it for snapshot */
 
-int snap_init(snap_capt_t *capt, snap_args_t *args, CamData *cam_data, MainUi *m_ui)
+int snap_init(snap_args_t *args, CamData *cam_data, MainUi *m_ui)
 {
     char *res_str;
     camera_t *cam;
     struct v4l2_format *fmt;
     char fourcc[5];
     unsigned int min;
+    snap_capt_t *capt;
+
+    /* Convenience */
+    capt = &(cam_data->u.s_capt);
 
     /* Set up */
     if (args->snap_count <= 0)
@@ -474,9 +477,13 @@ static void load_prefs(snap_capt_t *capt)
 
 /* Release the device buffers, Close off, Rebuild the pipline and restart */
 
-void snap_final(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
+void snap_final(CamData *cam_data, MainUi *m_ui)
 {
     int i;
+    snap_capt_t *capt;
+
+    /* Convenience */
+    capt = &(cam_data->u.s_capt);
 
     /* Information status */
     cam_data->mode = CAM_MODE_NONE;
@@ -524,10 +531,13 @@ void snap_final(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 
 /* Take a snapshot */
 
-int snap_image(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
+int snap_image(CamData *cam_data, MainUi *m_ui)
 {
     camera_t *cam;
+    snap_capt_t *capt;
 
+    /* Convenience */
+    capt = &(cam_data->u.s_capt);
     cam = cam_data->cam;
 
     /* Determine the input/output method */

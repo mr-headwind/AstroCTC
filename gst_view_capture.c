@@ -389,8 +389,8 @@ int gst_capture_init(CamData *cam_data, MainUi *m_ui, int duration, int no_frame
     video_capt_t *capt;
 
     /* Set up convenience pointer */
-    memset(&(cam_data->v_capt), 0, sizeof(video_capt_t));
-    capt = &(cam_data->v_capt);
+    memset(&(cam_data->u.v_capt), 0, sizeof(video_capt_t));
+    capt = &(cam_data->u.v_capt);
 
     /* Preferences */
     load_prefs(capt);
@@ -450,7 +450,7 @@ int gst_capture_elements(CamData *cam_data, MainUi *m_ui)
     video_capt_t *capt;
 
     /* Convenience pointer */
-    capt = &(cam_data->v_capt);
+    capt = &(cam_data->u.v_capt);
 
     /* Fixed elements */
     if (! create_element(&(cam_data->gst_objs.tee), "tee", "split", NULL, m_ui))
@@ -1041,7 +1041,7 @@ void view_prepare_capt(CamData *cam_data, MainUi *m_ui)
     
     if (cam_data->pipeline_type == ENC_PIPELINE)
     {
-	if (strcmp(cam_data->v_capt.codec, MPEG2) == 0)
+	if (strcmp(cam_data->u.v_capt.codec, MPEG2) == 0)
 	{
 	    get_session(CLRFMT, &p);
 	    swap_fourcc(p, fourcc);
@@ -1497,6 +1497,9 @@ void * monitor_duration(void *arg)
     };
 
     free(info_txt);
+    sprintf(new_status, "Writing 'meta data' file for %s...\n", cam_data->u.v_capt.fn);
+    gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
+    // write_meta_file('v', cam_data, secs, m_ui->duration);
 
     /* Time is up - stop capture and resume normal playback */
     set_eos(m_ui);
