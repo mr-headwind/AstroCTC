@@ -138,6 +138,7 @@ extern void get_session(char*, char**);
 extern void res_to_long(char *, long *, long *);
 extern void pxl2fourcc(pixelfmt, char *);
 extern int check_dir(char *);
+extern int write_meta_file(char, CamData *);
 
 
 /* Globals */
@@ -923,6 +924,10 @@ int image_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
 	check_cancel(&i, cam_data, m_ui);
     }
 
+    /* Write the image data 'metadata' file if required */
+    if (TRUE == TRUE)
+    	write_meta_file('s', cam_data);
+
     /* Clean up */
     cam_data->status = SN_DONE;
 
@@ -953,18 +958,15 @@ int stop_capture(CamData *cam_data, MainUi *m_ui)
 
 int image_output(int img_id, char *tm_stmp, snap_capt_t *capt, MainUi *m_ui)
 {
-    char out_name[256];
-    char fn[100];
-
     /* File name */
-    get_file_name(fn, img_id, (char *) capt->obj_title, tm_stmp, capt->id, capt->tt, capt->ts);
-    sprintf(out_name, "%s/%s.%s", capt->locn, fn, capt->codec);
+    get_file_name(capt->fn, img_id, (char *) capt->obj_title, tm_stmp, capt->id, capt->tt, capt->ts);
+    sprintf(capt->out_name, "%s/%s.%s", capt->locn, capt->fn, capt->codec);
 
     /* Main formats or FITS */
     if (strcmp(capt->codec, "fits") != 0)
-    	return std_format(out_name, capt, m_ui);
+    	return std_format(capt->out_name, capt, m_ui);
     else
-    	return fits_file(out_name, capt, m_ui);
+    	return fits_file(capt->out_name, capt, m_ui);
 }
 
 

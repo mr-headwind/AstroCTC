@@ -117,6 +117,8 @@ typedef struct _ImgCapture
     long height;
     long img_sz_bytes;
     const gchar *obj_title;
+    char out_name[256];
+    char fn[100];
     char *codec;					// Preferences
     unsigned int jpeg_quality;				// Preferences
     int delay;						// Preferences

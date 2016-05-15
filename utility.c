@@ -101,6 +101,11 @@ GtkWidget * find_widget_by_name(GtkWidget *, char *);
 GtkWidget * find_widget_by_parent(GtkWidget *, char *);
 GList * ctrl_widget_list(GtkWidget *, GtkWidget *);
 void delete_menu_items(GtkWidget *, char *);
+int write_meta_file(char, CamData *);
+void cur_date_str(char *, int, char *);
+void video_meta(FILE **, CamData *);
+void snap_meta(FILE **, CamData *);
+void common_meta(FILE **, const gchar *, char *, char *);
 void debug_session();
 
 extern int find_ctl(camera_t *, char *);
@@ -209,19 +214,13 @@ void app_msg(char *msg_id, char *opt_str, GtkWidget *window)
 void log_msg(char *msg_id, char *opt_str, char *sys_msg_id, GtkWidget *window)
 {
     char msg[512];
-    struct tm *tm;
-    time_t current_time;
-    size_t sz;
     char date_str[50];
 
     /* Lookup the error */
     get_msg(msg, msg_id, opt_str);
 
     /* Log the message */
-    date_str[0] = '\0';
-    current_time = time(NULL);
-    tm = localtime(&current_time);
-    sz = strftime(date_str, sizeof(date_str), "%d-%b-%Y %I:%M:%S %p", tm);
+    cur_date_str(date_str, sizeof(date_str), "%d-%b-%Y %I:%M:%S %p");
 
     /* This may before anything has been set up (chicken & egg !). Use stderr if required */
     if (lf == NULL)
@@ -699,20 +698,31 @@ void free_session()
 
 /* Write the camera information and settings (meta data) for captures and snapshots to file */
 
-int write_meta_file(char capt, CamData *cam_data, int arg1, int arg2)
+//int write_meta_file(char capt, CamData *cam_data, int arg1, int arg2, int arg3)
+int write_meta_file(char capt, CamData *cam_data)
 {
     FILE *mf = NULL;
     char buf[256];
-    char *m_file;
+
     int i;
 
-    /* Set file name */
-    m_file = cam_data->u.v_capt.out_name;
+    /* Set file name and open */
+    if (capt == 'v')
+	sprintf(buf, "%s/%s.metadata", cam_data->u.v_capt.locn, cam_data->u.v_capt.fn);
+     
+    else if (capt == 's')
+	sprintf(buf, "%s/%s.metadata", cam_data->u.s_capt.locn, cam_data->u.s_capt.fn);
+    else
+    	return FALSE;
 
-    if ((mf = fopen(m_file, "w")) == (FILE *) NULL)
+    if ((mf = fopen(buf, "w")) == (FILE *) NULL)
 	return FALSE;
 
-    /* Video file, date, camera name */
+    /* Video or snapshot specific details */
+    if (capt == 'v')
+    	video_meta(&mf, cam_data);
+    else
+    	snap_meta(&mf, cam_data);
 
     /* Capture details requested - duration, frames, snapshots ... */
 
@@ -737,6 +747,57 @@ int write_meta_file(char capt, CamData *cam_data, int arg1, int arg2)
     fclose(mf);
 
     return TRUE;
+}
+
+
+/* Write the meta data video related details */
+
+void video_meta(FILE **mf, CamData *cam_data)
+{
+    /* Common details */
+    common_meta(&(*mf), cam_data->u.v_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.v_capt.out_name);
+
+    return;
+}
+
+
+/* Write the meta data snapshot related details */
+
+void snap_meta(FILE **mf, CamData *cam_data)
+{
+    /* Common details */
+    common_meta(&(*mf), cam_data->u.s_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.s_capt.out_name);
+
+    /* Snapshot specific details */
+
+    return;
+}
+
+
+/* Write the common meta data details */
+
+void common_meta(FILE **mf, const gchar *obj_title, char *camera_nm, char *out_name)
+{
+    char date_str[50];
+
+    /* Date, Title, Camera, File */
+    cur_date_str(date_str, sizeof(date_str), "%d-%b-%Y %I:%M:%S %p");
+    fputs(date_str, *mf);
+    fputs("\n\n", *mf);
+
+    fputs("Title: ", *mf);
+    fputs(obj_title, *mf);
+    fputs("\n", *mf);
+
+    fputs("Camera: ", *mf);
+    fputs(camera_nm, *mf);
+    fputs("\n", *mf);
+
+    fputs("File: ", *mf);
+    fputs(out_name, *mf);
+    fputs("\n", *mf);
+
+    return;
 }
 
 
@@ -1215,6 +1276,23 @@ void delete_menu_items(GtkWidget *menu, char *nm)
     }
 
     g_list_free(child_widgets);
+
+    return;
+}
+
+
+/* Get a string for the current time */
+
+void cur_date_str(char *date_str, int s_sz, char *fmt)
+{
+    struct tm *tm;
+    time_t current_time;
+    size_t sz;
+
+    *date_str = '\0';
+    current_time = time(NULL);
+    tm = localtime(&current_time);
+    sz = strftime(date_str, s_sz, fmt, tm);
 
     return;
 }
