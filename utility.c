@@ -103,9 +103,9 @@ GList * ctrl_widget_list(GtkWidget *, GtkWidget *);
 void delete_menu_items(GtkWidget *, char *);
 int write_meta_file(char, CamData *);
 void cur_date_str(char *, int, char *);
-void video_meta(FILE **, CamData *);
-void snap_meta(FILE **, CamData *);
-void common_meta(FILE **, const gchar *, char *, char *);
+void video_meta(FILE *, CamData *);
+void snap_meta(FILE *, CamData *);
+void common_meta(FILE *, const gchar *, char *, char *);
 void debug_session();
 
 extern int find_ctl(camera_t *, char *);
@@ -699,7 +699,7 @@ void free_session()
 /* Write the camera information and settings (meta data) for captures and snapshots to file */
 
 //int write_meta_file(char capt, CamData *cam_data, int arg1, int arg2, int arg3)
-int write_meta_file(char capt, CamData *cam_data)
+int write_meta_file(char capt_type, CamData *cam_data)
 {
     FILE *mf = NULL;
     char buf[256];
@@ -707,10 +707,10 @@ int write_meta_file(char capt, CamData *cam_data)
     int i;
 
     /* Set file name and open */
-    if (capt == 'v')
+    if (capt_type == 'v')
 	sprintf(buf, "%s/%s.metadata", cam_data->u.v_capt.locn, cam_data->u.v_capt.fn);
      
-    else if (capt == 's')
+    else if (capt_type == 's')
 	sprintf(buf, "%s/%s.metadata", cam_data->u.s_capt.locn, cam_data->u.s_capt.fn);
     else
     	return FALSE;
@@ -719,10 +719,10 @@ int write_meta_file(char capt, CamData *cam_data)
 	return FALSE;
 
     /* Video or snapshot specific details */
-    if (capt == 'v')
-    	video_meta(&mf, cam_data);
+    if (capt_type == 'v')
+    	video_meta(mf, cam_data);
     else
-    	snap_meta(&mf, cam_data);
+    	snap_meta(mf, cam_data);
 
     /* Capture details requested - duration, frames, snapshots ... */
 
@@ -752,10 +752,12 @@ int write_meta_file(char capt, CamData *cam_data)
 
 /* Write the meta data video related details */
 
-void video_meta(FILE **mf, CamData *cam_data)
+void video_meta(FILE *mf, CamData *cam_data)
 {
     /* Common details */
-    common_meta(&(*mf), cam_data->u.v_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.v_capt.out_name);
+    common_meta(mf, cam_data->u.v_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.v_capt.out_name);
+
+    /* Video specific details - No. of Frames, Duration, unlimited */
 
     return;
 }
@@ -763,39 +765,61 @@ void video_meta(FILE **mf, CamData *cam_data)
 
 /* Write the meta data snapshot related details */
 
-void snap_meta(FILE **mf, CamData *cam_data)
+void snap_meta(FILE *mf, CamData *cam_data)
 {
-    /* Common details */
-    common_meta(&(*mf), cam_data->u.s_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.s_capt.out_name);
+    char s[100];
 
-    /* Snapshot specific details */
+    /* Common details */
+    common_meta(mf, cam_data->u.s_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.s_capt.out_name);
+
+    /* Frames requested */
+    sprintf(s, "Frames Requested: %d\n", cam_data->cam_max);
+    fputs(s, mf);
+
+    /* Options - Delay, Frame Group Delay every n frames */
+    if (cam_data->u.s_capt.delay <= 0)
+	sprintf(s, "Delay: Immediate\n");
+    else
+	sprintf(s, "Delay: %d seconds\n", cam_data->u.s_capt.delay);
+
+    fputs(s, mf);
+
+    if (cam_data->u.s_capt.delay_grp > 0)
+    {
+	sprintf(s, "       and a delay of %d seconds every %d frames\n", cam_data->u.s_capt.delay,
+									 cam_data->u.s_capt.delay_grp);
+	fputs(s, mf);
+    }
+
+    /* Frames delivered */
+    sprintf(s, "Frames delivered: %d\n", cam_data->cam_count);
+    fputs(s, mf);
 
     return;
 }
 
 
-/* Write the common meta data details */
+/* Write the common meta data details - Date, Object Title, Camera, File */
 
-void common_meta(FILE **mf, const gchar *obj_title, char *camera_nm, char *out_name)
+void common_meta(FILE *mf, const gchar *obj_title, char *camera_nm, char *out_name)
 {
     char date_str[50];
 
-    /* Date, Title, Camera, File */
     cur_date_str(date_str, sizeof(date_str), "%d-%b-%Y %I:%M:%S %p");
-    fputs(date_str, *mf);
-    fputs("\n\n", *mf);
+    fputs(date_str, mf);
+    fputs("\n\n", mf);
 
-    fputs("Title: ", *mf);
-    fputs(obj_title, *mf);
-    fputs("\n", *mf);
+    fputs("Title: ", mf);
+    fputs(obj_title, mf);
+    fputs("\n", mf);
 
-    fputs("Camera: ", *mf);
-    fputs(camera_nm, *mf);
-    fputs("\n", *mf);
+    fputs("Camera: ", mf);
+    fputs(camera_nm, mf);
+    fputs("\n", mf);
 
-    fputs("File: ", *mf);
-    fputs(out_name, *mf);
-    fputs("\n", *mf);
+    fputs("File: ", mf);
+    fputs(out_name, mf);
+    fputs("\n", mf);
 
     return;
 }
