@@ -140,6 +140,8 @@ typedef struct _VideoCapture
     char fn[100];
     codec_t *codec_data;
     const gchar *obj_title;
+    char capt_type;
+    int amt_reqd;
     char cam_fcc[5];					// Preferences
     char *codec;					// Preferences
     char *locn;						// Preferences

@@ -136,7 +136,7 @@ extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void res_to_long(char *, long *, long *);
 extern void get_session(char*, char**);
 extern void dttm_stamp(char *, size_t);
-extern void get_file_name(char *, int, char *, char *, char, char, char);
+extern void get_file_name(char *, char *, char *, char *, char, char, char);
 extern codec_t * get_codec(char *);
 extern int get_user_pref(char *, char **);
 extern int codec_property_type(char *, char *);
@@ -387,6 +387,7 @@ int gst_capture(CamData *cam_data, MainUi *m_ui, int duration, int no_frames)
 int gst_capture_init(CamData *cam_data, MainUi *m_ui, int duration, int no_frames)
 {
     video_capt_t *capt;
+    char seq_no_s[10];
 
     /* Set up convenience pointer */
     memset(&(cam_data->u.v_capt), 0, sizeof(video_capt_t));
@@ -401,6 +402,7 @@ int gst_capture_init(CamData *cam_data, MainUi *m_ui, int duration, int no_frame
 
     /* Initial */
     m_ui->thread_init = FALSE;
+    sprintf(seq_no_s, "%03d", capt_seq_no);
 
     /* Object title for file name */
     capt->obj_title = gtk_entry_get_text( GTK_ENTRY (m_ui->obj_title));
@@ -423,7 +425,7 @@ int gst_capture_init(CamData *cam_data, MainUi *m_ui, int duration, int no_frame
     }
 
     get_file_name(capt->fn, 
-    		  capt_seq_no, 
+    		  seq_no_s, 
 		  (char *) capt->obj_title,
 		  capt->tm_stmp, capt->id, capt->tt, capt->ts);
     sprintf(capt->out_name, "%s/%s.%s", capt->locn, capt->fn, capt->codec_data->extn);
@@ -1497,9 +1499,21 @@ void * monitor_duration(void *arg)
     };
 
     free(info_txt);
-    sprintf(new_status, "Writing 'meta data' file for %s...\n", cam_data->u.v_capt.fn);
-    gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-    // write_meta_file('v', cam_data, secs, m_ui->duration);
+
+    /* Write the image data 'metadata' file if required */
+    if (TRUE == TRUE)
+    {
+	setup_meta(cam_data, 'v', 'd', m_ui->duration, secs);
+
+	sprintf(new_status, "Writing 'meta data' file for %s...\n", cam_data->u.v_capt.fn);
+	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
+
+	cam_data->u.v_capt.capt_type = 'd';
+	cam_data->u.v_capt.amt_reqd = m_ui->duration;
+	cam_data->u.v_capt.cam_count = secs;
+
+    	write_meta_file('v', cam_data, NULL);
+    }
 
     /* Time is up - stop capture and resume normal playback */
     set_eos(m_ui);
@@ -1556,6 +1570,19 @@ void * monitor_frames(void *arg)
 
     /* Time is up - stop capture and resume normal playback */
     cam_data = g_object_get_data (G_OBJECT(m_ui->window), "cam_data");
+
+    /* Write the image data 'metadata' file if required */
+    if (TRUE == TRUE)
+    {
+	sprintf(new_status, "Writing 'meta data' file for %s...\n", cam_data->u.v_capt.fn);
+	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
+
+	cam_data->u.v_capt.capt_type = 'f';
+	cam_data->u.v_capt.amt_reqd = m_ui->no_of_frames;
+	cam_data->u.v_capt.cam_count = (int) frames;
+
+    	write_meta_file('v', cam_data, NULL);
+    }
 
     pthread_exit(&ret_mon);
 }

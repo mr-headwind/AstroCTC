@@ -102,6 +102,9 @@
     . There is an issue using YUY2 in the video settings in combination with certain video capture
       formats (eg. YUY2/YUY2, YUY2/Ogg). This has only occurred with an ASUS built-in laptop camera,
       but there could possibly be others.
+    . There is a problem with some resolution showing on the main window and taking snapshots where there
+      is a delay. Some resolutions greater than 800 x 600 will show an image with lines. This seems to relate
+      to the size of the drawing area.
 
  THE TECHNICAL STUFF
  -------------------

@@ -104,8 +104,8 @@ void set_fn_pref(char *, char *, char *, const gchar *);
 void set_fn_handler(PrefUi *);
 void set_tmpl_colour(GtkWidget *, char *);
 char find_active_by_parent(GtkWidget *, char);
-void get_file_name(char *, int, char *, char *, char, char, char);
-void file_name_item(char *, char, char, char, char, int, char *, char *); 
+void get_file_name(char *, char *, char *, char *, char, char, char);
+void file_name_item(char *, char, char, char, char, char *, char *, char *); 
 int read_user_prefs(GtkWidget *);
 int write_user_prefs(GtkWidget *);
 void set_default_prefs();
@@ -1009,7 +1009,7 @@ void set_fn_pref(char *id, char *tt, char *ts, const gchar *nm)
 /* Construct a filename */
 
 void get_file_name(char *fn, 
-		   int id, char *title, char *tm_stmp, 
+		   char *id, char *title, char *tm_stmp, 
 		   char idp, char ttp, char tsp)
 {
     int len;
@@ -1050,10 +1050,10 @@ void get_file_name(char *fn,
 
 void file_name_item(char *fn, char cc, 
 		    char idp, char ttp, char tsp,
-		    int id, char *title, char *tm_stmp) 
+		    char *id, char *title, char *tm_stmp) 
 {
     if (idp == cc)
-    	sprintf(fn, "%s%03d_", fn, id);
+    	sprintf(fn, "%s%s_", fn, id);
 
     else if (ttp == cc)
 	sprintf(fn, "%s%s_", fn, title);

@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <inttypes.h>
 #include <sys/types.h>
 #include <sys/time.h>
 #include <sys/mman.h>
@@ -129,7 +130,7 @@ extern int xioctl(int, int, void *);
 extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void dttm_stamp(char *, size_t);
 extern int get_user_pref(char *, char **);
-extern void get_file_name(char *, int, char *, char *, char, char, char);
+extern void get_file_name(char *, char *, char *, char *, char, char, char);
 extern int64_t msec_time();
 extern void set_capture_btns(MainUi *, int, int);
 extern void printBits(size_t const, void const * const);
@@ -138,7 +139,7 @@ extern void get_session(char*, char**);
 extern void res_to_long(char *, long *, long *);
 extern void pxl2fourcc(pixelfmt, char *);
 extern int check_dir(char *);
-extern int write_meta_file(char, CamData *);
+extern int write_meta_file(char, CamData *, char *);
 
 
 /* Globals */
@@ -811,8 +812,8 @@ printf("%s delay %d\n", debug_hdr, capt->delay);
     	delay_msecs = 0;
 
 printf("%s delay %d\n", debug_hdr, capt->delay);
-//printf("%s delay 1 " "%" PRId64 "\n", debug_hdr, msec_time());
-//printf("%s delay 2 " "%" PRId64 "\n", debug_hdr, delay_msecs);
+printf("%s delay 1 " "%" PRId64 "\n", debug_hdr, msec_time());
+printf("%s delay 2 " "%" PRId64 "\n", debug_hdr, delay_msecs);
     if (capt->delay_grp > 0)
 	grp_cnt = 0;
     else
@@ -930,7 +931,7 @@ printf("%s delay %d\n", debug_hdr, capt->delay);
 
     /* Write the image data 'metadata' file if required */
     if (TRUE == TRUE)
-    	write_meta_file('s', cam_data);
+    	write_meta_file('s', cam_data, tm_stmp);
 
     /* Clean up */
     cam_data->status = SN_DONE;
@@ -962,8 +963,11 @@ int stop_capture(CamData *cam_data, MainUi *m_ui)
 
 int image_output(int img_id, char *tm_stmp, snap_capt_t *capt, MainUi *m_ui)
 {
+    char img_id_s[10];
+
     /* File name */
-    get_file_name(capt->fn, img_id, (char *) capt->obj_title, tm_stmp, capt->id, capt->tt, capt->ts);
+    sprintf(img_id_s, "%03d", img_id);
+    get_file_name(capt->fn, img_id_s, (char *) capt->obj_title, tm_stmp, capt->id, capt->tt, capt->ts);
     sprintf(capt->out_name, "%s/%s.%s", capt->locn, capt->fn, capt->codec);
 
     /* Main formats or FITS */
