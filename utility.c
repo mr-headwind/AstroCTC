@@ -55,6 +55,7 @@
 #include <session.h>
 #include <gtk/gtk.h>
 #include <linux/videodev2.h>
+#include <codec.h>
 #include <cam.h>
 #include <defs.h>
 
@@ -106,10 +107,14 @@ void cur_date_str(char *, int, char *);
 void video_meta(FILE *, CamData *);
 void snap_meta(FILE *, CamData *);
 void common_meta(FILE *, const gchar *, char *, char *);
+void settings_meta(FILE *, CamData *);
 void debug_session();
 
 extern int find_ctl(camera_t *, char *);
 extern void get_file_name(char *, char *, char *, char *, char, char, char);
+extern struct v4l2_queryctrl * get_next_ctrl(int);
+extern struct v4l2_list * get_next_oth_ctrl(struct v4l2_list *, CamData *);
+extern void session_ctrl_val(struct v4l2_queryctrl *, char *, long *);
 
 
 /* Globals */
@@ -699,7 +704,6 @@ void free_session()
 
 /* Write the camera information and settings (meta data) for captures and snapshots to file */
 
-//int write_meta_file(char capt, CamData *cam_data, int arg1, int arg2, int arg3)
 int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
 {
     FILE *mf = NULL;
@@ -740,25 +744,8 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
     else
     	snap_meta(mf, cam_data);
 
-    /* Capture details requested - duration, frames, snapshots ... */
-
     /* Camera settings */
-
-    /*
-    for(i = 0; i < setting_count; i++)
-    {
-    	if (Settings[i].save_flg == FALSE)
-	    continue;
-
-    	sprintf(buf, "%s|%s\n", Settings[i].key, Settings[i].val);
-    	
-    	if ((fputs(buf, sf)) == EOF)
-    	{
-	    log_msg("SYS9005", s_file, NULL, NULL);
-	    return FALSE;
-	}
-    }
-    */
+    settings_meta(mf, cam_data);
 
     fclose(mf);
 
@@ -771,21 +758,37 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
 void video_meta(FILE *mf, CamData *cam_data)
 {
     char s[100];
+    char desc[30];
 
     /* Common details */
     common_meta(mf, cam_data->u.v_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.v_capt.out_name);
 
     /* Codec format */
-    sprintf(s, "Codec: %s", cam_data->u.v_capt.codec_data.short_desc);
+    sprintf(s, "Codec: %s\n", cam_data->u.v_capt.codec_data->short_desc);
     fputs(s, mf);
 
-    /* Video specific details - No. of Frames, Duration, unlimited */
-    /* Frames requested */
-    sprintf(s, "Frames Requested: %d\n", cam_data->cam_max);
+    /* Video capture mode - duration, frames, umlimited */
+    switch (cam_data->u.v_capt.capt_type)
+    {
+    	case 'd': 
+	    strcpy(desc, "seconds");
+	    break;
+    	case 'f': 
+	    strcpy(desc, "frames");
+	    break;
+    	case 'u':
+	    strcpy(desc, "unlimited - seconds");
+	    break;
+    	default:
+	    strcpy(desc, "Unknown");
+	    break;
+    }
+
+    sprintf(s, "Video requested: %d (%s)\n", cam_data->u.v_capt.amt_reqd, desc);
     fputs(s, mf);
 
-    /* Frames delivered */
-    sprintf(s, "Frames delivered: %d\n", cam_data->cam_count);
+    /* Actual */
+    sprintf(s, "Captured: %d (seconds)\n", cam_data->cam_count);
     fputs(s, mf);
 
     return;
@@ -859,6 +862,78 @@ void common_meta(FILE *mf, const gchar *obj_title, char *camera_nm, char *out_na
     fputs("File: ", mf);
     fputs(out_name, mf);
     fputs("\n", mf);
+
+    return;
+}
+
+
+/* Write the camera settings to the meta data file */
+
+void settings_meta(FILE *mf, CamData *cam_data)
+{
+    int init;
+    long ctl_val;
+    char ctl_key[10];
+    char s[100];
+    char *p;
+    struct v4l2_queryctrl *qctrl;
+    struct v4l2_list *tmp, *last;
+
+    fputs("\nVIDEO FORMAT\n", mf);
+
+    /* Video format */
+    get_session(CLRFMT, &p);
+    fputs("Video format: ", mf);
+    fputs(p, mf);
+    fputs("\n", mf);
+
+    /* Resolution */
+    get_session(RESOLUTION, &p);
+    fputs("Resolution: ", mf);
+    fputs(p, mf);
+    fputs("\n", mf);
+
+    /* Frame rate */
+    get_session(FPS, &p);
+    fputs("Frame rate: ", mf);
+    fputs(p, mf);
+    fputs("\n", mf);
+
+    /* Controls */
+    fputs("\nCONTROLS\n", mf);
+    init = TRUE;
+    last = NULL;
+
+    /* Standard */
+    while((qctrl = get_next_ctrl(init)) != NULL)
+    {
+	session_ctrl_val(qctrl, ctl_key, &ctl_val);
+	sprintf(s, "%s: %ld\n", qctrl->name, ctl_val);
+	fputs(s, mf);
+	init = FALSE;
+    }
+
+    /* Other */
+    while((tmp = get_next_oth_ctrl(last, cam_data)) != NULL)
+    {
+	qctrl = (struct v4l2_queryctrl *) tmp->v4l2_data;
+	session_ctrl_val(qctrl, ctl_key, &ctl_val);
+	sprintf(s, "%s: %ld\n", qctrl->name, ctl_val);
+	fputs(s, mf);
+	last = tmp;
+    }
+
+    /* Private */
+    tmp = cam_data->cam->pctl_head;
+
+    for(tmp = cam_data->cam->pctl_head; tmp != NULL; tmp = last)
+    {
+	qctrl = (struct v4l2_queryctrl *) tmp->v4l2_data;
+	session_ctrl_val(qctrl, ctl_key, &ctl_val);
+	sprintf(s, "%s: %ld\n", qctrl->name, ctl_val);
+	fputs(s, mf);
+	last = tmp->next;
+    }
 
     return;
 }

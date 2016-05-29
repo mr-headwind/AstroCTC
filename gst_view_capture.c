@@ -127,6 +127,7 @@ void * monitor_duration(void *);
 void * monitor_frames(void *);
 void * send_EOS(void *);
 int set_eos(MainUi *);
+void setup_meta(CamData *, char, int);
 void capture_cleanup();
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
@@ -144,6 +145,7 @@ extern GstPadProbeReturn OnPadProbe (GstPad *, GstPadProbeInfo *, gpointer);
 extern void OnPrepReticule (GstElement *, GstCaps *, gpointer);
 extern void OnDrawReticule (GstElement *, cairo_t *, guint64, guint64, gpointer);
 extern int check_dir(char *);
+extern int write_meta_file(char, CamData *, char *);
 
 
 /* Globals */
@@ -1462,7 +1464,6 @@ void * monitor_duration(void *arg)
 {
     MainUi *m_ui;
     CamData *cam_data;
-    int secs;
     const gchar *s;
     char *info_txt;
     char new_status[100];
@@ -1476,7 +1477,7 @@ void * monitor_duration(void *arg)
     strcpy(info_txt, (char *) s);
 
     /* Place a rolling counter of seconds on the info line each second */
-    for(secs = 1; secs <= m_ui->duration; secs++)
+    for(cam_data->cam_count = 1; cam_data->cam_count <= m_ui->duration; cam_data->cam_count++)
     {
     	sleep(1);
 
@@ -1487,12 +1488,12 @@ void * monitor_duration(void *arg)
 	/* If the pipeline has been paused, suspend counter, otherwise continue */
 	if (cam_data->state == GST_STATE_PAUSED)
 	{
-	    secs--;
-	    sprintf(new_status, "Capture paused at %d of %d seconds\n", secs, m_ui->duration);
+	    cam_data->cam_count--;
+	    sprintf(new_status, "Capture paused at %d of %d seconds\n", cam_data->cam_count, m_ui->duration);
 	}
 	else
 	{
-	    sprintf(new_status, "%s    (%d of %d)\n", info_txt, secs, m_ui->duration);
+	    sprintf(new_status, "%s    (%d of %d)\n", info_txt, cam_data->cam_count, m_ui->duration);
 	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
@@ -1502,18 +1503,7 @@ void * monitor_duration(void *arg)
 
     /* Write the image data 'metadata' file if required */
     if (TRUE == TRUE)
-    {
-	setup_meta(cam_data, 'v', 'd', m_ui->duration, secs);
-
-	sprintf(new_status, "Writing 'meta data' file for %s...\n", cam_data->u.v_capt.fn);
-	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-
-	cam_data->u.v_capt.capt_type = 'd';
-	cam_data->u.v_capt.amt_reqd = m_ui->duration;
-	cam_data->u.v_capt.cam_count = secs;
-
-    	write_meta_file('v', cam_data, NULL);
-    }
+	setup_meta(cam_data, 'd', m_ui->duration);
 
     /* Time is up - stop capture and resume normal playback */
     set_eos(m_ui);
@@ -1540,6 +1530,7 @@ void * monitor_frames(void *arg)
     s = gtk_label_get_text (GTK_LABEL (m_ui->status_info));
     info_txt = (char *) malloc(strlen(s) + 1);
     strcpy(info_txt, (char *) s);
+    cam_data->cam_count = 1;
 
     /* Place a rolling counter of frames on the info line each second */
     while (frames <= m_ui->no_of_frames)
@@ -1559,9 +1550,14 @@ void * monitor_frames(void *arg)
 	g_object_get(cam_data->gst_objs.vid_rate, "out", &frames, NULL);
 
 	if (cam_data->state == GST_STATE_PAUSED)
+	{
 	    sprintf(new_status, "Capture paused at %d of %d frames\n", (int) frames, m_ui->no_of_frames);
+	}
 	else
+	{
 	    sprintf(new_status, "%s    (%d of %d)\n", info_txt, (int) frames, m_ui->no_of_frames);
+	    cam_data->cam_count++;
+	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
     };
@@ -1573,16 +1569,7 @@ void * monitor_frames(void *arg)
 
     /* Write the image data 'metadata' file if required */
     if (TRUE == TRUE)
-    {
-	sprintf(new_status, "Writing 'meta data' file for %s...\n", cam_data->u.v_capt.fn);
-	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-
-	cam_data->u.v_capt.capt_type = 'f';
-	cam_data->u.v_capt.amt_reqd = m_ui->no_of_frames;
-	cam_data->u.v_capt.cam_count = (int) frames;
-
-    	write_meta_file('v', cam_data, NULL);
-    }
+	setup_meta(cam_data, 'f', m_ui->no_of_frames);
 
     pthread_exit(&ret_mon);
 }
@@ -1594,7 +1581,6 @@ void * monitor_unltd(void *arg)
 {
     MainUi *m_ui;
     CamData *cam_data;
-    int secs;
     const gchar *s;
     char *info_txt;
     char new_status[100];
@@ -1608,7 +1594,7 @@ void * monitor_unltd(void *arg)
     strcpy(info_txt, (char *) s);
 
     /* Place a rolling counter of seconds on the info line each second */
-    secs = 1;
+    cam_data->cam_count = 1;
 
     while(1)
     {
@@ -1621,17 +1607,21 @@ void * monitor_unltd(void *arg)
 	/* If the pipeline has been paused, suspend counter, otherwise continue */
 	if (cam_data->state == GST_STATE_PAUSED)
 	{
-	    secs--;
-	    sprintf(new_status, "Capture paused at %d seconds\n", secs);
+	    cam_data->cam_count--;
+	    sprintf(new_status, "Capture paused at %d seconds\n", cam_data->cam_count);
 	}
 	else
 	{
-	    sprintf(new_status, "%s    %d seconds\n", info_txt, secs);
+	    sprintf(new_status, "%s    %d seconds\n", info_txt, cam_data->cam_count);
 	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-    	secs++;
+    	cam_data->cam_count++;
     };
+
+    /* Write the image data 'metadata' file if required */
+    if (TRUE == TRUE)
+	setup_meta(cam_data, 'u', -1);
 
     free(info_txt);
     pthread_exit(&ret_mon);
@@ -1685,6 +1675,19 @@ void * send_EOS(void *arg)
     pthread_mutex_unlock (&capt_lock_mutex);
 
     pthread_exit(&ret_eos);
+}
+
+
+/* Destroy the mutex and condition (for completeness only here) */
+
+void setup_meta(CamData *cam_data, char capt_type, int amt_reqd)
+{
+    cam_data->u.v_capt.capt_type = capt_type;
+    cam_data->u.v_capt.amt_reqd = amt_reqd;
+
+    write_meta_file('v', cam_data, NULL);
+
+    return;
 }
 
 
