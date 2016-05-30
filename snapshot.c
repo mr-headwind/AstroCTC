@@ -1574,6 +1574,7 @@ void show_buffer(int i, snap_capt_t *capt, MainUi *m_ui, CamData *cam_data)
 {
     unsigned char *img;
     GtkAllocation allocation;
+    GdkPixbuf *tmp_pixbuf;
 
     //cam_data->cam_count = i;
     //if (snap_mutex_lock() != 0)
@@ -1607,9 +1608,12 @@ void show_buffer(int i, snap_capt_t *capt, MainUi *m_ui, CamData *cam_data)
 
     memcpy(capt->tmp_img_buf, img, capt->img_sz_bytes);
     gtk_widget_get_allocation (m_ui->video_window, &allocation);
-    cam_data->pixbuf = gdk_pixbuf_new_from_data (capt->tmp_img_buf, GDK_COLORSPACE_RGB, FALSE, 8, 
-					         allocation.width, allocation.height, allocation.width * 3,
-					         NULL, cam_data);
+    tmp_pixbuf = gdk_pixbuf_new_from_data (capt->tmp_img_buf, GDK_COLORSPACE_RGB, FALSE, 8, 
+					   capt->width, capt->height, capt->width * 3,
+					   NULL, cam_data);
+    cam_data->pixbuf = gdk_pixbuf_scale_simple (tmp_pixbuf, allocation.width, allocation.height, GDK_INTERP_BILINEAR); 
+    g_object_unref(tmp_pixbuf);
+
     snap_mutex_unlock();
     
     return;

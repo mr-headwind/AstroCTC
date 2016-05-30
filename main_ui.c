@@ -166,6 +166,7 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
     GtkWidget *cntl_frame_grid;  
     GtkWidget *menu_bar;  
     GtkWidget *toolbar, *presetbar;  
+    GtkWidget *scrollwin;
     PangoFontDescription *font_desc;
 
     /* Initial */
@@ -191,6 +192,14 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
     gtk_widget_set_halign (m_ui->video_window, GTK_ALIGN_CENTER);
     gtk_widget_set_valign (m_ui->video_window, GTK_ALIGN_CENTER);
 
+    scrollwin = gtk_scrolled_window_new(NULL, NULL);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW (scrollwin),
+				   GTK_POLICY_AUTOMATIC,
+				   GTK_POLICY_AUTOMATIC);
+    gtk_container_add (GTK_CONTAINER (scrollwin), m_ui->video_window);
+    gtk_scrolled_window_set_min_content_width (GTK_SCROLLED_WINDOW (scrollwin), STD_VWIDTH);
+    gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (scrollwin), STD_VHEIGHT);
+
     g_signal_connect (m_ui->video_window, "realize", G_CALLBACK (OnRealise), cam_data);
     g_signal_connect (m_ui->video_window, "draw", G_CALLBACK (OnExpose), m_ui);
 
@@ -206,7 +215,7 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
 
     /* Box to hold video window and control panel */
     vbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
-    gtk_box_pack_start (GTK_BOX (vbox), m_ui->video_window, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (vbox), scrollwin, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (vbox), cntl_frame_grid, FALSE, FALSE, 0);
 
     /* INFORMATION AREA AT BOTTOM OF WINDOW */
@@ -1674,14 +1683,11 @@ void update_main_ui_fps(MainUi *m_ui, CamData *cam_data)
 }
 
 
-/* Adjust the video window area - don't go larger than standard */
+/* Adjust the video window area */
 
 void update_main_ui_video(long width, long height, MainUi *m_ui)
 {
-    if (width <= STD_VWIDTH)
-	gtk_widget_set_size_request (m_ui->video_window, width, height);
-    else
-	gtk_widget_set_size_request (m_ui->video_window, STD_VWIDTH, STD_VHEIGHT);
+    gtk_widget_set_size_request (m_ui->video_window, width, height);
 
     return;
 }

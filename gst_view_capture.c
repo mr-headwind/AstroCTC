@@ -1477,7 +1477,7 @@ void * monitor_duration(void *arg)
     strcpy(info_txt, (char *) s);
 
     /* Place a rolling counter of seconds on the info line each second */
-    for(cam_data->cam_count = 1; cam_data->cam_count <= m_ui->duration; cam_data->cam_count++)
+    for(cam_data->cam_count = 0; cam_data->cam_count < m_ui->duration; cam_data->cam_count++)
     {
     	sleep(1);
 
@@ -1530,7 +1530,7 @@ void * monitor_frames(void *arg)
     s = gtk_label_get_text (GTK_LABEL (m_ui->status_info));
     info_txt = (char *) malloc(strlen(s) + 1);
     strcpy(info_txt, (char *) s);
-    cam_data->cam_count = 1;
+    cam_data->cam_count = 0;
 
     /* Place a rolling counter of frames on the info line each second */
     while (frames <= m_ui->no_of_frames)
