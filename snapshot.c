@@ -248,7 +248,11 @@ void snap_status(CamData *cam_data, MainUi *m_ui)
     	case SN_IN_PROGRESS:
 	    if (cam_data->cam_count < cam_data->cam_max)
 	    {
-		sprintf(s, "Snapshot %d of %d done (successful)", (cam_data->cam_count + 1), cam_data->cam_max);
+		if (cam_data->cam_count == 0)
+		    strcpy(s, "Snapshot pending");
+		else
+		    sprintf(s, "Snapshot %d of %d done (successful)", (cam_data->cam_count + 1), cam_data->cam_max);
+
 		gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
 	    }
 
@@ -805,15 +809,11 @@ int image_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
     memset(capt->tmp_img_buf, 0, capt->img_sz_bytes);
 
     /* Possible delay */
-printf("%s delay %d\n", debug_hdr, capt->delay);
     if (capt->delay > 0)
 	delay_msecs = msec_time() + INT64_C(capt->delay * 1000);
     else
     	delay_msecs = 0;
 
-printf("%s delay %d\n", debug_hdr, capt->delay);
-printf("%s delay 1 " "%" PRId64 "\n", debug_hdr, msec_time());
-printf("%s delay 2 " "%" PRId64 "\n", debug_hdr, delay_msecs);
     if (capt->delay_grp > 0)
 	grp_cnt = 0;
     else

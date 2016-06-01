@@ -1402,6 +1402,15 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	    /* Lock this section of code */
 	    pthread_mutex_lock(&capt_lock_mutex);
+/* Check if buffer limit has been reached */
+guint64 frames;
+if (G_IS_OBJECT(cam_data->gst_objs.vid_rate))
+{
+    g_object_get(cam_data->gst_objs.vid_rate, "out", &frames, NULL);
+    printf("%s EOS frames %d\n", debug_hdr, (int) frames);
+}
+else
+    printf("%s EOS frames 0\n", debug_hdr);
 
 	    /* Prepare to restart normal viewing */
 	    capt_prepare_view(cam_data, m_ui);
