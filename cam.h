@@ -141,8 +141,8 @@ typedef struct _VideoCapture
     codec_t *codec_data;
     const gchar *obj_title;
     int capt_opt;					// 1 = Seconds, 2 = Frames, 3 = Unlimited
-    long capt_req_dur;
-    long capt_act_dur;
+    long capt_reqd;
+    long capt_actl;
     long capt_frames;
     char cam_fcc[5];					// Preferences
     char *codec;					// Preferences

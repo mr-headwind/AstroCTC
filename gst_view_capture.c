@@ -127,7 +127,7 @@ void * monitor_duration(void *);
 void * monitor_frames(void *);
 void * send_EOS(void *);
 int set_eos(MainUi *);
-void setup_meta(CamData *, char, int);
+void setup_meta(CamData *);
 void capture_cleanup();
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
@@ -1402,15 +1402,9 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	    /* Lock this section of code */
 	    pthread_mutex_lock(&capt_lock_mutex);
-/* Check if buffer limit has been reached */
-guint64 frames;
-if (G_IS_OBJECT(cam_data->gst_objs.vid_rate))
-{
-    g_object_get(cam_data->gst_objs.vid_rate, "out", &frames, NULL);
-    printf("%s EOS frames %d\n", debug_hdr, (int) frames);
-}
-else
-    printf("%s EOS frames 0\n", debug_hdr);
+
+	    /* Check the meta data file */
+	    setup_meta(cam_data);
 
 	    /* Prepare to restart normal viewing */
 	    capt_prepare_view(cam_data, m_ui);
@@ -1476,8 +1470,8 @@ void * monitor_duration(void *arg)
     const gchar *s;
     char *info_txt;
     char new_status[100];
-    time_t current_time, start_time;
-    double diff_time;
+    time_t start_time;
+    double pause_secs;
     
     /* Base information text */
     ret_mon = TRUE;
@@ -1486,15 +1480,15 @@ void * monitor_duration(void *arg)
     s = gtk_label_get_text (GTK_LABEL (m_ui->status_info));
     info_txt = (char *) malloc(strlen(s) + 1);
     strcpy(info_txt, (char *) s);
-    cam_data->u.v_capt.capt_opt = 1;			// Capture by seconds
-    cam_data->u.v_capt.capt_req_dur = m_ui->duration;
-    cam_data->u.v_capt.capt_act_dur = 0;
+    cam_data->u.v_capt.capt_opt = 1;			// Capture number of seconds
+    cam_data->u.v_capt.capt_reqd = m_ui->duration;
 
-    /* Monitor the current time against the staet time */
+    /* Monitor the current time against the start time */
+    cam_data->u.v_capt.capt_actl = 0;
     start_time = time(NULL);
-    diff_time = 0;
+    pause_secs = 0;
     
-    while((int) diff_time <= m_ui->duration)
+    while(cam_data->u.v_capt.capt_actl <= m_ui->duration)
     {
     	usleep(500000);
 
@@ -1502,30 +1496,22 @@ void * monitor_duration(void *arg)
 	if (! G_IS_OBJECT(cam_data->gst_objs.tee_capt_pad))
 	    break;
 
-	/* If the pipeline has been paused, reset start time, otherwise continue */
+	/* If the pipeline has been paused, maintain how long for, otherwise continue */
 	if (cam_data->state == GST_STATE_PAUSED)
 	{
-	    pause_time = pause_time + (current_time - start_time) - cam_data->u.v_capt.capt_act_dur;
-	    start_time = time(NULL);
-	    sprintf(new_status, "Capture paused at %d of %d seconds\n", cam_data->cam_count, m_ui->duration);
+	    pause_secs = pause_secs + difftime(start_time, time(NULL)) - (double) cam_data->u.v_capt.capt_actl;
+	    sprintf(new_status, "Capture paused at %ld of %d seconds\n", cam_data->u.v_capt.capt_actl, m_ui->duration);
 	}
 	else
 	{
-	    sprintf(new_status, "%s    (%d of %d)\n", info_txt, cam_data->cam_count, m_ui->duration);
+	    sprintf(new_status, "%s    (%ld of %d)\n", info_txt, cam_data->u.v_capt.capt_actl, m_ui->duration);
 	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-
-	current_time = time(NULL);
-    	diff_time = difftime(current_time, start_time);
-	cam_data->u.v_capt.capt_act_dur = (long) diff_time;
+    	cam_data->u.v_capt.capt_actl = (long) (difftime(time(NULL), start_time) - pause_secs);
     };
 
     free(info_txt);
-
-    /* Write the image data 'metadata' file if required */
-    if (TRUE == TRUE)
-	setup_meta(cam_data, 'd', m_ui->duration);
 
     /* Time is up - stop capture and resume normal playback */
     set_eos(m_ui);
@@ -1533,7 +1519,7 @@ void * monitor_duration(void *arg)
     pthread_exit(&ret_mon);
 }
 
-gst_view_capture.c
+
 /* Monitor and control the specified capture frame count */
 
 void * monitor_frames(void *arg)
@@ -1552,13 +1538,13 @@ void * monitor_frames(void *arg)
     s = gtk_label_get_text (GTK_LABEL (m_ui->status_info));
     info_txt = (char *) malloc(strlen(s) + 1);
     strcpy(info_txt, (char *) s);
-    cam_data->cam_count = 0;
+    cam_data->u.v_capt.capt_opt = 2;			// Capture number of frames
+    cam_data->u.v_capt.capt_reqd = m_ui->no_of_frames;
 
-    /* Place a rolling counter of frames on the info line each second */
+    /* Display a rolling frame count - EOS will be set when the set limit has been reached */
     while (frames <= m_ui->no_of_frames)
     {
-    	sleep(1);
-	frames = 0;
+    	usleep(500000);
 
     	/* Test if capture has been ended manually */
 	if (! G_IS_OBJECT(cam_data->gst_objs.tee_capt_pad))
@@ -1570,16 +1556,12 @@ void * monitor_frames(void *arg)
 
 	/* If the pipeline has been paused, suspend counter, otherwise continue */
 	g_object_get(cam_data->gst_objs.vid_rate, "out", &frames, NULL);
+	cam_data->u.v_capt.capt_actl = (long) frames;
 
 	if (cam_data->state == GST_STATE_PAUSED)
-	{
 	    sprintf(new_status, "Capture paused at %d of %d frames\n", (int) frames, m_ui->no_of_frames);
-	}
 	else
-	{
 	    sprintf(new_status, "%s    (%d of %d)\n", info_txt, (int) frames, m_ui->no_of_frames);
-	    cam_data->cam_count++;
-	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
     };
@@ -1588,10 +1570,6 @@ void * monitor_frames(void *arg)
 
     /* Time is up - stop capture and resume normal playback */
     cam_data = g_object_get_data (G_OBJECT(m_ui->window), "cam_data");
-
-    /* Write the image data 'metadata' file if required */
-    if (TRUE == TRUE)
-	setup_meta(cam_data, 'f', m_ui->no_of_frames);
 
     pthread_exit(&ret_mon);
 }
@@ -1606,6 +1584,8 @@ void * monitor_unltd(void *arg)
     const gchar *s;
     char *info_txt;
     char new_status[100];
+    time_t start_time;
+    double pause_secs;
     
     /* Base information text */
     ret_mon = TRUE;
@@ -1614,36 +1594,36 @@ void * monitor_unltd(void *arg)
     s = gtk_label_get_text (GTK_LABEL (m_ui->status_info));
     info_txt = (char *) malloc(strlen(s) + 1);
     strcpy(info_txt, (char *) s);
+    cam_data->u.v_capt.capt_opt = 3;			// Capture unlimited seconds 
+    cam_data->u.v_capt.capt_reqd = -1;
 
-    /* Place a rolling counter of seconds on the info line each second */
-    cam_data->cam_count = 1;
-
+    /* Monitor the current time against the start time */
+    cam_data->u.v_capt.capt_actl = 0;
+    start_time = time(NULL);
+    pause_secs = 0;
+    
     while(1)
     {
-    	sleep(1);
+    	usleep(500000);
 
     	/* Test if capture has ended manually */
 	if (! G_IS_OBJECT(cam_data->gst_objs.tee_capt_pad))
 	    break;
 
-	/* If the pipeline has been paused, suspend counter, otherwise continue */
+	/* If the pipeline has been paused, maintain how long for, otherwise continue */
 	if (cam_data->state == GST_STATE_PAUSED)
 	{
-	    cam_data->cam_count--;
-	    sprintf(new_status, "Capture paused at %d seconds\n", cam_data->cam_count);
+	    pause_secs = pause_secs + difftime(start_time, time(NULL)) - (double) cam_data->u.v_capt.capt_actl;
+	    sprintf(new_status, "Capture paused at %ld seconds\n", cam_data->u.v_capt.capt_actl);
 	}
 	else
 	{
-	    sprintf(new_status, "%s    %d seconds\n", info_txt, cam_data->cam_count);
+	    sprintf(new_status, "%s    %ld seconds\n", info_txt, cam_data->u.v_capt.capt_actl);
 	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-    	cam_data->cam_count++;
+    	cam_data->u.v_capt.capt_actl = (long) (difftime(time(NULL), start_time) - pause_secs);
     };
-
-    /* Write the image data 'metadata' file if required */
-    if (TRUE == TRUE)
-	setup_meta(cam_data, 'u', -1);
 
     free(info_txt);
     pthread_exit(&ret_mon);
@@ -1700,12 +1680,27 @@ void * send_EOS(void *arg)
 }
 
 
-/* Destroy the mutex and condition (for completeness only here) */
+/* Create the meta data file if necessary */
 
-void setup_meta(CamData *cam_data, char capt_type, int amt_reqd)
+void setup_meta(CamData *cam_data)
 {
-    cam_data->u.v_capt.capt_type = capt_type;
-    cam_data->u.v_capt.amt_reqd = amt_reqd;
+    guint64 frames;
+
+    if (TRUE != TRUE)
+    	return;
+
+    /* Get the frame total if available (should be) */
+    frames = 0;
+
+    if (G_IS_OBJECT(cam_data->gst_objs.vid_rate))
+    {
+	g_object_get(cam_data->gst_objs.vid_rate, "out", &frames, NULL);
+	cam_data->u.v_capt.capt_frames = (long) frames;
+    }
+    else
+    {
+	cam_data->u.v_capt.capt_frames = 0;
+    }
 
     write_meta_file('v', cam_data, NULL);
 

@@ -757,26 +757,26 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
 
 void video_meta(FILE *mf, CamData *cam_data)
 {
+    char desc[100];
     char s[100];
-    char desc[30];
 
     /* Common details */
     common_meta(mf, cam_data->u.v_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.v_capt.out_name);
 
     /* Codec format */
-    sprintf(s, "Codec: %s\n", cam_data->u.v_capt.codec_data->short_desc);
-    fputs(s, mf);
+    sprintf(desc, "Codec: %s\n", cam_data->u.v_capt.codec_data->short_desc);
+    fputs(desc, mf);
 
     /* Video capture mode - duration, frames, umlimited */
-    switch (cam_data->u.v_capt.capt_type)
+    switch (cam_data->u.v_capt.capt_opt)
     {
-    	case 'd': 
+    	case 1: 
 	    strcpy(desc, "seconds");
 	    break;
-    	case 'f': 
+    	case 2: 
 	    strcpy(desc, "frames");
 	    break;
-    	case 'u':
+    	case 3:
 	    strcpy(desc, "unlimited - seconds");
 	    break;
     	default:
@@ -784,11 +784,35 @@ void video_meta(FILE *mf, CamData *cam_data)
 	    break;
     }
 
-    sprintf(s, "Video requested: %d (%s)\n", cam_data->u.v_capt.amt_reqd, desc);
+    sprintf(s, "Video requested: %ld (%s)\n", cam_data->u.v_capt.capt_reqd, desc);
     fputs(s, mf);
 
     /* Actual */
-    sprintf(s, "Captured: %d (seconds)\n", cam_data->cam_count);
+    if (cam_data->u.v_capt.capt_frames != 0)
+    	sprintf(desc, "  (%ld frames)", cam_data->u.v_capt.capt_frames);
+    else
+    	desc[0] = '\0';
+
+    switch (cam_data->u.v_capt.capt_opt)
+    {
+    	case 1: 
+	    sprintf(s, "Output: %ld %s\n", cam_data->u.v_capt.capt_actl, desc);
+	    break;
+    	case 2: 
+	    if (cam_data->u.v_capt.capt_frames == 0)
+		sprintf(s, "Output: %ld (may vary, approx. only)\n", cam_data->u.v_capt.capt_actl);
+	    else
+		sprintf(s, "Output: %ld\n", cam_data->u.v_capt.capt_frames);
+
+	    break;
+    	case 3:
+	    sprintf(s, "Output: %ld %s\n", cam_data->u.v_capt.capt_actl, desc);
+	    break;
+    	default:
+	    sprintf(s, "Output: %ld\n", cam_data->u.v_capt.capt_actl);
+	    break;
+    }
+
     fputs(s, mf);
 
     return;
