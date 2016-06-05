@@ -1476,6 +1476,8 @@ void * monitor_duration(void *arg)
     const gchar *s;
     char *info_txt;
     char new_status[100];
+    time_t current_time, start_time;
+    double diff_time;
     
     /* Base information text */
     ret_mon = TRUE;
@@ -1484,20 +1486,27 @@ void * monitor_duration(void *arg)
     s = gtk_label_get_text (GTK_LABEL (m_ui->status_info));
     info_txt = (char *) malloc(strlen(s) + 1);
     strcpy(info_txt, (char *) s);
+    cam_data->u.v_capt.capt_opt = 1;			// Capture by seconds
+    cam_data->u.v_capt.capt_req_dur = m_ui->duration;
+    cam_data->u.v_capt.capt_act_dur = 0;
 
-    /* Place a rolling counter of seconds on the info line each second */
-    for(cam_data->cam_count = 0; cam_data->cam_count < m_ui->duration; cam_data->cam_count++)
+    /* Monitor the current time against the staet time */
+    start_time = time(NULL);
+    diff_time = 0;
+    
+    while((int) diff_time <= m_ui->duration)
     {
-    	sleep(1);
+    	usleep(500000);
 
     	/* Test if capture has been ended manually */
 	if (! G_IS_OBJECT(cam_data->gst_objs.tee_capt_pad))
 	    break;
 
-	/* If the pipeline has been paused, suspend counter, otherwise continue */
+	/* If the pipeline has been paused, reset start time, otherwise continue */
 	if (cam_data->state == GST_STATE_PAUSED)
 	{
-	    cam_data->cam_count--;
+	    pause_time = pause_time + (current_time - start_time) - cam_data->u.v_capt.capt_act_dur;
+	    start_time = time(NULL);
 	    sprintf(new_status, "Capture paused at %d of %d seconds\n", cam_data->cam_count, m_ui->duration);
 	}
 	else
@@ -1506,6 +1515,10 @@ void * monitor_duration(void *arg)
 	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
+
+	current_time = time(NULL);
+    	diff_time = difftime(current_time, start_time);
+	cam_data->u.v_capt.capt_act_dur = (long) diff_time;
     };
 
     free(info_txt);
@@ -1520,7 +1533,7 @@ void * monitor_duration(void *arg)
     pthread_exit(&ret_mon);
 }
 
-
+gst_view_capture.c
 /* Monitor and control the specified capture frame count */
 
 void * monitor_frames(void *arg)
