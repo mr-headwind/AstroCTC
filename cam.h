@@ -144,6 +144,7 @@ typedef struct _VideoCapture
     long capt_reqd;
     long capt_actl;
     long capt_frames;
+    long capt_dropped;
     char cam_fcc[5];					// Preferences
     char *codec;					// Preferences
     char *locn;						// Preferences

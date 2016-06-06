@@ -789,7 +789,7 @@ void video_meta(FILE *mf, CamData *cam_data)
 
     /* Actual */
     if (cam_data->u.v_capt.capt_frames != 0)
-    	sprintf(desc, "  (%ld frames)", cam_data->u.v_capt.capt_frames);
+    	sprintf(desc, "  (%ld frames, %ld dropped)", cam_data->u.v_capt.capt_frames, cam_data->u.v_capt.capt_dropped);
     else
     	desc[0] = '\0';
 
@@ -802,7 +802,8 @@ void video_meta(FILE *mf, CamData *cam_data)
 	    if (cam_data->u.v_capt.capt_frames == 0)
 		sprintf(s, "Output: %ld (may vary, approx. only)\n", cam_data->u.v_capt.capt_actl);
 	    else
-		sprintf(s, "Output: %ld\n", cam_data->u.v_capt.capt_frames);
+		sprintf(s, "Output: %ld (%ld dropped)\n", cam_data->u.v_capt.capt_frames, 
+							  cam_data->u.v_capt.capt_dropped);
 
 	    break;
     	case 3:

@@ -1469,9 +1469,9 @@ void * monitor_duration(void *arg)
     CamData *cam_data;
     const gchar *s;
     char *info_txt;
-    char new_status[100];
+    char new_status[150];
     time_t start_time;
-    double pause_secs;
+    double tmp_pause, total_pause;
     
     /* Base information text */
     ret_mon = TRUE;
@@ -1486,7 +1486,8 @@ void * monitor_duration(void *arg)
     /* Monitor the current time against the start time */
     cam_data->u.v_capt.capt_actl = 0;
     start_time = time(NULL);
-    pause_secs = 0;
+    tmp_pause = 0;
+    total_pause = 0;
     
     while(cam_data->u.v_capt.capt_actl <= m_ui->duration)
     {
@@ -1499,16 +1500,22 @@ void * monitor_duration(void *arg)
 	/* If the pipeline has been paused, maintain how long for, otherwise continue */
 	if (cam_data->state == GST_STATE_PAUSED)
 	{
-	    pause_secs = pause_secs + difftime(start_time, time(NULL)) - (double) cam_data->u.v_capt.capt_actl;
+	    tmp_pause = difftime(time(NULL), start_time) - total_pause - (double) cam_data->u.v_capt.capt_actl;
 	    sprintf(new_status, "Capture paused at %ld of %d seconds\n", cam_data->u.v_capt.capt_actl, m_ui->duration);
 	}
 	else
 	{
+	    if (tmp_pause != 0)
+	    {
+	    	total_pause += tmp_pause;
+	    	tmp_pause = 0;
+	    }
+
+	    cam_data->u.v_capt.capt_actl = (long) (difftime(time(NULL), start_time) - total_pause);
 	    sprintf(new_status, "%s    (%ld of %d)\n", info_txt, cam_data->u.v_capt.capt_actl, m_ui->duration);
 	}
 
-    	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-    	cam_data->u.v_capt.capt_actl = (long) (difftime(time(NULL), start_time) - pause_secs);
+	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
     };
 
     free(info_txt);
@@ -1585,7 +1592,7 @@ void * monitor_unltd(void *arg)
     char *info_txt;
     char new_status[100];
     time_t start_time;
-    double pause_secs;
+    double tmp_pause, total_pause;
     
     /* Base information text */
     ret_mon = TRUE;
@@ -1600,7 +1607,8 @@ void * monitor_unltd(void *arg)
     /* Monitor the current time against the start time */
     cam_data->u.v_capt.capt_actl = 0;
     start_time = time(NULL);
-    pause_secs = 0;
+    tmp_pause = 0;
+    total_pause = 0;
     
     while(1)
     {
@@ -1613,16 +1621,22 @@ void * monitor_unltd(void *arg)
 	/* If the pipeline has been paused, maintain how long for, otherwise continue */
 	if (cam_data->state == GST_STATE_PAUSED)
 	{
-	    pause_secs = pause_secs + difftime(start_time, time(NULL)) - (double) cam_data->u.v_capt.capt_actl;
+	    tmp_pause = difftime(time(NULL), start_time) - total_pause - (double) cam_data->u.v_capt.capt_actl;
 	    sprintf(new_status, "Capture paused at %ld seconds\n", cam_data->u.v_capt.capt_actl);
 	}
 	else
 	{
+	    if (tmp_pause != 0)
+	    {
+	    	total_pause += tmp_pause;
+	    	tmp_pause = 0;
+	    }
+
+	    cam_data->u.v_capt.capt_actl = (long) (difftime(time(NULL), start_time) - total_pause);
 	    sprintf(new_status, "%s    %ld seconds\n", info_txt, cam_data->u.v_capt.capt_actl);
 	}
 
     	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);
-    	cam_data->u.v_capt.capt_actl = (long) (difftime(time(NULL), start_time) - pause_secs);
     };
 
     free(info_txt);
@@ -1684,7 +1698,7 @@ void * send_EOS(void *arg)
 
 void setup_meta(CamData *cam_data)
 {
-    guint64 frames;
+    guint64 frames, dropped;
 
     if (TRUE != TRUE)
     	return;
@@ -1696,10 +1710,14 @@ void setup_meta(CamData *cam_data)
     {
 	g_object_get(cam_data->gst_objs.vid_rate, "out", &frames, NULL);
 	cam_data->u.v_capt.capt_frames = (long) frames;
+
+	g_object_get(cam_data->gst_objs.vid_rate, "drop", &dropped, NULL);
+	cam_data->u.v_capt.capt_dropped = (long) dropped;
     }
     else
     {
 	cam_data->u.v_capt.capt_frames = 0;
+	cam_data->u.v_capt.capt_dropped = 0;
     }
 
     write_meta_file('v', cam_data, NULL);
