@@ -64,5 +64,6 @@ typedef struct _UserPrefData
 #define MPG2_FRAMERATE "MPEG2_FPS"
 #define AUDIO_MUTE "AUDIO"
 #define WARN_EMPTY_TITLE "NO_TITLE"
+#define META_DATA "META_DATA"
 
 #endif

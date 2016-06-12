@@ -799,6 +799,7 @@ int image_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
     int i, r, grp_cnt;
     char tm_stmp[50];
     int64_t cur_msecs, delay_msecs;
+    char *p;
 
     /* Allow for a sequence of image captures */
     cam = cam_data->cam;
@@ -930,7 +931,9 @@ int image_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
     }
 
     /* Write the image data 'metadata' file if required */
-    if (TRUE == TRUE)
+    get_user_pref(META_DATA, &p);
+
+    if (*p != '1')
     	write_meta_file('s', cam_data, tm_stmp);
 
     /* Clean up */

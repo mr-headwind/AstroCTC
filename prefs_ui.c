@@ -72,6 +72,7 @@ typedef struct _prefs_ui
     GtkWidget *capt_dir;
     GtkWidget *audio_hbox;
     GtkWidget *title_hbox;
+    GtkWidget *meta_hbox;
     int close_handler;
     int fn_err, qual_alloc_width;
     GList *hide_list;
@@ -89,8 +90,9 @@ void image_type(PrefUi *, PangoFontDescription **, PangoFontDescription **);
 void video_capture(PrefUi *, PangoFontDescription **, PangoFontDescription **);
 void fn_template(PrefUi *, PangoFontDescription **, PangoFontDescription **);
 void file_location(PrefUi *, PangoFontDescription **, PangoFontDescription **);
-void audio_mute(PrefUi *, PangoFontDescription **, PangoFontDescription **);
-void empty_title(PrefUi *, PangoFontDescription **, PangoFontDescription **);
+void audio_mute(PrefUi *, PangoFontDescription **);
+void empty_title(PrefUi *, PangoFontDescription **);
+void meta_data_file(PrefUi *, PangoFontDescription **);
 void pref_label_1(char *, PangoFontDescription **, GtkWidget **, GtkAlign, const GdkRGBA *, int);
 void pref_label_2(char *, PangoFontDescription **, GtkWidget **, GtkAlign, int, int);
 void pref_label_3(char *, PangoFontDescription **, GtkWidget *, int *);
@@ -116,6 +118,7 @@ void init_fn_prefs();
 void init_profile_prefs();
 void init_audio_prefs();
 void init_title_prefs();
+void init_metadata_prefs();
 void set_user_prefs(PrefUi *);
 int get_user_pref(char *, char **);
 void get_user_pref_idx(int, char *, char **);
@@ -313,11 +316,11 @@ void pref_control(PrefUi *p_ui)
     /* Capture and snapshot location */
     file_location(p_ui, &pf_body, &pf_hdr);
 
-    /* Audio mute */
-    audio_mute(p_ui, &pf_body, &pf_hdr);
-
-    /* Audio mute */
-    empty_title(p_ui, &pf_body, &pf_hdr);
+    /* General Capture and Snapshot options - Audio mute, Empty Title, Meta Data */
+    pref_label_1("General Capture & Snapshot", &(pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 10);
+    audio_mute(p_ui, &pf_body);
+    empty_title(p_ui, &pf_body);
+    meta_data_file(p_ui, &pf_body);
 
     /* Free font */
     pango_font_description_free (pf_body);
@@ -628,15 +631,10 @@ void file_location(PrefUi *p_ui,
 
 /* Audio mute - True means silence */
 
-void audio_mute(PrefUi *p_ui,
-		PangoFontDescription **pf_body,
-		PangoFontDescription **pf_hdr)
+void audio_mute(PrefUi *p_ui, PangoFontDescription **pf_body)
 {  
     int i;
     char *p;
-
-    /* Heading */
-    pref_label_1("Audio", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 10);
 
     /* Put in horizontal box */
     p_ui->audio_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
@@ -663,22 +661,16 @@ void audio_mute(PrefUi *p_ui,
 
 /* Empty Title warning */
 
-void empty_title(PrefUi *p_ui,
-		 PangoFontDescription **pf_body,
-		 PangoFontDescription **pf_hdr)
+void empty_title(PrefUi *p_ui, PangoFontDescription **pf_body)
 {  
     int i;
     char *p;
-
-    /* Heading */
-    pref_label_1("Empty Title Warning for Capture and Snapshot", &(*pf_hdr), &(p_ui->pref_cntr), 
-    		 GTK_ALIGN_START, &DARK_BLUE, 10);
 
     /* Put in horizontal box */
     p_ui->title_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Display a warning message", &(*pf_body), &p_ui->title_hbox, GTK_ALIGN_END, 20, 0);
+    pref_label_2("Display Empty Title warning message", &(*pf_body), &p_ui->title_hbox, GTK_ALIGN_END, 20, 0);
 
     /* Set up current preference */
     get_user_pref(WARN_EMPTY_TITLE, &p);
@@ -692,6 +684,34 @@ void empty_title(PrefUi *p_ui,
     pref_boolean("Off", "On", i, &(*pf_body), &p_ui->title_hbox);
     gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->title_hbox, FALSE, FALSE, 0);
 
+    return;
+}
+
+
+/* Write Meta Data file for capture and snapshot */
+
+void meta_data_file(PrefUi *p_ui, PangoFontDescription **pf_body)
+{  
+    int i;
+    char *p;
+
+    /* Put in horizontal box */
+    p_ui->meta_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
+
+    /* Label */
+    pref_label_2("Write a Meta Data file", &(*pf_body), &p_ui->meta_hbox, GTK_ALIGN_END, 20, 0);
+
+    /* Set up current preference */
+    get_user_pref(META_DATA, &p);
+
+    i = TRUE;
+
+    if (p != NULL)
+    	if (atoi(p) == 0)
+	    i = FALSE;
+
+    pref_boolean("Off", "On", i, &(*pf_body), &p_ui->meta_hbox);
+    gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->meta_hbox, FALSE, FALSE, 0);
 
     return;
 }
@@ -1306,6 +1326,12 @@ void set_default_prefs()
     if (p == NULL)
 	init_title_prefs();
 
+    /* Meta Data */
+    get_user_pref(META_DATA, &p);
+
+    if (p == NULL)
+	init_metadata_prefs();
+
     /* Initial codec property defaults */
     init_codec_prop_prefs();
 
@@ -1406,6 +1432,16 @@ void init_title_prefs()
 }
 
 
+/* Default Meta Data action - on */
+
+void init_metadata_prefs()
+{
+    add_user_pref(META_DATA, "1");
+
+    return;
+}
+
+
 /* Update all user preferences */
 
 void set_user_prefs(PrefUi *p_ui)
@@ -1481,6 +1517,12 @@ void set_user_prefs(PrefUi *p_ui)
     s[0] = cc;
     s[1] = '\0';
     set_user_pref(WARN_EMPTY_TITLE, s);
+
+    /* Meta Data */
+    cc = find_active_by_parent(p_ui->meta_hbox, 'b');
+    s[0] = cc;
+    s[1] = '\0';
+    set_user_pref(META_DATA, s);
 
     return;
 }
@@ -1815,6 +1857,14 @@ int pref_save_reqd(PrefUi *p_ui)
     s[1] = '\0';
     
     if (pref_changed(WARN_EMPTY_TITLE, s))
+    	return TRUE;
+
+    /* Meta Data */
+    cc = find_active_by_parent(p_ui->meta_hbox, 'b');
+    s[0] = cc;
+    s[1] = '\0';
+    
+    if (pref_changed(META_DATA, s))
     	return TRUE;
 
     return FALSE;

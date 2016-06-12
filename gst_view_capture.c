@@ -1411,6 +1411,7 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	    /* Release the mutex and set capture as done */
 	    m_ui->thread_init = FALSE;
+	    cam_data->mode = CAM_MODE_NONE;
 	    pthread_cond_signal(&capt_eos_cv);
 	    pthread_mutex_unlock(&capt_lock_mutex);
 
@@ -1489,7 +1490,7 @@ void * monitor_duration(void *arg)
     tmp_pause = 0;
     total_pause = 0;
     
-    while(cam_data->u.v_capt.capt_actl <= m_ui->duration)
+    while(cam_data->u.v_capt.capt_actl < m_ui->duration)
     {
     	usleep(500000);
 
@@ -1699,8 +1700,11 @@ void * send_EOS(void *arg)
 void setup_meta(CamData *cam_data)
 {
     guint64 frames, dropped;
+    char *p;
 
-    if (TRUE != TRUE)
+    get_user_pref(META_DATA, &p);
+
+    if (*p != '1')
     	return;
 
     /* Get the frame total if available (should be) */
