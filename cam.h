@@ -119,6 +119,8 @@ typedef struct _ImgCapture
     const gchar *obj_title;
     char out_name[256];
     char fn[100];
+    long snap_max;
+    long snap_count;
     char *codec;					// Preferences
     unsigned int jpeg_quality;				// Preferences
     int delay;						// Preferences
@@ -189,8 +191,6 @@ typedef struct _CamData
     struct camlistNode *camlist;	/* Pointer to head of camera list */
     GdkPixbuf *pixbuf;			/* Snapshot usage */
     int status;				/* General purpose */
-    int cam_count;			/* General purpose */
-    int cam_max;			/* General purpose */
     union
     {
 	video_capt_t v_capt;		/* Video capture details */

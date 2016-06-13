@@ -719,7 +719,7 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
     }
     else if (capt_type == 's')
     {
-	if (cam_data->cam_max == 1)
+	if (cam_data->u.s_capt.snap_max == 1)
 	{
 	    sprintf(buf, "%s/%s.metadata", cam_data->u.s_capt.locn, cam_data->u.s_capt.fn);
 	}
@@ -840,7 +840,7 @@ void snap_meta(FILE *mf, CamData *cam_data)
     fputs(s, mf);
 
     /* Frames requested */
-    sprintf(s, "Frames Requested: %d\n", cam_data->cam_max);
+    sprintf(s, "Frames Requested: %ld\n", cam_data->u.s_capt.snap_max);
     fputs(s, mf);
 
     /* Options - Delay, Frame Group Delay every n frames */
@@ -859,7 +859,7 @@ void snap_meta(FILE *mf, CamData *cam_data)
     }
 
     /* Frames delivered */
-    sprintf(s, "Frames delivered: %d\n", cam_data->cam_count);
+    sprintf(s, "Frames delivered: %ld\n", cam_data->u.s_capt.snap_count);
     fputs(s, mf);
 
     return;

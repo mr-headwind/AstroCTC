@@ -120,8 +120,6 @@
  ---------------------
     . Stepwise operations for cameras that can handle them are not supported. (low prioity)
     . Sound is only an option if the camera (and driver) supports it. Could use sound card. (low priority)
-    . For video and snapshot capture, also create a 'meta' text file providing all the camera 
-      settings in place. Make this optional for video and snapshot.
     . Add facility to note/record telescope, conditions and location to above meta file
     . On Capture or Snapshot, check if title is blank and confirm Ok with a dialog (maybe also an option setting)
     . FITS support is very basic. Add ascii / binary tables with camera and other settings info. eg Title

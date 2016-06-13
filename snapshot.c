@@ -169,8 +169,8 @@ int snap_control(CamData *cam_data, MainUi *m_ui, int snap_count, int delay, int
         return FALSE;
 
     /* Start snapshot capture */
-    cam_data->cam_count = 0;
-    cam_data->cam_max = snap_count;
+    cam_data->u.s_capt.snap_count = 0;
+    cam_data->u.s_capt.snap_max = snap_count;
 
     snap_args = malloc(sizeof(snap_args_t));
     snap_args->cam_data = cam_data;
@@ -246,12 +246,13 @@ void snap_status(CamData *cam_data, MainUi *m_ui)
     switch (cam_data->status)
     {
     	case SN_IN_PROGRESS:
-	    if (cam_data->cam_count < cam_data->cam_max)
+	    if (cam_data->u.s_capt.snap_count < cam_data->u.s_capt.snap_max)
 	    {
-		if (cam_data->cam_count == 0)
+		if (cam_data->u.s_capt.snap_count == 0)
 		    strcpy(s, "Snapshot pending");
 		else
-		    sprintf(s, "Snapshot %d of %d done (successful)", (cam_data->cam_count + 1), cam_data->cam_max);
+		    sprintf(s, "Snapshot %ld of %ld done (successful)", 
+		    			(cam_data->u.s_capt.snap_count + 1), cam_data->u.s_capt.snap_max);
 
 		gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
 	    }
@@ -339,9 +340,9 @@ int snap_init(snap_args_t *args, CamData *cam_data, MainUi *m_ui)
 
     /* Set up */
     if (args->snap_count <= 0)
-    	cam_data->cam_max = 1;
+    	cam_data->u.s_capt.snap_max = 1;
     else
-	cam_data->cam_max = args->snap_count;
+	cam_data->u.s_capt.snap_max = args->snap_count;
 
     cam = cam_data->cam;
     fmt = &(capt->fmt);
@@ -818,11 +819,11 @@ int image_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
     if (capt->delay_grp > 0)
 	grp_cnt = 0;
     else
-	grp_cnt = (cam_data->cam_max + 1) * -1;
+	grp_cnt = (cam_data->u.s_capt.snap_max + 1) * -1;
 
     i = 0;
 
-    while(i < cam_data->cam_max)
+    while(i < cam_data->u.s_capt.snap_max)
     {
 	/* Grab a snapshot */
 	do
@@ -933,7 +934,7 @@ int image_capture(snap_capt_t *capt, CamData *cam_data, MainUi *m_ui)
     /* Write the image data 'metadata' file if required */
     get_user_pref(META_DATA, &p);
 
-    if (*p != '1')
+    if (*p == '1')
     	write_meta_file('s', cam_data, tm_stmp);
 
     /* Clean up */
@@ -1585,7 +1586,7 @@ void show_buffer(int i, snap_capt_t *capt, MainUi *m_ui, CamData *cam_data)
     if (snap_mutex_trylock() != 0)	
     	return;
 
-    cam_data->cam_count = i;
+    cam_data->u.s_capt.snap_count = i;
 
     if (capt->io_method == 'M')
     {
@@ -1654,7 +1655,7 @@ int check_cancel(int *i, CamData *cam_data, MainUi *m_ui)
     if (cancel_indi == FALSE)
     	return FALSE;
 
-    *i = cam_data->cam_max;
+    *i = cam_data->u.s_capt.snap_max;
 
     return TRUE;
 }
