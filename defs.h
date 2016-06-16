@@ -82,7 +82,6 @@ extern const GdkRGBA NIGHT;
 #define USER_PREFS "user_preferences"
 #define PRF_NONE "None"
 #define MPEG2 "MPG2"
-#define VERSION "0.24"
 #define DEV_DIR "/dev"
 #define V4L_SYS_CLASS "/sys/class/video4linux"
 //#define PACKAGE_DATA_DIR "/usr/share"	// Not sure of PACKAGE_DATA_DIR name, also -D on compile may be better

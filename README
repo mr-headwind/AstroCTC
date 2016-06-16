@@ -38,18 +38,23 @@
 
     	https://github.com/mr-headwind/AstroCTC
 
-    Download the code package to a development directory and unpack
+    Download the code package to a suitable development directory (eg. $HOME/AstroCTC).
+    You can either download all the individual application files or an archive from the Releases
+    directory. If you elect to grab individual files be warned that these may be in a work-in-progress
+    state and be unstable.
     	
     The GTK+ 3.0 and Gstreamer 1.0 libraries need to be installed and additionally the following
-    may be required:
+    packages may be required (Note: this is how for Ubuntu):
     	sudo apt-get install libv4l-dev
     	sudo apt-get install libjpeg-dev
     	sudo apt-get install libpng-dev
     	See below for FITS details
 
     The icon image file 'astroctc.png' will need to be located appropriately:
+    	cd $HOME
     	mkdir -P .local/share/icons/hicolor/48x48/apps
     	mkdir -P .local/share/pixmaps/AstroCTC
+    	cd AstroCTC (or whatever directory was chosen for download)
     	ln -s astroctc.png .local/share/icons/hicolor/48x48/apps/astroctc.png
     	ln -s astroctc.png .local/share/pixmaps/AstroCTC/astroctc.png
 
@@ -59,10 +64,17 @@
 
     	http://heasarc.gsfc.nasa.gov/docs/software/fitsio
 
+    You can also easily get the latest archive as follows:
+    	
+    	cd $HOME/Downloads
+    	wget heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/cfitsio_latest.tar.gz
+
     Briefly, download the code package and do the following:
     	cd /usr/local/src
-	mv ~/Downloads/cfitsio????.tar.gz .		(where ???? is the version, currently 3370)
-	tar zxvf cfitsio????.tar.gz
+	mv ~/Downloads/cfitsio????.tar.gz .		(where ???? is the version, eg. 3390)
+	   OR 
+	mv ~/Downloads/cfitsio_latest.tar.gz .
+	tar zxvf cfitsio????.tar.gz 	(or cfitsio_latest.tar.gz)
 	./configure --prefix=/usr
 	make
 	make install

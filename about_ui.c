@@ -42,6 +42,7 @@
 #include <gtk/gtk.h>  
 #include <stdio.h>
 #include <defs.h>
+#include <version.h>
 
 
 /* Types */
