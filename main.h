@@ -45,6 +45,7 @@ typedef struct _main_ui
     /* Main view widgets */
     GtkWidget *window;
     GtkWidget *video_window;  
+    GtkWidget *scrollwin;  
     GtkWidget *status_info;  
 
     /* Menu items */

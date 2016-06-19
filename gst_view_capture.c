@@ -129,6 +129,7 @@ void * send_EOS(void *);
 int set_eos(MainUi *);
 void setup_meta(CamData *);
 void capture_cleanup();
+void check_video_scroll(char *, char *, MainUi *);
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 void debug_state(GstElement *, char *,  CamData *);
@@ -339,7 +340,7 @@ int start_view_pipeline(CamData *cam_data, MainUi *m_ui, int init)
 	gst_object_unref (bus);
     }
 
-    /* Inforamtion status line */
+    /* Information status line */
     sprintf(s, "Camera %s (%s) playing", cam_data->current_cam, cam_data->current_dev);
     gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
 
@@ -1329,6 +1330,9 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	case GST_MESSAGE_STATE_CHANGED:
 	case GST_MESSAGE_ASYNC_DONE:
+	    /* Check need to set vidow window scrollbars */
+	    check_video_scroll(GST_MESSAGE_SRC_NAME(msg), "v_sink", m_ui);
+
 	    /* Action for capture only */
 	    if (cam_data->mode != CAM_MODE_CAPT)
 	    	break;
@@ -1852,6 +1856,28 @@ int remove_reticule(MainUi *m_ui, CamData *cam_data)
     cam_data->gst_objs.cairo_convert = NULL;
 
     return TRUE;
+}
+
+
+/* Check need to set vidow window scrollbars */
+
+void check_video_scroll(char *nm, char *match_nm, MainUi *m_ui)
+{
+    GtkAdjustment *h_adj, *v_adj;
+
+    h_adj = gtk_scrolled_window_get_hadjustment (GTK_SCROLLED_WINDOW (m_ui->scrollwin));
+    v_adj = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW (m_ui->scrollwin));
+
+    printf("%s height  lower %G, upper %G, page %G\n", debug_hdr, 
+    							gtk_adjustment_get_lower(h_adj),
+    							gtk_adjustment_get_upper(h_adj),
+    							gtk_adjustment_get_page_size(h_adj));
+    printf("%s vertical  lower %G, upper %G, page %G\n", debug_hdr, 
+    							gtk_adjustment_get_lower(v_adj),
+    							gtk_adjustment_get_upper(v_adj),
+    							gtk_adjustment_get_page_size(v_adj));
+
+    return;
 }
 
 

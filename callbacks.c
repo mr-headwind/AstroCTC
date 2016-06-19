@@ -836,7 +836,7 @@ void OnSetRes(GtkWidget *cbox, gpointer user_data)
         return;
     
     // Reset the format and restart the pipeline
-    // May need to adjust video window area accordingly - don't go larger than standard
+    // May need to adjust video window area accordingly
     // Need to build a new fps list
     if (set_cam_fmt(cam_data->cam, &rfmt, m_ui->window) == TRUE)
     {
