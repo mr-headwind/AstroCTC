@@ -204,7 +204,7 @@ int gst_view_elements(CamData *cam_data, MainUi *m_ui)
     cam_data->gst_objs.v4l2_src = gst_element_factory_make ("v4l2src", "v4l2");
     cam_data->gst_objs.v_convert = gst_element_factory_make ("videoconvert", "v_convert");
     cam_data->gst_objs.v_sink = gst_element_factory_make ("autovideosink", "v_sink");
-    cam_data->gst_objs.v_filter = gst_element_factory_make ("capsfilter", "v_filter");
+    cam_data->gst_objs.v_filter = gst_elh_adjement_factory_make ("capsfilter", "v_filter");
     cam_data->gst_objs.vid_rate = gst_element_factory_make ("videorate", "vid_rate");
     cam_data->gst_objs.q1 = gst_element_factory_make ("queue", "block");
     */
@@ -1859,23 +1859,53 @@ int remove_reticule(MainUi *m_ui, CamData *cam_data)
 }
 
 
-/* Check need to set vidow window scrollbars */
+/* Check need to adjust video window scrollbars when resolution changes */
 
 void check_video_scroll(char *nm, char *match_nm, MainUi *m_ui)
 {
     GtkAdjustment *h_adj, *v_adj;
+    gdouble h_pgsz, v_pgsz, h_val, v_val, h_lwr, h_upr, v_upr;
+    gdouble new_h_val, new_v_val;
+    long width, height;
+    char *p;
 
+    /* Resolution only appears to changes when the message source is 'v_sink' */
+    if (strcmp(nm, match_nm) != 0)
+    	return;
+
+    /* Get Adjustment and rsolution details */
     h_adj = gtk_scrolled_window_get_hadjustment (GTK_SCROLLED_WINDOW (m_ui->scrollwin));
     v_adj = gtk_scrolled_window_get_vadjustment (GTK_SCROLLED_WINDOW (m_ui->scrollwin));
 
-    printf("%s height  lower %G, upper %G, page %G\n", debug_hdr, 
-    							gtk_adjustment_get_lower(h_adj),
-    							gtk_adjustment_get_upper(h_adj),
-    							gtk_adjustment_get_page_size(h_adj));
-    printf("%s vertical  lower %G, upper %G, page %G\n", debug_hdr, 
-    							gtk_adjustment_get_lower(v_adj),
-    							gtk_adjustment_get_upper(v_adj),
-    							gtk_adjustment_get_page_size(v_adj));
+    h_upr = gtk_adjustment_get_upper(h_adj);
+    v_upr = gtk_adjustment_get_upper(v_adj);
+    get_session(RESOLUTION, &p);
+    res_to_long(p, &width, &height);
+
+    /* Ignore if its not at the latest selecect resolution */
+    if ((width != (long) h_upr) || (height != (long) v_upr))
+    	return;
+
+    /* Check if scrollbars have come into play, if not, ignore */
+    h_lwr = gtk_adjustment_get_lower(h_adj);
+    h_pgsz = gtk_adjustment_get_page_size(h_adj);
+    v_pgsz = gtk_adjustment_get_page_size(v_adj);
+
+    if ((h_upr - h_lwr) <= h_pgsz)
+    	return;
+
+    /* Only adjust if nesessary */
+    h_val = gtk_adjustment_get_value(h_adj);
+    v_val = gtk_adjustment_get_value(v_adj);
+
+    new_h_val = (h_upr - h_pgsz) / 2;
+    new_v_val = (v_upr - v_pgsz) / 2;
+
+    if (h_val != new_h_val)
+	gtk_adjustment_set_value(h_adj, (h_upr - h_pgsz) / 2);
+
+    if (v_val != new_v_val)
+	gtk_adjustment_set_value(v_adj, (v_upr - v_pgsz) / 2);
 
     return;
 }
