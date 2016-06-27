@@ -1,0 +1,12 @@
+This directory contains archives at various stages of development. The contents
+of each will vary and there is fairly rudimentary comment about each as part of the 
+name where I thought it necessary.
+
+More detail as follows:-
+
+astroctc_0.1_pre_capture.tar.gz		Very basic application. View only.
+
+astroctc_0.15_basic_capture.tar.gz	Viewing and some simple video and image capture.
+
+astroctc_0.23_snapshot_unstable.tar.gz	Much further advanced capture and features, but
+					some changes have made snaphot unstable.
