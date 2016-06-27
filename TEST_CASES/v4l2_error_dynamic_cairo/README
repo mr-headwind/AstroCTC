@@ -1,0 +1,24 @@
+This problem causes the video to freeze (need to restart once it happens) with the error message:-
+
+libv4l2: error turning on stream: Invalid argument
+
+sometimes showing on the console. Things will often work for a while before freezing.
+Problem can occur on either the 'switch on' action to start drawing over the video
+or the 'switch off' action, but 'switch off' never shows the error message, just freezes.
+
+Problem did not occur using the laptop's built-in camera, but did occur using 2 other external USB cameras.
+NB. Remember the code defaults the device to '/dev/video0' so may need to change.
+Problem went away when the video sink was changed from 'xvimagesink' to 'ximagesink'.
+Unsure whether this is specific to dynamically adding a Cairo overlay and just dynamically
+adding in general.
+
+Have tried enabling (following a forum suggestion) some debug thus:
+
+echo 0xff > /sys/module/videobuf2_core/parameters/debug
+
+to check for kernel issues and set GST_DEBUG=1 but these did not look to show anything significant AFAICS.
+Problem appears to occur directly after the 'return GST_PAD_PROBE_REMOVE' in 'pad_probe_cb'
+(see attached program).
+
+Of course, my method for dynamically adding / removing may be flawed although I think I've
+kept the basics from various samples I've looked at.

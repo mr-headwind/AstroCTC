@@ -1,0 +1,3 @@
+This problem seemed to only occur on my desktop and possibly because this system was using vaapi. Occurred when
+pipeline was stopped, wiped and then recreated and run again. Problem went away when the video sink was changed
+from 'autovideosink' to 'xvimagesink' or 'ximagesink'.

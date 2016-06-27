@@ -1,0 +1,418 @@
+/*
+Makefile
+--------
+
+CC=cc
+CFLAGS=-I. `pkg-config --cflags gstreamer-1.0 gstreamer-video-1.0 cairo`
+DEPS=
+OBJ= test_dyn.o
+LIBS= `pkg-config --libs gstreamer-1.0 gstreamer-video-1.0 cairo`
+
+%.o: %.c $(DEPS)
+        $(CC) -c -o $@ $< $(CFLAGS)
+
+test_dyn: $(OBJ)
+        $(CC) -o $@ $^ $(LIBS)
+
+clean:
+        rm -f $(OBJ)
+*/
+
+
+#include <gst/gst.h>
+#include <stdio.h>
+#include <cairo/cairo.h>
+#include <cairo/cairo-gobject.h>
+#include <gst/video/video.h>
+#include <glib.h>
+#include <errno.h>
+#include <string.h>
+
+/*
+    The pipeline starts as below:-
+
+  | Camera  |  | Video |  | Caps   |  | Queue |  | Video   |  | Video |
+  | v4l2src |->| Rate  |->| Filter |->| (blk) |->| convert |->| sink  |-> Screen
+
+    but is dynamically changed to:-
+
+  | Camera  |  | Video |  | Caps   |  | Queue |  | Video   |  | Cairo   |  | Video   | | Video |
+  | v4l2src |->| Rate  |->| Filter |->| (blk) |->| convert |->| overlay |->| convert | | sink  |-> Screen
+
+    and keeps rolling around changing and changing back every 5 seconds until killed.
+
+*/
+
+/* Application structures for variables */
+
+typedef struct
+{
+    gboolean valid;
+    GstVideoInfo vinfo;
+    int draw_handler;
+    int info_handler;
+} CairoOverlayState;
+
+typedef struct
+{
+    GstElement *pipeline;
+    GstElement *v_convert, *v_sink;
+    GstElement *cairo_overlay, *cairo_convert;
+    GstPad *blockpad;
+    CairoOverlayState *overlay_state;
+    int ret_on_off_flg;
+    gulong id;
+    GMainLoop *loop;
+} AppData;
+
+
+
+/* Store the information from the caps that we are interested in */
+
+void prep_ret_cb (GstElement *overlay, GstCaps *caps, gpointer user_data)
+{
+    CairoOverlayState *state;
+    AppData *appdata;
+
+    appdata = (AppData *) user_data;
+    state = appdata->overlay_state;
+    state->valid = gst_video_info_from_caps (&state->vinfo, caps);
+}
+
+
+/* Draw the overlay - a reticule */ 
+
+void draw_ret_cb (GstElement *overlay, cairo_t *cr, guint64 timestamp, guint64 duration, gpointer user_data)
+{
+    AppData *appdata;
+    CairoOverlayState *state;
+    int width, height;
+    double xc, yc;
+
+    appdata = (AppData *) user_data;
+    state = appdata->overlay_state;
+
+    if (!state->valid)
+	return;
+
+    /* Draw the reticule */
+    width = GST_VIDEO_INFO_WIDTH (&state->vinfo);
+    height = GST_VIDEO_INFO_HEIGHT (&state->vinfo);
+
+    cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+    cairo_set_source_rgba (cr, 1, 0.2, 0.2, 0.6);
+    cairo_set_line_width (cr, 2);
+
+    xc = width / 2;
+    yc = height / 2;
+
+    cairo_move_to (cr, xc, 0);
+    cairo_line_to (cr, xc, height);
+    cairo_move_to (cr, 0, yc);
+    cairo_line_to (cr, width, yc);
+    cairo_arc (cr, xc, yc, 20, 0.0, 6.28); 	// NB. 6.28 = 360.0 * (3.14/180.0)
+    cairo_arc (cr, xc, yc, 60, 0.0, 6.28); 	// NB. 6.28 = 360.0 * (3.14/180.0)
+    cairo_stroke (cr);
+
+    return;
+}
+
+
+/* Prepare the pipeline for a reticule */
+
+int prepare_reticule(AppData *appdata)
+{
+    CairoOverlayState *state;
+    GstState curr_state, pend_state;
+    GstStateChangeReturn ret;
+
+    printf("Switching on...\n"); fflush(stdout);
+
+    /* Unlink from v_sink */
+    gst_element_unlink (appdata->v_convert, appdata->v_sink);
+
+    /* Create reticule elements (cairo) */
+    appdata->cairo_overlay = gst_element_factory_make ("cairooverlay", "reticule");
+    appdata->cairo_convert = gst_element_factory_make ("videoconvert", "r_convert");
+
+    if (! (appdata->cairo_overlay && appdata->cairo_convert))
+    {
+	printf("Error: Couldn't create cairo elements\n"); fflush(stdout);
+	return FALSE;
+    }
+
+    /* Set up overlay state */
+    appdata->overlay_state = g_new0 (CairoOverlayState, 1);
+    state = appdata->overlay_state;
+
+    /* Hook up the neccesary signals for cairooverlay */
+    state->draw_handler = g_signal_connect (appdata->cairo_overlay, 
+					    "draw", G_CALLBACK (draw_ret_cb), appdata);
+    state->info_handler = g_signal_connect (appdata->cairo_overlay, 
+					    "caps-changed", G_CALLBACK (prep_ret_cb), appdata);
+
+    /* Add to pipeline and link */
+    gst_bin_add_many (GST_BIN (appdata->pipeline), appdata->cairo_overlay, appdata->cairo_convert, NULL);
+
+    if (gst_element_link_many (appdata->v_convert, appdata->cairo_overlay, 
+			       appdata->cairo_convert, appdata->v_sink, NULL) != TRUE)
+    	return FALSE;
+
+    /* Set state */
+    if (gst_element_sync_state_with_parent(appdata->cairo_overlay) == FALSE)
+    {
+	printf("Error: Cairo overlay sync state error\n"); fflush(stdout);
+    	return FALSE;
+    }
+
+    if (gst_element_sync_state_with_parent(appdata->cairo_convert) == FALSE)
+    {
+	printf("Error: Cairo convert sync state error\n"); fflush(stdout);
+    	return FALSE;
+    }
+
+    /* Debug
+    ret = gst_element_get_state (appdata->cairo_overlay, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
+    printf("Cairo overlay current state: %d pending state %d\n", curr_state, pend_state); fflush(stdout);
+    ret = gst_element_get_state (appdata->cairo_convert, &curr_state, &pend_state, GST_CLOCK_TIME_NONE);
+    printf("Cairo convert current state: %d pending state %d\n", curr_state, pend_state); fflush(stdout);
+    */
+
+    appdata->ret_on_off_flg = TRUE;
+    return TRUE;
+}
+
+
+/* Remove reticule from the pipeline */
+
+int remove_reticule(AppData *appdata)
+{
+    CairoOverlayState *state;
+
+    printf("Switching off...\n"); fflush(stdout);
+
+    /* Set to NULL state */
+    gst_element_set_state (appdata->cairo_overlay, GST_STATE_NULL);
+    gst_element_set_state (appdata->cairo_convert, GST_STATE_NULL);
+
+    /* Unlink cairo overlay objects */
+    gst_element_unlink (appdata->v_convert, appdata->cairo_overlay);
+    gst_element_unlink (appdata->cairo_convert, appdata->v_sink);
+
+    /* Unhook the neccesary signals for cairooverlay */
+    state = appdata->overlay_state;
+    g_signal_handler_disconnect (appdata->cairo_overlay, state->draw_handler); 
+    g_signal_handler_disconnect (appdata->cairo_overlay, state->info_handler); 
+
+    /* Remove reticule elements (cairo) and clear the overlay state */
+    gst_bin_remove_many (GST_BIN (appdata->pipeline), appdata->cairo_overlay, appdata->cairo_convert, NULL);
+    g_free (appdata->overlay_state);
+
+    /* Link */
+    if (gst_element_link (appdata->v_convert, appdata->v_sink) != TRUE)
+    	return FALSE;
+
+    /* Set state */
+    if (gst_element_sync_state_with_parent(appdata->v_convert) == FALSE)
+    {
+	printf("Error: Vconvert sync state error\n"); fflush(stdout);
+    	return FALSE;
+    }
+
+    /* Reset */	
+    //gst_object_unref (appdata->cairo_overlay);
+    //gst_object_unref (appdata->cairo_convert);
+    appdata->cairo_overlay = NULL;
+    appdata->cairo_convert = NULL;
+    appdata->ret_on_off_flg = FALSE;
+
+    return TRUE;
+}
+
+
+/* Callback - Gst probe for inserting / removing a cairo object for reticule */
+
+GstPadProbeReturn pad_probe_cb (GstPad *pad, GstPadProbeInfo *info, gpointer user_data)
+{
+    AppData *appdata;
+
+    appdata = (AppData *) user_data;
+
+    if (appdata->ret_on_off_flg == FALSE)
+	prepare_reticule(appdata);
+    else
+	remove_reticule(appdata);
+
+appdata->id = 0;
+    return GST_PAD_PROBE_REMOVE;
+}
+
+
+/* Add callback so that every n seconds reticule will either draw or clear */
+
+int timeout_cb (gpointer user_data)
+{
+    AppData *appdata;
+
+    appdata = (AppData *) user_data;
+printf("timeout_cb\n"); fflush(stdout);
+if (appdata->id != 0)
+{
+printf("timeout_cb - bing bong! - restart\n Err %s\n", strerror(errno)); fflush(stdout);
+gst_element_set_state (appdata->pipeline, GST_STATE_READY);
+gst_element_set_state (appdata->pipeline, GST_STATE_PLAYING);
+gst_element_get_state (appdata->pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+}
+    appdata->id = gst_pad_add_probe (appdata->blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM, pad_probe_cb, user_data, NULL); 
+
+    return TRUE;
+}
+
+
+/* Check for pipeline bus messages */
+
+static void bus_cb (GstBus *bus, GstMessage *msg, gpointer user_data)
+{
+    AppData *appdata;
+    gchar *msg_str;
+    GError *error;
+
+    appdata = (AppData *) user_data;
+	
+    if (GST_MESSAGE_TYPE(msg) == GST_MESSAGE_ERROR)
+    {	
+	gst_message_parse_error(msg, &error, &msg_str);
+	printf("GST error: message: %s\n", msg_str); fflush(stdout);
+	g_free(error);
+	g_free(msg_str);
+	g_main_loop_quit (appdata->loop);
+	return;
+    }
+    
+    if (GST_MESSAGE_TYPE(msg) == GST_MESSAGE_WARNING)
+    {	
+	gst_message_parse_warning(msg, &error, &msg_str);
+	printf("GST warning: message: %s\n", msg_str); fflush(stdout);
+	g_free(error);
+	g_free(msg_str);
+	return;
+    }
+
+    if (GST_MESSAGE_TYPE(msg) == GST_MESSAGE_EOS)
+    {	
+	printf("End of Stream - quitting\n"); fflush(stdout);
+	g_main_loop_quit (appdata->loop);
+	return;
+    }
+
+    return;
+}
+
+
+/* Start up stuff */
+
+void initialize(AppData *appdata)
+{
+    appdata->ret_on_off_flg = FALSE;
+    appdata->id = 0;
+
+    return;
+}
+
+
+/* Finish up stuff */
+
+void final(AppData *appdata)
+{
+    gst_element_set_state (appdata->pipeline, GST_STATE_NULL);
+    gst_object_unref (appdata->pipeline);
+
+    return;
+}
+
+
+/* Set up pipeline and elements */
+
+int init_pipeline(AppData *appdata, int *argc, char ***argv)
+{
+    GstElement *pipeline, *v4l2_src, *v_rate, *q1, *v_filter;
+    GstCaps *v_caps;
+    GstBus *bus;
+
+    /* Initialize Gstreamer */
+    gst_init(argc, argv);
+	
+    /* Create pipeline (and save) and message bus */
+    pipeline = gst_pipeline_new("test-camera");
+    appdata->pipeline = pipeline;
+
+    bus = gst_pipeline_get_bus(GST_PIPELINE(pipeline));
+    gst_bus_add_watch(bus, (GstBusFunc) bus_cb, appdata);
+    gst_object_unref(GST_OBJECT(bus));
+	
+    /* Main elements */
+    v4l2_src = gst_element_factory_make ("v4l2src", "v4l2");
+    v_rate = gst_element_factory_make ("videorate", "v_rate");
+    v_filter = gst_element_factory_make ("capsfilter", "v_filter");
+    q1 = gst_element_factory_make ("queue", "block");
+    appdata->v_convert = gst_element_factory_make ("videoconvert", "v_convert");
+    appdata->v_sink = gst_element_factory_make ("xvimagesink", "v_sink");
+    //appdata->v_sink = gst_element_factory_make ("ximagesink", "v_sink");
+
+    /* Check elements */
+    if (! (pipeline && v4l2_src && v_rate && v_filter && q1 && appdata->v_convert && appdata->v_sink))
+    {
+	printf("Error: Couldn't create pipeline elements\n"); fflush(stdout);
+	return FALSE;
+    }
+
+    v_caps = gst_caps_new_simple ("video/x-raw",
+				 "format", G_TYPE_STRING, "YV12",
+				 "framerate", GST_TYPE_FRACTION, 10, 1,
+				 "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+				 "width", G_TYPE_INT, 640,
+				 "height", G_TYPE_INT, 480,
+				 NULL);
+
+    /* Set the device source, caps filter and other object properties */
+    //g_object_set (v4l2_src, "device", "/dev/video1", NULL);		// (depends on which cam tested
+    g_object_set (v4l2_src, "device", "/dev/video0", NULL);		// (laptop cam always works ok
+    g_object_set (appdata->v_sink, "sync", FALSE, NULL);
+    g_object_set (v_filter, "caps", v_caps, NULL);
+
+    appdata->blockpad = gst_element_get_static_pad (q1, "src");
+
+    /* Build the pipeline - add all the elements - and link */
+    gst_bin_add_many (GST_BIN (pipeline), v4l2_src, v_rate, v_filter, q1, appdata->v_convert, appdata->v_sink, NULL);
+
+    if (gst_element_link_many (v4l2_src, v_rate, v_filter, q1, appdata->v_convert, appdata->v_sink, NULL) != TRUE)
+    {
+	printf("Error: Couldn't link pipeline elements\n"); fflush(stdout);
+	return FALSE;
+    }
+
+    gst_caps_unref(v_caps);
+
+    /* Start */
+    gst_element_set_state(pipeline, GST_STATE_PLAYING);
+
+    return TRUE;
+}
+
+
+/* Main control */
+
+int main (int argc, char **argv)
+{
+    AppData appdata;
+
+    initialize(&appdata);
+    init_pipeline(&appdata, &argc, &argv);
+
+    appdata.loop = g_main_loop_new (NULL, FALSE);
+    g_timeout_add_seconds (5, timeout_cb, &appdata);
+    g_main_loop_run (appdata.loop);
+
+    final(&appdata);
+    return 0;
+}

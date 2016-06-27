@@ -1,0 +1,376 @@
+#include <stdlib.h>  
+#include <string.h>  
+#include <gtk/gtk.h>  
+#include <gst/gst.h>
+#include <gst/video/videooverlay.h>
+#include <gdk/gdkx.h>
+#include <sys/ioctl.h>
+#include <linux/videodev2.h>
+#include <libv4l2.h>
+#include <errno.h>
+#include <fcntl.h>
+
+/* Types */
+
+typedef struct _main_ui_cam
+{
+    GtkWidget *window;
+    GtkWidget *video_window;
+    GtkWidget *restart_btn, *quit_btn;
+    GstElement *pipeline; 
+    GstState state;     
+    char current_dev[256];    
+    GstElement *v4l2_src, *v_convert, *v_sink, *v_filter, *v_rate, *v_fakesink;
+    GstCaps *v_caps; 
+} MainUiCam;
+
+/* Prototypes */
+
+void main_ui(MainUiCam *);
+int cam_view(MainUiCam *);
+int cam_set_state(MainUiCam *, GstState, GtkWidget *);
+void OnRestart(GtkWidget *, gpointer);
+void OnQuit(GtkWidget*, gpointer);
+gboolean OnExpose (GtkWidget*, GdkEventExpose*, MainUiCam *);
+void OnRealise(GtkWidget*);
+GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
+
+
+/* Globals */
+
+guintptr video_window_handle = 0;
+
+
+/* Main program control */
+
+int main(int argc, char *argv[])
+{  
+    MainUiCam m_ui_cam;
+
+    /* Initial */
+    memset(&m_ui_cam, 0, sizeof (MainUiCam));
+    strcpy(m_ui_cam.current_dev, "/dev/video0");
+
+    gtk_init(&argc, &argv);  
+    gst_init (&argc, &argv);
+
+    /* Build UI and start viewing */
+    main_ui(&m_ui_cam);
+    cam_view(&m_ui_cam);
+
+    gtk_main();  
+
+    exit(0);
+}  
+
+
+/* Create the user interface and set the CallBacks */
+
+void main_ui(MainUiCam *m_ui_cam)
+{  
+    GtkWidget *mbox, *vbox, *cbox;  
+
+    /* Set up the UI window */
+    m_ui_cam->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);  
+    g_object_set_data (G_OBJECT (m_ui_cam->window), "ui_cam", m_ui_cam);
+    gtk_window_set_position(GTK_WINDOW(m_ui_cam->window), GTK_WIN_POS_CENTER);
+    gtk_window_set_default_size(GTK_WINDOW(m_ui_cam->window), 200, 200);
+    gtk_container_set_border_width(GTK_CONTAINER(m_ui_cam->window), 10);
+
+    /* Main view */
+    mbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 1);
+    gtk_widget_set_halign(GTK_WIDGET (mbox), GTK_ALIGN_START);
+
+    /* DRAWING AREA TO SHOW VIDEO */
+    m_ui_cam->video_window = gtk_drawing_area_new();
+    gtk_widget_set_double_buffered (m_ui_cam->video_window, FALSE);
+    gtk_widget_set_size_request (m_ui_cam->video_window, 640, 480);
+    gtk_widget_set_halign (m_ui_cam->video_window, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign (m_ui_cam->video_window, GTK_ALIGN_CENTER);
+
+    g_signal_connect (m_ui_cam->video_window, "realize", G_CALLBACK (OnRealise), m_ui_cam);
+    g_signal_connect (m_ui_cam->video_window, "draw", G_CALLBACK (OnExpose), m_ui_cam);
+
+    /* Control buttons */
+    cbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 20);
+
+    m_ui_cam->restart_btn = gtk_button_new_with_label("Restart");  
+    m_ui_cam->quit_btn = gtk_button_new_with_label("Close");  
+
+    gtk_box_pack_start (GTK_BOX (cbox), m_ui_cam->restart_btn, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (cbox), m_ui_cam->quit_btn, FALSE, FALSE, 0);
+
+    g_signal_connect(m_ui_cam->restart_btn, "clicked", G_CALLBACK(OnRestart), (gpointer) m_ui_cam->window);
+    g_signal_connect_swapped(m_ui_cam->quit_btn, "clicked", G_CALLBACK(OnQuit), (gpointer) m_ui_cam->window);
+
+    /* Box to hold video window and control panel */
+    vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 20);
+    gtk_box_pack_start (GTK_BOX (vbox), m_ui_cam->video_window, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (vbox), cbox, FALSE, FALSE, 0);
+
+    /* Combine everything onto the window */
+    gtk_box_pack_start (GTK_BOX (mbox), vbox, FALSE, FALSE, 0);
+    gtk_container_add(GTK_CONTAINER(m_ui_cam->window), mbox);  
+
+    /* Exit when window closed */
+    g_signal_connect(m_ui_cam->window, "destroy", G_CALLBACK(OnQuit), m_ui_cam->window);  
+
+    /* Show window */
+    gtk_widget_show_all(m_ui_cam->window);
+
+    return;
+}
+
+
+/* GST camera viewing */
+
+int cam_view(MainUiCam *m_ui_cam)
+{
+    GstBus *bus;
+    guint source_id;
+
+    /* Elements */
+    //m_ui_cam->v4l2_src = gst_element_factory_make ("v4l2src", "v4l2");
+    m_ui_cam->v4l2_src = gst_element_factory_make ("videotestsrc", "v4l2");
+    m_ui_cam->v_convert = gst_element_factory_make ("videoconvert", "v_convert");
+    //m_ui_cam->v_sink = gst_element_factory_make ("fakesink", "v_sink");
+    m_ui_cam->v_sink = gst_element_factory_make ("autovideosink", "v_sink");
+    //m_ui_cam->v_sink = gst_element_factory_make ("xvimagesink", "v_sink");
+    m_ui_cam->v_filter = gst_element_factory_make ("capsfilter", "v_filter");
+    m_ui_cam->v_rate = gst_element_factory_make ("videorate", "v_rate");
+
+    m_ui_cam->pipeline = gst_pipeline_new ("cam_video");
+
+    if (!m_ui_cam->pipeline || !m_ui_cam->v_convert || !m_ui_cam->v_sink || !m_ui_cam->v_filter || ! m_ui_cam->v_rate)
+    {
+	fprintf(stderr, "Error: One or more elements not present\n");
+        return FALSE;
+    }
+
+    /* Build the pipeline - add all the elements */
+    gst_bin_add_many (GST_BIN (m_ui_cam->pipeline), 
+    				m_ui_cam->v4l2_src, m_ui_cam->v_rate, m_ui_cam->v_sink, 
+    				m_ui_cam->v_convert, m_ui_cam->v_filter, NULL);
+
+    /* Specify what kind of video is wanted from the camera */
+    m_ui_cam->v_caps = gst_caps_new_simple ("video/x-raw",
+					     "format", G_TYPE_STRING, "YV12",
+					     "framerate", GST_TYPE_FRACTION, 10, 1,
+					     "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
+					     "width", G_TYPE_INT, 640,
+					     "height", G_TYPE_INT, 480,
+					     NULL);
+
+    /* Object data */
+    //g_object_set (m_ui_cam->v4l2_src, "device", m_ui_cam->current_dev, NULL);
+    g_object_set (m_ui_cam->v_rate, "drop-only", TRUE, NULL);
+    g_object_set (m_ui_cam->v_filter, "caps", m_ui_cam->v_caps, NULL);
+    g_object_set (m_ui_cam->v_sink, "sync", FALSE, NULL);
+
+    /* Link */
+    if (gst_element_link_many (m_ui_cam->v4l2_src, m_ui_cam->v_rate, m_ui_cam->v_filter,
+    			       m_ui_cam->v_convert, m_ui_cam->v_sink, NULL) != TRUE)
+    {
+	fprintf(stderr, "Error: link - v4l2_src:v_rate:v_filter:convert:sink\n");
+	return FALSE;
+    }
+
+    gst_caps_unref(m_ui_cam->v_caps);
+
+    /* Set up sync handler for setting the xid once the pipeline is started */
+    bus = gst_pipeline_get_bus (GST_PIPELINE (m_ui_cam->pipeline));
+    gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bus_sync_handler, NULL, NULL);
+
+printf("Debug: cam_view: set play 1\n"); fflush(stdout);
+//sleep(5);		// !!!!! THIS MAKES ITS WORK
+    /* Play */
+    if (cam_set_state(m_ui_cam, GST_STATE_PLAYING, m_ui_cam->window) == FALSE)
+        return FALSE;
+printf("Debug: cam_view: set play 2\n"); fflush(stdout);
+
+    gst_object_unref (bus);
+
+    return TRUE;
+}
+
+
+/* Bus watch for the video window handle */
+
+GstBusSyncReply bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
+{
+    // Ignore anything but 'prepare-window-handle' element messages
+    if (!gst_is_video_overlay_prepare_window_handle_message (message))
+        return GST_BUS_PASS;
+
+    if (video_window_handle != 0)
+    {
+        GstVideoOverlay *overlay;
+        GstVideoOverlayInterface *iface;
+
+printf("Debug: sync handler 1:  video handle is %" G_GUINTPTR_FORMAT "\n", video_window_handle); fflush(stdout);
+        overlay = GST_VIDEO_OVERLAY (GST_MESSAGE_SRC (message));
+
+if (overlay == NULL)
+    printf("Debug: sync handler 2: overlay is null\n"); fflush(stdout);
+
+/* THIS IS WHAT HAPPENS IN 'gst_video_overlay_set_window_handle' 
+
+if (! GST_IS_VIDEO_OVERLAY (overlay))
+    printf("Debug: sync handler 1b: overlay not video\n"); fflush(stdout);
+iface = GST_VIDEO_OVERLAY_GET_INTERFACE (overlay);
+if (iface->set_window_handle)
+{
+    printf("Debug: sync handler 1c: iface OK\n"); fflush(stdout);
+    iface->set_window_handle (overlay, video_window_handle);
+    printf("Debug: sync handler 1d: after set handle\n"); fflush(stdout);
+}
+*/
+        gst_video_overlay_set_window_handle (overlay, video_window_handle);
+printf("Debug: sync handler 3:\n"); fflush(stdout);
+    }
+    else
+    {
+        g_warning ("Should have obtained video_window_handle by now!");
+    }
+
+    gst_message_unref (message);
+    return GST_BUS_DROP;
+}
+
+
+// Callback - On create of physical video window retrieve its handle (for X windowing system only)
+
+void OnRealise(GtkWidget *widget)
+{
+    GdkWindow *window = gtk_widget_get_window (widget);
+
+    if (!gdk_window_ensure_native (window))
+        g_error ("Couldn't create native window needed for GstVideoOverlay!");
+
+  /* Retrieve window handler from GDK */
+#if defined (GDK_WINDOWING_X11)
+{
+    gulong window_handle = GDK_WINDOW_XID (window);
+    video_window_handle = window_handle;
+}
+#else
+    g_error("Error: - This is purely for linux (X) based systems.\n");
+#endif
+}
+
+
+// Called everytime the video window needs to be redrawn (due to damage/exposure, rescaling, etc). 
+
+gboolean OnExpose (GtkWidget *widget, GdkEventExpose *event, MainUiCam *m_ui_cam)
+{
+    if (m_ui_cam->state < GST_STATE_PAUSED)
+    {
+        GtkAllocation allocation;
+        GdkWindow *window = gtk_widget_get_window (widget);
+        cairo_t *cr;
+
+        gtk_widget_get_allocation (widget, &allocation);
+        cr = gdk_cairo_create (window);
+        cairo_set_source_rgb (cr, 0, 0, 0);
+        cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
+        cairo_fill (cr);
+        cairo_destroy (cr);
+    }
+
+    return FALSE;
+}
+
+
+/* Callback - Quit */
+
+void OnQuit(GtkWidget *window, gpointer user_data)
+{  
+    MainUiCam *m_ui_cam;
+
+    m_ui_cam = g_object_get_data (G_OBJECT(window), "ui_cam");
+    cam_set_state(m_ui_cam, GST_STATE_NULL, window);
+    gst_object_unref (m_ui_cam->pipeline);
+    m_ui_cam->pipeline = NULL;
+
+    gtk_main_quit();
+
+    return;
+}
+
+
+/* Callback - Restart the video from the camera */
+
+void OnRestart(GtkWidget *cam_detail, gpointer user_data)
+{  
+    MainUiCam *m_ui_cam;
+    GtkWidget *window;
+    int fd;
+
+    /* Get data */
+    printf("Debug: Restart button clicked\n");
+
+    window = (GtkWidget *) user_data;
+    m_ui_cam = g_object_get_data (G_OBJECT(window), "ui_cam");
+
+    /* Wipe the pipeline (free all the resources) and restart */
+    if (cam_set_state(m_ui_cam, GST_STATE_NULL, m_ui_cam->window) == FALSE)
+    	return;
+
+    gst_object_unref (m_ui_cam->pipeline);
+    m_ui_cam->pipeline = NULL;
+    m_ui_cam->v4l2_src = NULL;
+    m_ui_cam->v_convert = NULL;
+    m_ui_cam->v_sink = NULL;
+    m_ui_cam->v_filter = NULL;
+    m_ui_cam->v_rate = NULL;
+    m_ui_cam->v_caps = NULL;
+
+    cam_view(m_ui_cam);
+
+    return;
+}  
+
+
+/* Set pileline state */
+
+int cam_set_state(MainUiCam *m_ui_cam, GstState state, GtkWidget *window)
+{
+    GstStateChangeReturn ret, ret2;
+    GstState chg_state;
+
+    if (! GST_IS_ELEMENT(m_ui_cam->pipeline))
+    {
+	fprintf(stderr, "Error: Pipeline not an element\n");
+    	return -1;
+    }
+
+    ret = gst_element_set_state (m_ui_cam->pipeline, state);
+
+    switch(ret)
+    {
+	case GST_STATE_CHANGE_SUCCESS:
+	case GST_STATE_CHANGE_NO_PREROLL:
+	case GST_STATE_CHANGE_ASYNC:
+	    ret2 = gst_element_get_state (m_ui_cam->pipeline, &chg_state, NULL, GST_CLOCK_TIME_NONE);
+
+	    if (chg_state != state)
+	    {
+		fprintf(stderr, "Error: State change - wrong state\n");
+		return FALSE;
+	    }
+
+	    break;
+
+	case GST_STATE_CHANGE_FAILURE:
+	    fprintf(stderr, "Error: State change failed\n");
+	    return FALSE;
+
+	default:
+	    fprintf(stderr, "Error: State change unknown error\n");
+	    return FALSE;
+    }
+
+    m_ui_cam->state = state;
+
+    return TRUE;
+}

@@ -1,0 +1,50 @@
+Hello,
+I have two problems with a pipeline that I'm using to create a file in YUY2 format. I've tried a number of
+variations but the problem remains. The pipeline is:
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! tee name="splitter" ! queue leaky=1 ! videoconvert ! ximagesink sync=false splitter. ! queue leaky=1 ! videoconvert ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! avimux ! filesink location=test.avi
+
+The first problem is when I run the above, the video is frozen and when I Ctrl & C after a while the only 
+output in test.avi is a few frames. And yet, if I substitute 'I420' in place of the first 'YUY2', it works.
+
+If I break it up to run a pipeline just to view only its fine, ie.
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! videoconvert ! ximagesink
+
+but doing the same for the capture part still doesn't work. ie.
+
+gst-launch-1.0 -e v4l2src device="/dev/video0" ! videorate ! video/x-raw, format=YUY2, width=640, height=480, framerate=10/1 ! videoconvert ! avimux ! filesink location=test.avi
+
+Substituting 'I420' here still does not work, but interestingly, if use another camera (not YUY2 capable), it does. ie.
+
+gst-launch-1.0 -e v4l2src device="/dev/video1" ! videorate ! video/x-raw, format=I420, width=640, height=480, framerate=10/1 ! videoconvert ! avimux ! filesink location=test.avi
+
+So I'm starting to think that there is something about this particular camera causing problems. Its a built-in 
+laptop camera.
+
+
+Setting GST_DEBUG=1 shows nothing unusual (?) I think:-
+
+Setting pipeline to PAUSED ...
+Pipeline is live and does not need PREROLL ...
+Setting pipeline to PLAYING ...
+New clock: GstSystemClock
+^Chandling interrupt.
+Interrupt: Stopping pipeline ...
+EOS on shutdown enabled -- Forcing EOS on the pipeline
+Waiting for EOS...
+Got EOS from element "pipeline0".
+EOS received - stopping pipeline...
+Execution ended after 0:00:08.126906858
+Setting pipeline to PAUSED ...
+Setting pipeline to READY ...
+Setting pipeline to NULL ...
+Freeing pipeline ...
+
+The second problem is if I substitute 'xvimagesink' for 'ximagesink' in the pipeline that works (using I420), 
+the result is that video is frozen and the output in test.avi is just a few frames again, which is a bit
+baffling. 
+
+If anyone has any ideas or can point out where I'm going wrong I'd appreciate it.
+
+Thanks. Regards. Tony.
