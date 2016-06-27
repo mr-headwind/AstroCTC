@@ -23,6 +23,7 @@
     AstroCTC (Astronomical CCD in Telescope Capture) is an application designed for 
     video and image capture of the Planets and the Moon. A suitable astronomical or
     modified webcam will give the best results, however it will work with most webcams.
+    The camera driver must be V4L2 compliant.
 
     Numerous video and image formats are available, however FITS image support is
     mostly basic and should only be used by those familiar with it.
