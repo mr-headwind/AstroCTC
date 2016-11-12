@@ -61,7 +61,7 @@
 
  BUILD FITS FROM SOURCE
  ----------------------
-    If you need to build the FITS libaray separately, the source and instructions are located at:
+    If you need to build the FITS library separately, the source and instructions are located at:
 
     	http://heasarc.gsfc.nasa.gov/docs/software/fitsio
 
