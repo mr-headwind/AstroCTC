@@ -252,7 +252,7 @@ void snap_status(CamData *cam_data, MainUi *m_ui)
 		    strcpy(s, "Snapshot pending");
 		else
 		    sprintf(s, "Snapshot %ld of %ld done (successful)", 
-		    			(cam_data->u.s_capt.snap_count + 1), cam_data->u.s_capt.snap_max);
+				(cam_data->u.s_capt.snap_count + 1), cam_data->u.s_capt.snap_max);
 
 		gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
 	    }
@@ -1429,6 +1429,7 @@ int fits_file(char *out_name, snap_capt_t *capt, MainUi *m_ui)
     {
 	sprintf(s, "fits_create_img failed - status %d", status);
 	log_msg("CAM0017", s, "CAM0017", m_ui->window);
+	fits_close_file(f_out, &status); 
     	return FALSE;
     }
 
@@ -1436,15 +1437,22 @@ int fits_file(char *out_name, snap_capt_t *capt, MainUi *m_ui)
     if (bitpix == ULONG_IMG)
     {
     	if (write_24_to_32_bpp(f_out, fpixel, no_elements, capt, m_ui) == FALSE)
+    	{
+	    fits_close_file(f_out, &status); 
 	    return FALSE;
+	}
     }
     else if (bitpix == USHORT_IMG)
     {
     	if (write_24_to_16_bpp(f_out, fpixel, no_elements, capt, m_ui) == FALSE)
+    	{
+	    fits_close_file(f_out, &status); 
 	    return FALSE;
+	}
     }
     else
     {
+	fits_close_file(f_out, &status); 
     	return FALSE;
     }
 
@@ -1472,7 +1480,7 @@ print_bits(sizeof(uint32_t), pixel);
 
 int write_24_to_32_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt_t *capt, MainUi *m_ui)
 {
-    int status, i, j;
+    int status, i, j, r;
     unsigned char *rgb_data;
     int img_len;
     uint32_t *pixel;
@@ -1480,6 +1488,8 @@ int write_24_to_32_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt
     char s[100];
 
     /* Allocate memory for the whole image */ 
+    r = TRUE;
+    status = 0;
     array[0] = (unsigned long *) malloc(capt->width * capt->height * sizeof(unsigned long));
     memset(array[0], 0, capt->width * capt->height);
 
@@ -1510,13 +1520,13 @@ int write_24_to_32_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt
     {
 	sprintf(s, "fits_write_img failed - status %d", status);
 	log_msg("CAM0017", s, "CAM0017", m_ui->window);
-    	return FALSE;
+    	r = FALSE;
     }
       
     /* Clean up */
     free(array[0]);  
 
-    return TRUE;
+    return r;
 }
 
 
@@ -1524,7 +1534,7 @@ int write_24_to_32_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt
 
 int write_24_to_16_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt_t *capt, MainUi *m_ui)
 {
-    int status, i, j;
+    int status, i, j, r;
     unsigned char *rgb_data;
     int img_len;
     uint16_t *pixel;
@@ -1532,6 +1542,8 @@ int write_24_to_16_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt
     char s[100];
 
     /* Allocate memory for the whole image */ 
+    r = TRUE;
+    status = 0;
     array[0] = (unsigned short *) malloc(capt->width * capt->height * sizeof(unsigned short));
     memset(array[0], 0, capt->width * capt->height);
 
@@ -1562,13 +1574,13 @@ int write_24_to_16_bpp(fitsfile *f_out, long fpixel, long no_elements, snap_capt
     {
 	sprintf(s, "fits_write_img failed - status %d", status);
 	log_msg("CAM0017", s, "CAM0017", m_ui->window);
-    	return FALSE;
+    	r = FALSE;
     }
       
     /* Clean up */
     free(array[0]);  
 
-    return TRUE;
+    return r;
 }
 
 
