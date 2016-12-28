@@ -33,15 +33,37 @@
     While AstroCTC is primarily designed for astronomical use, it can also serve as a general
     webcam program.
 
- BUILD FROM SOURCE
- -----------------
-    If you wish to build and/or work on AstroCTC separately, the source is located at:
+ INSTALL
+ -------
+    There are several ways to install AstroCTC outlined below.
+
+ 1. DISTRIBUTION PACKAGE
+ -----------------------
+    This is probably the easiest and best way for installation only.
+
+    Download the latest distribution archive from here: 
+    	https://github.com/mr-headwind/AstroCTC/tree/master/DIST_PACKAGES 
+    to your download directory (eg. $HOME/Downloads).
+
+    Start a terminal or xterm session
+    cd $HOME/Downloads (or your download directory)
+    tar xvzf astroctc-x.xx.tar.gz (where x.xx is the version number)
+    ./configure --prefix=/usr
+    make
+    sudo make install
+
+    Reading the next section may help if you encounter errors during this process.
+
+ 2. BUILD FROM SOURCE
+ --------------------
+    If you wish to build and/or work on AstroCTC separately, the git repository is located at:
 
     	https://github.com/mr-headwind/AstroCTC
 
-    Download the code package to a suitable development directory (eg. $HOME/AstroCTC).
-    You can either download all the individual application files or an archive from the Releases
-    directory. If you elect to grab individual files be warned that these may be in a work-in-progress
+    Either clone the repository or download the repository package to a suitable development 
+    directory (eg. $HOME/Development/AstroCTC). You may also download individual files and there 
+    is a RELEASES directory with various stable snapshot archives.
+    If you elect to grab individual files be warned that these may be in a work-in-progress
     state and be unstable.
     	
     The GTK+ 3.0 and Gstreamer 1.0 libraries need to be installed and additionally the following
@@ -51,6 +73,14 @@
     	sudo apt-get install libpng-dev
     	See below for FITS details
 
+    Depending the graphics on your computer, you may also encounter errors pointing vaguely to
+    some kind of 'va' or 'vaapi' problem. The following fixed this on my computer:-
+    	sudo apt-get install vdpauinfo
+    	sudo apt-get install vainfo
+    	sudo apt-get install mesa-vdpau-drivers
+    	export LIBVA_DRIVER_NAME=vdpau
+    	export VDPAU_DRIVER=r600
+
     The icon image file 'astroctc.png' will need to be located appropriately:
     	cd $HOME
     	mkdir -P .local/share/icons/hicolor/48x48/apps
@@ -58,6 +88,10 @@
     	cd AstroCTC (or whatever directory was chosen for download)
     	ln -s astroctc.png .local/share/icons/hicolor/48x48/apps/astroctc.png
     	ln -s astroctc.png .local/share/pixmaps/AstroCTC/astroctc.png
+
+    If you wish to make your own distribution package the 'setup_AutoTools.sh' shell script 
+    in the AutoTools directory will set up a release structure, but may need to be altered 
+    if your directory structure is different.
 
  BUILD FITS FROM SOURCE
  ----------------------
@@ -83,10 +117,9 @@
  THINGS TO BE DONE
  -----------------
     Web page - check out Launch Pad or add 'not ready' message
-    Set up GIT / Sourceforge
+    Set up Sourceforge
     Set up gmail account (AstroCTC@gmail.com)
-    Install instructions (libraries, GTK, GST, Fits, set up desktop icon)
-    Find out how to build a .deb package for apt-get install astroctc
+    Build a .deb package for apt-get install astroctc ?
 
  THINGS TO BE CHECKED OR REVIEWED
  --------------------------------
