@@ -82,7 +82,7 @@ static const char *about_text[][2] =
     { "License", "Copyright (C) 2016  Anthony Buckley\n\n"
     		 "This program comes with ABSOLUTELY NO WARRANTY.\n"
 		 "See the GNU General Public License, version 3 or later for details.\n" },
-    { "Credits", "Tony Buckley\t (astroctc@gmail.com)\n" }
+    { "Credits", "Tony Buckley\t (tony.buckley000@gmail.com)\n" }
 };
 static const int txt_max = 2;
 

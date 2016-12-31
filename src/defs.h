@@ -86,7 +86,7 @@ extern const GdkRGBA NIGHT;
 #define V4L_SYS_CLASS "/sys/class/video4linux"
 //#define PACKAGE_DATA_DIR "/usr/share"	// Not sure of PACKAGE_DATA_DIR name, also -D on compile may be better
 #define PACKAGE_DATA_DIR "/home/tony/.local/share"	// Dev only
-#define APP_URI "http://www.users.on.net/~tony.buckley"		// Test only
+#define APP_URI "http://AstroCTC.sourceforge.net"
 #endif
 
 
