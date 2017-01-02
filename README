@@ -116,8 +116,7 @@
 
  THINGS TO BE DONE
  -----------------
-    Web page - check out Launch Pad or add 'not ready' message
-    Set up Sourceforge
+    Web page - possible Launch Pad or add add own ? (or leave it at the SourceForge one)
     Build a .deb package for apt-get install astroctc ?
 
  THINGS TO BE CHECKED OR REVIEWED
