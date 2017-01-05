@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=AstroCTC Astronomical Image Capture
+Name=AstroCTC Astronomy Image Capture
 _Comment=A program to capture Planetary and Lunar images
 TryExec=astroctc
 Exec=astroctc

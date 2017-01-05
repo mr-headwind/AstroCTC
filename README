@@ -20,8 +20,8 @@
 
  DESCRIPTION
  -----------
-    AstroCTC (Astronomical CCD in Telescope Capture) is an application designed for 
-    video and image capture of the Planets and the Moon. A suitable astronomical or
+    AstroCTC (Astronomy CCD in Telescope Capture) is an application designed for 
+    video and image capture of the Planets and the Moon. A suitable astronomy or
     modified webcam will give the best results, however it will work with most webcams.
     The camera driver must be V4L2 compliant.
 
@@ -30,7 +30,7 @@
 
     AstroCTC is intended for use with Linux only.
 
-    While AstroCTC is primarily designed for astronomical use, it can also serve as a general
+    While AstroCTC is primarily designed for use in astronomy, it can also serve as a general
     webcam program.
 
  INSTALL
