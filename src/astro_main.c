@@ -29,7 +29,7 @@
 **	video. May be used for anything really, but ostensibly for use in creating astronomical images.
 **
 ** History
-**	26-Dec-3013	Initial code
+**	26-Dec-2013	Initial code
 **
 */
 
