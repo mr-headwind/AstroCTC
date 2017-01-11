@@ -84,10 +84,10 @@
     The icon image file 'astroctc.png' will need to be located appropriately:
     	cd $HOME
     	mkdir -P .local/share/icons/hicolor/48x48/apps
-    	mkdir -P .local/share/pixmaps/AstroCTC
+    	mkdir -P .local/share/pixmaps/astroctc
     	cd AstroCTC (or whatever directory was chosen for download)
     	ln -s astroctc.png .local/share/icons/hicolor/48x48/apps/astroctc.png
-    	ln -s astroctc.png .local/share/pixmaps/AstroCTC/astroctc.png
+    	ln -s astroctc.png .local/share/pixmaps/astroctc/astroctc.png
 
     If you wish to make your own distribution package the 'setup_AutoTools.sh' shell script 
     in the AutoTools directory will set up a release structure, but may need to be altered 

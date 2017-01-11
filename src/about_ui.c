@@ -71,6 +71,7 @@ void OnAboutClose(GtkWidget*, gpointer);
 
 extern void register_window(GtkWidget *);
 extern void deregister_window(GtkWidget *);
+extern void strlower(char *, char *);
 
 
 /* Globals */
@@ -196,6 +197,7 @@ GtkWidget * about_ui_hdr(AboutUi *p_ui)
     GtkWidget *label_t, *label_v;
     PangoFontDescription *font_desc;
     char *app_icon;
+    char *s;
 
     /* Set up */
     font_desc = pango_font_description_from_string ("Sans 15");
@@ -216,7 +218,10 @@ GtkWidget * about_ui_hdr(AboutUi *p_ui)
     gtk_box_pack_start (GTK_BOX (tbox), label_v, FALSE, FALSE, 0);
 
     /* Icon */
-    app_icon = g_strconcat (PACKAGE_DATA_DIR, "/pixmaps/", TITLE, "/astroctc.png",NULL);
+    s = (char *) malloc(sizeof(TITLE) + 1);
+    strlower(TITLE, s);
+    app_icon = g_strconcat (PACKAGE_DATA_DIR, "/pixmaps/", s, "/astroctc.png",NULL);
+    free(s);
     p_ui->icon = gtk_image_new_from_file(app_icon);
     g_free(app_icon);
     gtk_widget_set_margin_end(GTK_WIDGET (p_ui->icon), 20);

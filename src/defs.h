@@ -84,8 +84,8 @@ extern const GdkRGBA NIGHT;
 #define MPEG2 "MPG2"
 #define DEV_DIR "/dev"
 #define V4L_SYS_CLASS "/sys/class/video4linux"
-//#define PACKAGE_DATA_DIR "/usr/share"	// Not sure of PACKAGE_DATA_DIR name, also -D on compile may be better
-#define PACKAGE_DATA_DIR "/home/tony/.local/share"	// Dev only
+#define PACKAGE_DATA_DIR "/usr/share"			// Release only
+//#define PACKAGE_DATA_DIR "/home/tony/.local/share"	// Dev only
 #define APP_URI "http://AstroCTC.sourceforge.net"
 #endif
 

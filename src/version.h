@@ -30,4 +30,4 @@
 */
 
 
-#define VERSION "0.52"
+#define VERSION "0.53"
