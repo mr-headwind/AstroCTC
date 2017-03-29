@@ -1,0 +1,11 @@
+Package: astroctc
+Version: 0.53
+Section: base
+Priority: optional
+Architecture: amd64 or i386
+Depends: libcfitsio-bin, libpng, cairo, v4l-utils, libjpeg-dev, libpthread, libgtk-3-0, 
+         gstreamer1.0-plugins-bad-videoparsers, gstreamer1.0-plugins-base, libgstreamer1.0-0
+Maintainer: Anthony Buckley <tony.buckley000@gmail.com>
+Description: AstroCTC
+ An application designed for video and image capture of the Planets and the Moon.
+ It can also serve for general webcam viewing.
