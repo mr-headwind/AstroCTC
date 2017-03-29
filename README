@@ -39,7 +39,7 @@
 
  1. DISTRIBUTION PACKAGE
  -----------------------
-    This is probably the easiest and best way for installation only.
+    This is the preferred method for installation.
 
     Download the latest distribution archive from here: 
     	https://github.com/mr-headwind/AstroCTC/tree/master/DIST_PACKAGES 
@@ -52,9 +52,21 @@
     make
     sudo make install
 
-    Reading the next section may help if you encounter errors during this process.
+    There are a number of package dependencies (see below) that will be highlighted
+    during the configure process. These must be installed.
 
- 2. BUILD FROM SOURCE
+ 2. DEB PACKAGE
+ --------------
+    A binary deb package file is available on SourceForge at:-
+
+	https://sourceforge.net/projects/astroctc/?source=directory
+
+    or go to the SourceForge home page and search for astroctc.
+
+    It has been a little difficult to test this package properly so it is provided
+    as is only. If you experience any problem with it, please let me know (see BUGS ... below).
+
+ 3. BUILD FROM SOURCE
  --------------------
     If you wish to build and/or work on AstroCTC separately, the git repository is located at:
 
@@ -66,8 +78,30 @@
     If you elect to grab individual files be warned that these may be in a work-in-progress
     state and be unstable.
     	
-    The GTK+ 3.0 and Gstreamer 1.0 libraries need to be installed and additionally the following
-    packages may be required (Note: this is how for Ubuntu):
+    The icon image file 'astroctc.png' will need to be located appropriately:
+    	cd $HOME
+    	mkdir -P .local/share/icons/hicolor/48x48/apps
+    	mkdir -P .local/share/pixmaps/astroctc
+    	cd AstroCTC (or whatever directory was chosen for download)
+    	ln -s astroctc.png .local/share/icons/hicolor/48x48/apps/astroctc.png
+    	ln -s astroctc.png .local/share/pixmaps/astroctc/astroctc.png
+
+    If you wish to make your own distribution package the 'setup_AutoTools.sh' shell script 
+    in the AutoTools directory will set up a release structure, but may need to be altered 
+    if your directory structure is different.
+
+ DEPENDENCIES
+ ------------
+    The GTK+ 3.0 and Gstreamer 1.0 libraries need to be installed and, for the most part,
+    will likely already be present. However, if there is a problem, try:
+    	sudo apt-get install libv4l-dev 
+    	sudo apt-get build-dep libgtk-3-dev 
+    	sudo add-apt-repository ppa:gstreamer-developers/ppa
+	sudo apt-get update
+	sudo apt-get install gstreamer1.0*
+	sudo apt-get install gstreamer-tools
+    
+    Additionally the following packages may be required (Note: this is how for Ubuntu):
     	sudo apt-get install libv4l-dev
     	sudo apt-get install libjpeg-dev
     	sudo apt-get install libpng-dev
@@ -81,21 +115,10 @@
     	export LIBVA_DRIVER_NAME=vdpau
     	export VDPAU_DRIVER=r600
 
-    The icon image file 'astroctc.png' will need to be located appropriately:
-    	cd $HOME
-    	mkdir -P .local/share/icons/hicolor/48x48/apps
-    	mkdir -P .local/share/pixmaps/astroctc
-    	cd AstroCTC (or whatever directory was chosen for download)
-    	ln -s astroctc.png .local/share/icons/hicolor/48x48/apps/astroctc.png
-    	ln -s astroctc.png .local/share/pixmaps/astroctc/astroctc.png
-
-    If you wish to make your own distribution package the 'setup_AutoTools.sh' shell script 
-    in the AutoTools directory will set up a release structure, but may need to be altered 
-    if your directory structure is different.
-
- BUILD FITS FROM SOURCE
- ----------------------
-    If you need to build the FITS library separately, the source and instructions are located at:
+ FITS - BUILD FROM SOURCE OR INSTALL PACKAGE
+ -------------------------------------------
+    I find it easier to build the FITS library separately rather than install from the 
+    package archive. The source and instructions are located at:
 
     	http://heasarc.gsfc.nasa.gov/docs/software/fitsio
 
@@ -113,6 +136,11 @@
 	./configure --prefix=/usr
 	make
 	make install
+
+    However, if installing from the package archive is preferred, you will need at least:
+    	sudo apt-get install libcfitsio-bin 	(this should also install 'libcfitsio2',
+    					         mandatory for 'deb' installation)
+    	sudo apt-get install libcfitsio-dev	(not required for 'deb' installation)
 
  THINGS TO BE DONE
  -----------------
