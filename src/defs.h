@@ -87,6 +87,7 @@ extern const GdkRGBA NIGHT;
 #define PACKAGE_DATA_DIR "/usr/share"			// Release only
 //#define PACKAGE_DATA_DIR "/home/tony/.local/share"	// Dev only
 #define APP_URI "http://AstroCTC.sourceforge.net"
+#define CAM_ABBR_SZ 39
 #endif
 
 

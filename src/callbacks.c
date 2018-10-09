@@ -210,6 +210,12 @@ void OnCameraSel(GtkWidget *cam_sel, gpointer user_data)
     /* Set new camera */
     strcpy(cam_data->current_cam, cam_nm);
     strcpy(cam_data->current_dev, cam_dev);
+
+    memcpy(cam_data->current_cam_abbr, cam_data->current_cam, CAM_ABBR_SZ);
+    cam_data->current_cam_abbr[CAM_ABBR_SZ] = '\0';
+    memcpy(cam_data->current_dev_abbr, cam_data->current_dev, CAM_ABBR_SZ);
+    cam_data->current_dev_abbr[CAM_ABBR_SZ] = '\0';
+
     cam_data->cam = cam;
     camera_setup(cam, m_ui->window);
     set_session(CAMERA, cam_data->current_cam);
@@ -423,7 +429,7 @@ void OnStopCap(GtkWidget *capture_btn, gpointer user_data)
 
 void OnPauseCap(GtkWidget *capture_btn, gpointer user_data)
 {  
-    char s[100];
+    char s[150];
     CamData *cam_data;
     MainUi *m_ui;
     GtkWidget *window;
@@ -437,13 +443,13 @@ void OnPauseCap(GtkWidget *capture_btn, gpointer user_data)
     if (cam_data->state == GST_STATE_PAUSED)
     {
 	cam_set_state(cam_data, GST_STATE_PLAYING, window);
-	sprintf(s, "Camera %s (%s) capturing resumed ", cam_data->current_cam, cam_data->current_dev);
+	snprintf(s, sizeof(s), "Camera %s (%s) capturing resumed ", cam_data->current_cam_abbr, cam_data->current_dev_abbr);
 	gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
     }
     else
     {
 	cam_set_state(cam_data, GST_STATE_PAUSED, window);
-	sprintf(s, "Camera %s (%s) capturing paused ", cam_data->current_cam, cam_data->current_dev);
+	snprintf(s, sizeof(s), "Camera %s (%s) capturing paused ", cam_data->current_cam_abbr, cam_data->current_dev_abbr);
     }
 
     gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);

@@ -508,6 +508,12 @@ void add_camera_list(GtkWidget **cam_menu, MainUi *m_ui, CamData *cam_data)
 	{
 	    strcpy(cam_data->current_cam, cam_nm);
 	    strcpy(cam_data->current_dev, cam_dev);
+
+	    memcpy(cam_data->current_cam_abbr, cam_data->current_cam, CAM_ABBR_SZ);
+	    cam_data->current_cam_abbr[CAM_ABBR_SZ] = '\0';
+	    memcpy(cam_data->current_dev_abbr, cam_data->current_dev, CAM_ABBR_SZ);
+	    cam_data->current_dev_abbr[CAM_ABBR_SZ] = '\0';
+
 	    cam_data->cam = tmp->cam;
 	}
 

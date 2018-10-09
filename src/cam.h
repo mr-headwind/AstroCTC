@@ -186,6 +186,8 @@ typedef struct _CamData
     GstState state;                 	/* Current state of the pipeline */
     char current_dev[256];	    	/* Device path for current camera */
     char current_cam[256];	    	/* Name of current camera */
+    char current_dev_abbr[40];	    	/* Abbreviated Device */
+    char current_cam_abbr[40];	    	/* Abbreviated Name */
     camera_t *cam;			/* Information about the current camera */
     char *info_file;			/* Points to device last written to .cam_info if any */
     struct camlistNode *camlist;	/* Pointer to head of camera list */
