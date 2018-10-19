@@ -183,7 +183,7 @@ struct camlistNode* dev_camera_devices(GtkWidget *window)
     struct dirent *ep;
     struct stat fileStat;
     int fd, err, sz_dev, sz_fs;
-    char video_dev[100];
+    char video_dev[255];
     const char *sysfsclass = V4L_SYS_CLASS;
     struct camlistNode *v_node;
 
@@ -213,7 +213,7 @@ struct camlistNode* dev_camera_devices(GtkWidget *window)
 
 	if ((err = lstat(video_dev, &fileStat)) < 0)
 	{
-	    sprintf(app_msg_extra, "File: %s Error: %s", ep->d_name, strerror(errno)); 
+	    snprintf(app_msg_extra, sizeof(app_msg_extra), "File: %s Error: %s", ep->d_name, strerror(errno)); 
 	    log_msg("CAM0002", NULL, "SYS9000", window);
 	    continue;
 	}

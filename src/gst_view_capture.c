@@ -341,7 +341,7 @@ int start_view_pipeline(CamData *cam_data, MainUi *m_ui, int init)
     }
 
     /* Information status line */
-    sprintf(s, "Camera %s (%s) playing", cam_data->current_cam, cam_data->current_dev);
+    snprintf(s, sizeof(s), "Camera %s (%s) playing", cam_data->current_cam, cam_data->current_dev);
     gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
 
     return TRUE;
@@ -824,7 +824,7 @@ int start_capt_pipeline(CamData *cam_data, MainUi *m_ui)
     //source_id = gst_bus_add_watch (bus, (GstBusFunc) bus_message_watch, m_ui);	xxxx IS THIS NEEDED ?
 
     /* Inforamtion status line */
-    sprintf(s, "Camera %s (%s) is capturing", cam_data->current_cam, cam_data->current_dev);
+    snprintf(s, sizeof(s), "Camera %s (%s) is capturing", cam_data->current_cam, cam_data->current_dev);
 
     if (m_ui->duration > 0)
 	sprintf(s, "%s: %d secs", s, m_ui->duration);
@@ -861,7 +861,7 @@ int cam_set_state(CamData *cam_data, GstState state, GtkWidget *window)
 
 	    if (chg_state != state)
 	    {
-		sprintf(app_msg_extra, "Current camera is %s", cam_data->current_cam);
+		snprintf(app_msg_extra, sizeof(app_msg_extra), "Current camera is %s", cam_data->current_cam);
 		log_msg("CAM0022", s, "CAM0022", window);
 		return FALSE;
 	    }
@@ -894,12 +894,12 @@ int cam_set_state(CamData *cam_data, GstState state, GtkWidget *window)
 		    strcpy(s, "Unknown");
 	    }
 
-	    sprintf(app_msg_extra, "Current camera is %s", cam_data->current_cam);
+	    snprintf(app_msg_extra, sizeof(app_msg_extra), "Current camera is %s", cam_data->current_cam);
 	    log_msg("CAM0022", s, "CAM0022", window);
 	    return FALSE;
 
 	default:
-	    sprintf(app_msg_extra, "Unknown return - Current camera is %s", cam_data->current_cam);
+	    snprintf(app_msg_extra, sizeof(app_msg_extra), "Unknown return - Current camera is %s", cam_data->current_cam);
 	    log_msg("CAM0022", s, "CAM0022", window);
 	    return FALSE;
     }
@@ -1025,7 +1025,7 @@ void capture_limits(app_gst_objects *gst_objs, MainUi *m_ui)
 
 void view_prepare_capt(CamData *cam_data, MainUi *m_ui)
 {
-    char s[10];
+    char s[100];
     long width, height;
     int fps;
     char *p;
@@ -1076,7 +1076,7 @@ void view_prepare_capt(CamData *cam_data, MainUi *m_ui)
 void capt_prepare_view(CamData *cam_data, MainUi *m_ui)
 {
     app_gst_objects *gst_objs;
-    char s[10];
+    char s[100];
     long width, height;
     int fps;
     char *p;
@@ -1180,7 +1180,7 @@ void capt_prepare_view(CamData *cam_data, MainUi *m_ui)
 
 int view_clear_pipeline(CamData *cam_data, MainUi *m_ui)
 {
-    char s[10];
+    char s[100];
 
     if (cam_data->mode != CAM_MODE_VIEW)
     {
