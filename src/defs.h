@@ -124,8 +124,8 @@ extern const GdkRGBA NIGHT;
 #ifndef ERR_INCLUDED
 #define ERR_INCLUDED
 #ifdef ERR_FILE
-char app_msg_extra[256];
+char app_msg_extra[1000];
 #else
-extern char app_msg_extra[256];
+extern char app_msg_extra[1000];
 #endif
 #endif

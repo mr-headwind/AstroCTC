@@ -70,7 +70,7 @@ typedef struct _camera
 {
     int fd;                             /* File descriptor for /dev/videoN */
     int cam_is_open;			/* General purpose flag only used as required */
-    char video_dev[255];                /* Device path, i.e. /dev/video0 */
+    char video_dev[300];                /* Device path, i.e. /dev/video0 */
     struct v4l2_capability vcaps;       /* Video capability bit field */
     struct v4l2_list *ctl_head;		/* Controls list head */
     struct v4l2_list *ctl_last;		/* Controls list end */
