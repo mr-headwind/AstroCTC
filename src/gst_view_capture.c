@@ -1143,7 +1143,7 @@ void capt_prepare_view(CamData *cam_data, MainUi *m_ui)
 	    get_session(RESOLUTION, &p);
 	    res_to_long(p, &width, &height);
 
-	    gst_caps_make_writable (gst_objs->v_caps);
+	    gst_objs->v_caps = gst_caps_make_writable (gst_objs->v_caps);
 	    gst_caps_set_simple (gst_objs->v_caps,
 				 "format", G_TYPE_STRING, fourcc,
 				 "framerate", GST_TYPE_FRACTION, fps, 1,
