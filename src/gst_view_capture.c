@@ -170,7 +170,6 @@ int gst_view(CamData *cam_data, MainUi *m_ui)
         return FALSE;
 
     /* GST setup */
-
     if (!gst_view_elements(cam_data, m_ui))
 	return FALSE;
 
@@ -223,8 +222,12 @@ int gst_view_elements(CamData *cam_data, MainUi *m_ui)
     	return FALSE;
 
     if (cam_data->gst_objs.v_sink == NULL)
+    {
+    	log_msg("SYS9013", "No ximagesink - trying autovideosink...", NULL, NULL);
+
 	if (! create_element(&(cam_data->gst_objs.v_sink), "autovideosink", "v_sink", cam_data, m_ui))
 	    return FALSE;
+    }
 
     if (! create_element(&(cam_data->gst_objs.v_filter), "capsfilter", "v_filter", cam_data, m_ui))
     	return FALSE;
@@ -247,6 +250,8 @@ int gst_view_elements(CamData *cam_data, MainUi *m_ui)
     /* Specify what kind of video is wanted from the camera */
     get_session(CLRFMT, &p);
     swap_fourcc(p, fourcc);
+printf("%s gst_view_elements p: %s, fourcc: %s\n", debug_hdr, p, fourcc); fflush(stdout);
+strcpy(fourcc, "YUY2");
     get_session(RESOLUTION, &p);
     res_to_long(p, &width, &height);
     get_session(FPS, &p);

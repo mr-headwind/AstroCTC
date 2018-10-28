@@ -912,11 +912,13 @@ void colour_fmt(int **row,
 	gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT (m_ui->cbox_clrfmt), s, fourcc);
 	match_session(p, fourcc, i, &sess_idx);
     	fmt_node = fmt_node->next;
+printf("%s colour_fmt fmt: %s\n", debug_hdr, fourcc); fflush(stdout); 
     }
 
     /* Check if there is a match on a previous session */
     if (sess_idx >= 0)
     {
+printf("%s colour_fmt session: %s\n", debug_hdr, fourcc); fflush(stdout); 
 	strcpy(fourcc, p);
     }
     else
@@ -926,6 +928,7 @@ void colour_fmt(int **row,
 	{
 	    cbox_def_vals(&(m_ui->cbox_clrfmt), clr, clr_count);
 	    strcpy(fourcc, clr[0]);
+printf("%s colour_fmt empty default: %s\n", debug_hdr, fourcc); fflush(stdout); 
 	    sess_idx = 0;
 	    log_msg("CAM0040", "format setting", NULL, NULL);
 	}
