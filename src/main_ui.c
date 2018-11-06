@@ -148,7 +148,6 @@ extern void OnQuit(GtkWidget*, gpointer);
 //extern GList* gst_camera_devices(gchar*);
 extern struct camlistNode* dev_camera_devices(GtkWidget*);
 extern void app_msg(char*, char *, GtkWidget *);
-extern void OnMainResize(GtkWidget *, GdkRectangle *, gpointer); 
 extern void OnRealise(GtkWidget*);
 extern gboolean OnExpose (GtkWidget*, cairo_t *, gpointer);
 extern gboolean OnNvExpose (GtkWidget *, cairo_t *, gpointer);
@@ -245,8 +244,6 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
     /* Show window */
     gtk_widget_show_all(m_ui->window);
     gtk_window_get_size (GTK_WINDOW(m_ui->window), &m_ui->main_width, &m_ui->main_height);
-printf("%s main_ui  width: %d  height: %d\n", debug_hdr, m_ui->main_width, m_ui->main_height);fflush(stdout);
-    g_signal_connect(m_ui->window, "size-allocate", G_CALLBACK(OnMainResize), m_ui);  
 
     return;
 }
