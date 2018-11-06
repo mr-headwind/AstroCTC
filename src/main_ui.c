@@ -148,6 +148,7 @@ extern void OnQuit(GtkWidget*, gpointer);
 //extern GList* gst_camera_devices(gchar*);
 extern struct camlistNode* dev_camera_devices(GtkWidget*);
 extern void app_msg(char*, char *, GtkWidget *);
+extern void OnMainResize(GtkWidget *, GdkRectangle *, gpointer); 
 extern void OnRealise(GtkWidget*);
 extern gboolean OnExpose (GtkWidget*, cairo_t *, gpointer);
 extern gboolean OnNvExpose (GtkWidget *, cairo_t *, gpointer);
@@ -198,6 +199,8 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
     gtk_container_add (GTK_CONTAINER (m_ui->scrollwin), m_ui->video_window);
     gtk_scrolled_window_set_min_content_width (GTK_SCROLLED_WINDOW (m_ui->scrollwin), STD_VWIDTH);
     gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (m_ui->scrollwin), STD_VHEIGHT);
+    gtk_scrolled_window_set_max_content_width (GTK_SCROLLED_WINDOW (m_ui->scrollwin), MAX_VWIDTH);
+    gtk_scrolled_window_set_max_content_height (GTK_SCROLLED_WINDOW (m_ui->scrollwin), MAX_VHEIGHT);
 
     g_signal_connect (m_ui->video_window, "realize", G_CALLBACK (OnRealise), cam_data);
     g_signal_connect (m_ui->video_window, "draw", G_CALLBACK (OnExpose), m_ui);
@@ -241,6 +244,9 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
 
     /* Show window */
     gtk_widget_show_all(m_ui->window);
+    gtk_window_get_size (GTK_WINDOW(m_ui->window), &m_ui->main_width, &m_ui->main_height);
+printf("%s main_ui  width: %d  height: %d\n", debug_hdr, m_ui->main_width, m_ui->main_height);fflush(stdout);
+    g_signal_connect(m_ui->window, "size-allocate", G_CALLBACK(OnMainResize), m_ui);  
 
     return;
 }
@@ -912,13 +918,11 @@ void colour_fmt(int **row,
 	gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT (m_ui->cbox_clrfmt), s, fourcc);
 	match_session(p, fourcc, i, &sess_idx);
     	fmt_node = fmt_node->next;
-printf("%s colour_fmt fmt: %s\n", debug_hdr, fourcc); fflush(stdout); 
     }
 
     /* Check if there is a match on a previous session */
     if (sess_idx >= 0)
     {
-printf("%s colour_fmt session: %s\n", debug_hdr, fourcc); fflush(stdout); 
 	strcpy(fourcc, p);
     }
     else
@@ -928,7 +932,6 @@ printf("%s colour_fmt session: %s\n", debug_hdr, fourcc); fflush(stdout);
 	{
 	    cbox_def_vals(&(m_ui->cbox_clrfmt), clr, clr_count);
 	    strcpy(fourcc, clr[0]);
-printf("%s colour_fmt empty default: %s\n", debug_hdr, fourcc); fflush(stdout); 
 	    sess_idx = 0;
 	    log_msg("CAM0040", "format setting", NULL, NULL);
 	}
@@ -1696,6 +1699,12 @@ void update_main_ui_fps(MainUi *m_ui, CamData *cam_data)
 void update_main_ui_video(long width, long height, MainUi *m_ui)
 {
     gtk_widget_set_size_request (m_ui->video_window, width, height);
+
+    if (width <= MAX_VWIDTH)
+	gtk_scrolled_window_set_min_content_width (GTK_SCROLLED_WINDOW (m_ui->scrollwin), width);
+
+    if (height <= MAX_VHEIGHT)
+	gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (m_ui->scrollwin), height);
 
     return;
 }

@@ -258,7 +258,7 @@ strcpy(fourcc, "YUY2");
     fps = atoi(p);
 
     cam_data->gst_objs.v_caps = gst_caps_new_simple ("video/x-raw",
-						     "format", G_TYPE_STRING, fourcc,
+						     //"format", G_TYPE_STRING, fourcc,
 						     "framerate", GST_TYPE_FRACTION, fps, 1,
 						     "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
 						     "width", G_TYPE_INT, width,

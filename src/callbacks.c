@@ -81,6 +81,7 @@ void OnSetCtrlRadio(GtkToggleButton *, gpointer);
 void OnCtrlDefVal(GtkWidget*, gpointer);
 void OnCtrlReset(GtkWidget *, gpointer);
 void OnOtherCtrl(GtkWidget*, gpointer);
+void OnMainResize(GtkWidget *, GdkRectangle *, gpointer);
 void OnRealise(GtkWidget*, CamData*);
 void OnQuit(GtkWidget*, gpointer);
 gboolean OnExpose (GtkWidget*, cairo_t *, gpointer);
@@ -1155,6 +1156,26 @@ void OnDrawReticule (GstElement *overlay, cairo_t *cr, guint64 timestamp, guint6
     cairo_arc (cr, xc, yc, 20, 0.0, 6.28); 	// NB. 6.28 = 360.0 * (3.14/180.0)
     cairo_arc (cr, xc, yc, 60, 0.0, 6.28); 	// NB. 6.28 = 360.0 * (3.14/180.0)
     cairo_stroke (cr);
+
+    return;
+}
+
+
+/* Window resize */
+
+void OnMainResize(GtkWidget *win, GdkRectangle *alloc, gpointer user_data)
+{
+    int w, h;
+    MainUi *m_ui;
+
+    /* Get data */
+    m_ui = (MainUi *) user_data;
+
+printf("%s OnMainResize new width: %d  height: %d\n", debug_hdr, alloc->width, alloc->height);fflush(stdout);
+/*
+gtk_window_get_size (GTK_WINDOW(win), &w, &h);
+printf("%s OnMainResize new width: %d  height: %d\n", debug_hdr, w, h);fflush(stdout);
+*/
 
     return;
 }

@@ -83,6 +83,10 @@ typedef struct _main_ui
     int preset_hndlr_id;
     int nvexp_hndlr_id;
 
+    /* Main window base size */
+    int main_width;
+    int main_height;
+
     int duration;
     int no_of_frames;
     int thread_init;

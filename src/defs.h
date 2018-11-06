@@ -102,6 +102,8 @@ extern const GdkRGBA NIGHT;
 #define _videosz
 #define STD_VWIDTH 640
 #define STD_VHEIGHT 480
+#define MAX_VWIDTH 1280
+#define MAX_VHEIGHT 720
 #endif
 
 
