@@ -133,6 +133,9 @@ void check_video_scroll(char *, char *, MainUi *);
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 void debug_state(GstElement *, char *,  CamData *);
+static void print_pad_capabilities(GstElement *, gchar *);
+static void print_caps(const GstCaps *, const gchar *);
+static gboolean print_field(GQuark, const GValue *, gpointer);
 
 extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void res_to_long(char *, long *, long *);
@@ -310,6 +313,11 @@ int link_view_pipeline(CamData *cam_data, MainUi *m_ui)
     }
 
     gst_caps_unref(gst_objs->v_caps);
+
+    /* Print initial negotiated caps (in NULL state) */
+    printf("%s link_view_pipeline - In NULL state:\n", debug_hdr);
+    print_pad_capabilities (gst_objs->vid_rate, "vid_rate");
+    //print_pad_capabilities (gst_objs->v_sink, "v_sink");
 
     return TRUE;
 }
@@ -1338,6 +1346,9 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    /* Check need to set vidow window scrollbars */
 	    check_video_scroll(GST_MESSAGE_SRC_NAME(msg), "v_sink", m_ui);
 
+app_gst_objects *gst_objs;
+gst_objs = &(cam_data->gst_objs);
+print_pad_capabilities (gst_objs->v_sink, "v_sink");
 	    /* Action for capture only */
 	    if (cam_data->mode != CAM_MODE_CAPT)
 	    	break;
@@ -1939,4 +1950,118 @@ void debug_state(GstElement *el, char *desc, CamData *cam_data)
     printf("%s Debug State: %s current %d pending %d\n", debug_hdr, desc, curr, pend); fflush(stdout);
 
     return;
+}
+
+   
+/* Iterate the sink pads of an element */
+
+void iterate_sink_pads(GstElement *element)
+{
+    GstIterator *iter;
+    int done;
+
+    iter = gst_element_iterate_pads (element);
+    done = FALSE;
+
+    while (!done)
+    {
+	switch (gst_iterator_next (it, &item))
+	{
+	    case GST_ITERATOR_OK:
+	  ... use/change item here...
+	      gst_object_unref (item);
+	      break;
+	    case GST_ITERATOR_RESYNC:
+	      ...rollback changes to items...
+	      gst_iterator_resync (it);
+	      break;
+	    case GST_ITERATOR_ERROR:
+	      ...wrong parameters were given...
+	      done = TRUE;
+	      break;
+	    case GST_ITERATOR_DONE:
+	      done = TRUE;
+	      break;
+	}
+    }
+}
+
+    gst_iterator_free (iter);
+
+    return;
+}
+
+
+/* Functions below print the Capabilities in a human-friendly format */
+
+static void print_pad_capabilities(GstElement *element, gchar *pad_name)
+{
+    GstPad *pad = NULL;
+    GstCaps *caps = NULL;
+
+    /* Retrieve pad */
+    pad = gst_element_get_static_pad (element, pad_name);
+
+    if (!pad)
+    {
+	g_printerr ("Could not retrieve pad '%s'\n", pad_name);
+	return;
+    }
+   
+    /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
+    //caps = gst_pad_get_negotiated_caps (pad);
+    caps = gst_pad_get_current_caps (pad);
+
+    if (!caps)
+	caps = gst_pad_query_caps (pad, NULL);
+	//caps = gst_pad_get_caps_reffed (pad);
+
+    /* Print and free */
+    g_print ("Caps for the %s pad:\n", pad_name);
+    print_caps (caps, "      ");
+    gst_caps_unref (caps);
+    gst_object_unref (pad);
+}
+
+
+/* Shows the CURRENT capabilities of the requested pad in the given element */
+
+static void print_caps(const GstCaps * caps, const gchar * pfx)
+{
+    guint i;
+
+    g_return_if_fail (caps != NULL);
+
+    if (gst_caps_is_any (caps))
+    {
+	g_print ("%sANY\n", pfx);
+	return;
+    }
+
+    if (gst_caps_is_empty (caps))
+    {
+	g_print ("%sEMPTY\n", pfx);
+	return;
+    }
+   
+    for (i = 0; i < gst_caps_get_size (caps); i++)
+    {
+	GstStructure *structure = gst_caps_get_structure (caps, i);
+	 
+	g_print ("%s%s\n", pfx, gst_structure_get_name (structure));
+	gst_structure_foreach (structure, print_field, (gpointer) pfx);
+    }
+}
+
+
+/* Print caps details */
+
+static gboolean print_field(GQuark field, const GValue * value, gpointer pfx)
+{
+    gchar *str = gst_value_serialize (value);
+
+    g_print ("%s  %15s: %s\n", (gchar *) pfx, g_quark_to_string (field), str);
+    g_free (str);
+
+    return TRUE;
 }
