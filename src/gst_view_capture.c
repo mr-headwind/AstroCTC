@@ -136,6 +136,7 @@ void debug_state(GstElement *, char *,  CamData *);
 static void print_pad_capabilities(GstElement *, gchar *);
 static void print_caps(const GstCaps *, const gchar *);
 static gboolean print_field(GQuark, const GValue *, gpointer);
+void iterate_sink_pads(GstElement *);
 
 extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void res_to_long(char *, long *, long *);
@@ -316,7 +317,8 @@ int link_view_pipeline(CamData *cam_data, MainUi *m_ui)
 
     /* Print initial negotiated caps (in NULL state) */
     printf("%s link_view_pipeline - In NULL state:\n", debug_hdr);
-    print_pad_capabilities (gst_objs->vid_rate, "vid_rate");
+    iterate_sink_pads(gst_objs->vid_rate);
+    //print_pad_capabilities (gst_objs->vid_rate, "vid_rate");
     //print_pad_capabilities (gst_objs->v_sink, "v_sink");
 
     return TRUE;
@@ -1959,32 +1961,40 @@ void iterate_sink_pads(GstElement *element)
 {
     GstIterator *iter;
     int done;
+    GValue item = G_VALUE_INIT;
+    GstPad *pad = NULL;
+    GstCaps *caps = NULL;
 
-    iter = gst_element_iterate_pads (element);
+    iter = gst_element_iterate_sink_pads (element);
     done = FALSE;
 
     while (!done)
     {
-	switch (gst_iterator_next (it, &item))
+	switch (gst_iterator_next (iter, &item))
 	{
 	    case GST_ITERATOR_OK:
-	  ... use/change item here...
-	      gst_object_unref (item);
-	      break;
+		//... use/change item here...
+		g_print("Iterator pad found\n");
+		//pad = (GstPad) item;
+		//gst_object_unref (item);
+		g_value_reset (&item);
+		break;
 	    case GST_ITERATOR_RESYNC:
-	      ...rollback changes to items...
-	      gst_iterator_resync (it);
-	      break;
+		//...rollback changes to items...
+		g_print("Iterator rsync\n");
+		gst_iterator_resync (iter);
+		break;
 	    case GST_ITERATOR_ERROR:
-	      ...wrong parameters were given...
-	      done = TRUE;
-	      break;
+		//...wrong parameters were given...
+		g_printerr("Iterator error\n");
+		done = TRUE;
+		break;
 	    case GST_ITERATOR_DONE:
-	      done = TRUE;
-	      break;
+		g_print("Iterator done\n");
+	        done = TRUE;
+	        break;
 	}
     }
-}
 
     gst_iterator_free (iter);
 
