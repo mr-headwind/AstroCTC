@@ -133,10 +133,12 @@ void check_video_scroll(char *, char *, MainUi *);
 GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 void debug_state(GstElement *, char *,  CamData *);
-static void print_pad_capabilities(GstElement *, gchar *);
+
+static void print_pad_capabilities(GstPad *);
 static void print_caps(const GstCaps *, const gchar *);
 static gboolean print_field(GQuark, const GValue *, gpointer);
 void iterate_sink_pads(GstElement *);
+static void get_pad(const GValue *, gpointer);
 
 extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void res_to_long(char *, long *, long *);
@@ -254,8 +256,8 @@ int gst_view_elements(CamData *cam_data, MainUi *m_ui)
     /* Specify what kind of video is wanted from the camera */
     get_session(CLRFMT, &p);
     swap_fourcc(p, fourcc);
-printf("%s gst_view_elements p: %s, fourcc: %s\n", debug_hdr, p, fourcc); fflush(stdout);
-strcpy(fourcc, "YUY2");
+//printf("%s gst_view_elements p: %s, fourcc: %s\n", debug_hdr, p, fourcc); fflush(stdout);
+//strcpy(fourcc, "YUY2");
     get_session(RESOLUTION, &p);
     res_to_long(p, &width, &height);
     get_session(FPS, &p);
@@ -317,7 +319,10 @@ int link_view_pipeline(CamData *cam_data, MainUi *m_ui)
 
     /* Print initial negotiated caps (in NULL state) */
     printf("%s link_view_pipeline - In NULL state:\n", debug_hdr);
-    iterate_sink_pads(gst_objs->vid_rate);
+    //printf("%s link_view_pipeline - iterate video rate\n", debug_hdr);
+    //printf("%s link_view_pipeline - iterate v_sink`\n", debug_hdr);
+    printf("%s link_view_pipeline - iterate v_filter`\n", debug_hdr);
+    iterate_sink_pads(gst_objs->v_filter);
     //print_pad_capabilities (gst_objs->vid_rate, "vid_rate");
     //print_pad_capabilities (gst_objs->v_sink, "v_sink");
 
@@ -1350,7 +1355,8 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 app_gst_objects *gst_objs;
 gst_objs = &(cam_data->gst_objs);
-print_pad_capabilities (gst_objs->v_sink, "v_sink");
+iterate_sink_pads(gst_objs->v_sink);
+
 	    /* Action for capture only */
 	    if (cam_data->mode != CAM_MODE_CAPT)
 	    	break;
@@ -1960,41 +1966,12 @@ void debug_state(GstElement *el, char *desc, CamData *cam_data)
 void iterate_sink_pads(GstElement *element)
 {
     GstIterator *iter;
-    int done;
-    GValue item = G_VALUE_INIT;
-    GstPad *pad = NULL;
-    GstCaps *caps = NULL;
+    const gchar *pfx = "      ";
 
+    //iter = gst_element_iterate_src_pads (element);
     iter = gst_element_iterate_sink_pads (element);
-    done = FALSE;
 
-    while (!done)
-    {
-	switch (gst_iterator_next (iter, &item))
-	{
-	    case GST_ITERATOR_OK:
-		//... use/change item here...
-		g_print("Iterator pad found\n");
-		//pad = (GstPad) item;
-		//gst_object_unref (item);
-		g_value_reset (&item);
-		break;
-	    case GST_ITERATOR_RESYNC:
-		//...rollback changes to items...
-		g_print("Iterator rsync\n");
-		gst_iterator_resync (iter);
-		break;
-	    case GST_ITERATOR_ERROR:
-		//...wrong parameters were given...
-		g_printerr("Iterator error\n");
-		done = TRUE;
-		break;
-	    case GST_ITERATOR_DONE:
-		g_print("Iterator done\n");
-	        done = TRUE;
-	        break;
-	}
-    }
+    gst_iterator_foreach (iter, (GstIteratorForeachFunction) get_pad, (gpointer) pfx);
 
     gst_iterator_free (iter);
 
@@ -2002,22 +1979,31 @@ void iterate_sink_pads(GstElement *element)
 }
 
 
-/* Functions below print the Capabilities in a human-friendly format */
-
-static void print_pad_capabilities(GstElement *element, gchar *pad_name)
+static void get_pad(const GValue *item, gpointer pfx)
 {
     GstPad *pad = NULL;
-    GstCaps *caps = NULL;
 
-    /* Retrieve pad */
-    pad = gst_element_get_static_pad (element, pad_name);
+    printf("%s get_pad - found pad\n", debug_hdr);
+    pad = (GstPad *) g_value_get_object (item);
 
     if (!pad)
     {
-	g_printerr ("Could not retrieve pad '%s'\n", pad_name);
+	printf("%s get_pad - Could not retrieve pad\n", debug_hdr);
 	return;
     }
-   
+
+    print_pad_capabilities(pad);
+
+    return;
+}
+
+
+/* Functions below print the Capabilities in a human-friendly format */
+
+static void print_pad_capabilities(GstPad *pad)
+{
+    GstCaps *caps = NULL;
+
     /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
     //caps = gst_pad_get_negotiated_caps (pad);
     caps = gst_pad_get_current_caps (pad);
@@ -2027,10 +2013,9 @@ static void print_pad_capabilities(GstElement *element, gchar *pad_name)
 	//caps = gst_pad_get_caps_reffed (pad);
 
     /* Print and free */
-    g_print ("Caps for the %s pad:\n", pad_name);
+    printf("%s print_pad_capabilities - Caps for the pad:\n", debug_hdr);
     print_caps (caps, "      ");
     gst_caps_unref (caps);
-    gst_object_unref (pad);
 }
 
 
