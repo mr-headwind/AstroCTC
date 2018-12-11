@@ -1349,13 +1349,16 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    break;
 
 	case GST_MESSAGE_STATE_CHANGED:
+printf("%s message watch: state changed\n", debug_hdr);
 	case GST_MESSAGE_ASYNC_DONE:
 	    /* Check need to set vidow window scrollbars */
 	    check_video_scroll(GST_MESSAGE_SRC_NAME(msg), "v_sink", m_ui);
 
+printf("%s message watch: v_filter\n", debug_hdr);
 app_gst_objects *gst_objs;
 gst_objs = &(cam_data->gst_objs);
-iterate_sink_pads(gst_objs->v_sink);
+iterate_sink_pads(gst_objs->v_filter);
+//iterate_sink_pads(gst_objs->v_sink);
 
 	    /* Action for capture only */
 	    if (cam_data->mode != CAM_MODE_CAPT)
@@ -2003,6 +2006,7 @@ static void get_pad(const GValue *item, gpointer pfx)
 static void print_pad_capabilities(GstPad *pad)
 {
     GstCaps *caps = NULL;
+    gboolean fx;
 
     /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
     //caps = gst_pad_get_negotiated_caps (pad);
@@ -2011,6 +2015,13 @@ static void print_pad_capabilities(GstPad *pad)
     if (!caps)
 	caps = gst_pad_query_caps (pad, NULL);
 	//caps = gst_pad_get_caps_reffed (pad);
+
+    fx = gst_caps_is_fixed (caps);
+    
+    if (fx)
+	printf("%s print_pad_capabilities - Caps fixed:\n", debug_hdr);
+    else
+	printf("%s print_pad_capabilities - Caps not fixed:\n", debug_hdr);
 
     /* Print and free */
     printf("%s print_pad_capabilities - Caps for the pad:\n", debug_hdr);
