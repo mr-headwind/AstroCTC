@@ -317,15 +317,6 @@ int link_view_pipeline(CamData *cam_data, MainUi *m_ui)
 
     gst_caps_unref(gst_objs->v_caps);
 
-    /* Print initial negotiated caps (in NULL state) */
-    printf("%s link_view_pipeline - In NULL state:\n", debug_hdr);
-    //printf("%s link_view_pipeline - iterate video rate\n", debug_hdr);
-    //printf("%s link_view_pipeline - iterate v_sink`\n", debug_hdr);
-    printf("%s link_view_pipeline - iterate v_filter`\n", debug_hdr);
-    iterate_sink_pads(gst_objs->v_filter);
-    //print_pad_capabilities (gst_objs->vid_rate, "vid_rate");
-    //print_pad_capabilities (gst_objs->v_sink, "v_sink");
-
     return TRUE;
 }
 
@@ -1312,6 +1303,7 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
     MainUi *m_ui;
     GError *err;
     gchar *msg_str;
+    app_gst_objects *gst_objs;
 
     /* Get data */
     m_ui = (MainUi *) user_data;
@@ -1350,15 +1342,16 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 
 	case GST_MESSAGE_STATE_CHANGED:
 printf("%s message watch: state changed\n", debug_hdr);
+	    /* Update the colour format once caps have been negotiated */
+printf("%s message watch: v_filter\n", debug_hdr);
+	    gst_objs = &(cam_data->gst_objs);
+//iterate_sink_pads(gst_objs->v_filter);
+	    check_video_negotiated(gst_objs->v_filter, cam_data, m_ui);
+
 	case GST_MESSAGE_ASYNC_DONE:
 	    /* Check need to set vidow window scrollbars */
 	    check_video_scroll(GST_MESSAGE_SRC_NAME(msg), "v_sink", m_ui);
 
-printf("%s message watch: v_filter\n", debug_hdr);
-app_gst_objects *gst_objs;
-gst_objs = &(cam_data->gst_objs);
-iterate_sink_pads(gst_objs->v_filter);
-//iterate_sink_pads(gst_objs->v_sink);
 
 	    /* Action for capture only */
 	    if (cam_data->mode != CAM_MODE_CAPT)
@@ -1938,6 +1931,124 @@ void check_video_scroll(char *nm, char *match_nm, MainUi *m_ui)
 }
 
 
+/* Update the video colour format once caps have been negotiated, if required */
+
+void check_video_negotiated(GstElement *elememt, CamData *cam_data, MainUi *m_ui)
+{
+    GstIterator *iter;
+
+    if (m_ui->clrfmt_negotiated == TRUE)
+    	return;
+
+    /* Iterate the sink pads of an element */
+    iter = gst_element_iterate_sink_pads (element);
+
+    gst_iterator_foreach (iter, (GstIteratorForeachFunction) get_pad, (gpointer) pfx);
+
+    gst_iterator_free (iter);
+
+    return;
+}
+
+
+/* Get the pad and test if negotiated */
+
+static void get_pad(const GValue *item)
+{
+    GstPad *pad = NULL;
+    GstCaps *caps = NULL;
+    gboolean fx;
+    guint i;
+
+    /* Get pad */
+    printf("%s get_pad - found pad\n", debug_hdr);
+    pad = (GstPad *) g_value_get_object (item);
+
+    if (!pad)
+    {
+	printf("%s get_pad - Could not retrieve pad\n", debug_hdr);
+	return;
+    }
+
+    /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
+    caps = gst_pad_get_current_caps (pad);
+
+    if (!caps)
+	return;
+
+    /* If caps are fixed get the format negotiated */
+    fx = gst_caps_is_fixed (caps);
+    
+    if (fx)
+    {
+	printf("%s print_pad_capabilities - Caps fixed:\n", debug_hdr);
+
+	g_return_if_fail (caps != NULL);
+
+	if (gst_caps_is_any (caps))
+	{
+	    g_print ("%sANY\n", pfx);
+	    return;
+	}
+
+	if (gst_caps_is_empty (caps))
+	{
+	    g_print ("%sEMPTY\n", pfx);
+	    return;
+	}
+   
+	for (i = 0; i < gst_caps_get_size (caps); i++)
+	{
+	    GstStructure *structure = gst_caps_get_structure (caps, i);
+	     
+	    g_print ("%s%s\n", pfx, gst_structure_get_name (structure));
+	    gst_structure_foreach (structure, get_field, (gpointer) pfx);
+	}
+	}
+	else
+	    printf("%s print_pad_capabilities - Caps not fixed:\n", debug_hdr);
+
+    /* Print and free */
+    printf("%s print_pad_capabilities - Caps for the pad:\n", debug_hdr);
+    print_caps (caps, "      ");
+    gst_caps_unref (caps);
+
+    return;
+}
+
+
+/* Print caps details */
+
+static gboolean get_field(GQuark field, const GValue * value)
+{
+    const gchar *fld_nm;
+    gchar *fld_val_str;
+    char fourcc[5];
+    char *p;
+
+    fld_val_str = gst_value_serialize (value);
+    fld_nm = g_quark_to_string (field);
+
+    if (strcmp(fln_nm, FORMAT_FLD) == 0)
+    {
+    	if (strlen(fld_val_str) > 5)			// There's a problem
+	    printf("%s fourcc error: %s\n", debug_hdr, fld_val_str);
+    	else
+	    strcpy(fourcc, fld_val_str);
+	    // set the list field if different
+	    get_session(CLRFMT, &p);
+
+	    if (strcmp(p, fourcc) != 0)
+	    	
+	    m_ui->clr_fmt_negotiated = TRUE;
+    }
+
+    g_free (fld_val_str);
+
+    return TRUE;
+}
+
+
 /* Debug the state of a GST Element */
 
 void debug_state(GstElement *el, char *desc, CamData *cam_data)
@@ -1963,43 +2074,6 @@ void debug_state(GstElement *el, char *desc, CamData *cam_data)
     return;
 }
 
-   
-/* Iterate the sink pads of an element */
-
-void iterate_sink_pads(GstElement *element)
-{
-    GstIterator *iter;
-    const gchar *pfx = "      ";
-
-    //iter = gst_element_iterate_src_pads (element);
-    iter = gst_element_iterate_sink_pads (element);
-
-    gst_iterator_foreach (iter, (GstIteratorForeachFunction) get_pad, (gpointer) pfx);
-
-    gst_iterator_free (iter);
-
-    return;
-}
-
-
-static void get_pad(const GValue *item, gpointer pfx)
-{
-    GstPad *pad = NULL;
-
-    printf("%s get_pad - found pad\n", debug_hdr);
-    pad = (GstPad *) g_value_get_object (item);
-
-    if (!pad)
-    {
-	printf("%s get_pad - Could not retrieve pad\n", debug_hdr);
-	return;
-    }
-
-    print_pad_capabilities(pad);
-
-    return;
-}
-
 
 /* Functions below print the Capabilities in a human-friendly format */
 
@@ -2009,7 +2083,6 @@ static void print_pad_capabilities(GstPad *pad)
     gboolean fx;
 
     /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
-    //caps = gst_pad_get_negotiated_caps (pad);
     caps = gst_pad_get_current_caps (pad);
 
     if (!caps)
