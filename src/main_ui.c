@@ -198,8 +198,8 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
     gtk_container_add (GTK_CONTAINER (m_ui->scrollwin), m_ui->video_window);
     gtk_scrolled_window_set_min_content_width (GTK_SCROLLED_WINDOW (m_ui->scrollwin), STD_VWIDTH);
     gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (m_ui->scrollwin), STD_VHEIGHT);
-    gtk_scrolled_window_set_max_content_width (GTK_SCROLLED_WINDOW (m_ui->scrollwin), MAX_VWIDTH);
-    gtk_scrolled_window_set_max_content_height (GTK_SCROLLED_WINDOW (m_ui->scrollwin), MAX_VHEIGHT);
+    //gtk_scrolled_window_set_max_content_width (GTK_SCROLLED_WINDOW (m_ui->scrollwin), MAX_VWIDTH);
+    //gtk_scrolled_window_set_max_content_height (GTK_SCROLLED_WINDOW (m_ui->scrollwin), MAX_VHEIGHT);
 
     g_signal_connect (m_ui->video_window, "realize", G_CALLBACK (OnRealise), cam_data);
     g_signal_connect (m_ui->video_window, "draw", G_CALLBACK (OnExpose), m_ui);

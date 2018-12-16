@@ -91,4 +91,5 @@ typedef struct _main_ui
     int no_of_frames;
     int thread_init;
     int night_view;
+    int clrfmt_negotiated;
 } MainUi;

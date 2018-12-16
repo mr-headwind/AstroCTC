@@ -134,11 +134,12 @@ GstBusSyncReply bus_sync_handler (GstBus*, GstMessage*, gpointer);
 gboolean bus_message_watch (GstBus *, GstMessage *, gpointer);
 void debug_state(GstElement *, char *,  CamData *);
 
+void check_video_negotiated(GstElement *, CamData *, MainUi *);
+static gboolean get_field(GQuark, const GValue *, gpointer);
+static void get_pad(const GValue *, gpointer);
 static void print_pad_capabilities(GstPad *);
 static void print_caps(const GstCaps *, const gchar *);
 static gboolean print_field(GQuark, const GValue *, gpointer);
-void iterate_sink_pads(GstElement *);
-static void get_pad(const GValue *, gpointer);
 
 extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void res_to_long(char *, long *, long *);
@@ -1933,7 +1934,7 @@ void check_video_scroll(char *nm, char *match_nm, MainUi *m_ui)
 
 /* Update the video colour format once caps have been negotiated, if required */
 
-void check_video_negotiated(GstElement *elememt, CamData *cam_data, MainUi *m_ui)
+void check_video_negotiated(GstElement *element, CamData *cam_data, MainUi *m_ui)
 {
     GstIterator *iter;
 
@@ -1943,7 +1944,7 @@ void check_video_negotiated(GstElement *elememt, CamData *cam_data, MainUi *m_ui
     /* Iterate the sink pads of an element */
     iter = gst_element_iterate_sink_pads (element);
 
-    gst_iterator_foreach (iter, (GstIteratorForeachFunction) get_pad, (gpointer) pfx);
+    gst_iterator_foreach (iter, (GstIteratorForeachFunction) get_pad, (gpointer) FORMAT_FLD);
 
     gst_iterator_free (iter);
 
@@ -1953,7 +1954,7 @@ void check_video_negotiated(GstElement *elememt, CamData *cam_data, MainUi *m_ui
 
 /* Get the pad and test if negotiated */
 
-static void get_pad(const GValue *item)
+static void get_pad(const GValue *item, gpointer fld_nm_select)
 {
     GstPad *pad = NULL;
     GstCaps *caps = NULL;
@@ -1987,13 +1988,13 @@ static void get_pad(const GValue *item)
 
 	if (gst_caps_is_any (caps))
 	{
-	    g_print ("%sANY\n", pfx);
+	    g_print ("%sANY\n", (gchar *) fld_nm_select);
 	    return;
 	}
 
 	if (gst_caps_is_empty (caps))
 	{
-	    g_print ("%sEMPTY\n", pfx);
+	    g_print ("%sEMPTY\n", (gchar *) fld_nm_select);
 	    return;
 	}
    
@@ -2001,12 +2002,14 @@ static void get_pad(const GValue *item)
 	{
 	    GstStructure *structure = gst_caps_get_structure (caps, i);
 	     
-	    g_print ("%s%s\n", pfx, gst_structure_get_name (structure));
-	    gst_structure_foreach (structure, get_field, (gpointer) pfx);
+	    g_print ("%s%s\n", (gchar *) fld_nm_select, gst_structure_get_name (structure));
+	    gst_structure_foreach (structure, get_field, (gpointer) fld_nm_select);
 	}
-	}
-	else
-	    printf("%s print_pad_capabilities - Caps not fixed:\n", debug_hdr);
+    }
+    else
+    {
+	printf("%s print_pad_capabilities - Caps not fixed:\n", debug_hdr);
+    }
 
     /* Print and free */
     printf("%s print_pad_capabilities - Caps for the pad:\n", debug_hdr);
@@ -2019,7 +2022,7 @@ static void get_pad(const GValue *item)
 
 /* Print caps details */
 
-static gboolean get_field(GQuark field, const GValue * value)
+static gboolean get_field(GQuark field, const GValue * value, gpointer fld_nm_select)
 {
     const gchar *fld_nm;
     gchar *fld_val_str;
@@ -2029,7 +2032,7 @@ static gboolean get_field(GQuark field, const GValue * value)
     fld_val_str = gst_value_serialize (value);
     fld_nm = g_quark_to_string (field);
 
-    if (strcmp(fln_nm, FORMAT_FLD) == 0)
+    if (strcmp(fld_nm, (gchar *) fld_nm_select) == 0)
     {
     	if (strlen(fld_val_str) > 5)			// There's a problem
 	    printf("%s fourcc error: %s\n", debug_hdr, fld_val_str);
@@ -2038,9 +2041,9 @@ static gboolean get_field(GQuark field, const GValue * value)
 	    // set the list field if different
 	    get_session(CLRFMT, &p);
 
-	    if (strcmp(p, fourcc) != 0)
+	    //if (strcmp(p, fourcc) != 0)
 	    	
-	    m_ui->clr_fmt_negotiated = TRUE;
+	    m_ui->clrfmt_negotiated = TRUE;
     }
 
     g_free (fld_val_str);
