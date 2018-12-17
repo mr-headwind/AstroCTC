@@ -1944,7 +1944,7 @@ void check_video_negotiated(GstElement *element, CamData *cam_data, MainUi *m_ui
     /* Iterate the sink pads of an element */
     iter = gst_element_iterate_sink_pads (element);
 
-    gst_iterator_foreach (iter, (GstIteratorForeachFunction) get_pad, (gpointer) FORMAT_FLD);
+    gst_iterator_foreach (iter, (GstIteratorForeachFunction) get_pad, (gpointer) m_ui);
 
     gst_iterator_free (iter);
 
@@ -1954,7 +1954,7 @@ void check_video_negotiated(GstElement *element, CamData *cam_data, MainUi *m_ui
 
 /* Get the pad and test if negotiated */
 
-static void get_pad(const GValue *item, gpointer fld_nm_select)
+static void get_pad(const GValue *item, gpointer user_data)
 {
     GstPad *pad = NULL;
     GstCaps *caps = NULL;
@@ -1988,13 +1988,13 @@ static void get_pad(const GValue *item, gpointer fld_nm_select)
 
 	if (gst_caps_is_any (caps))
 	{
-	    g_print ("%sANY\n", (gchar *) fld_nm_select);
+	    g_print ("%sANY\n", FORMAT_FLD);
 	    return;
 	}
 
 	if (gst_caps_is_empty (caps))
 	{
-	    g_print ("%sEMPTY\n", (gchar *) fld_nm_select);
+	    g_print ("%sEMPTY\n", FORMAT_FLD);
 	    return;
 	}
    
@@ -2002,8 +2002,8 @@ static void get_pad(const GValue *item, gpointer fld_nm_select)
 	{
 	    GstStructure *structure = gst_caps_get_structure (caps, i);
 	     
-	    g_print ("%s%s\n", (gchar *) fld_nm_select, gst_structure_get_name (structure));
-	    gst_structure_foreach (structure, get_field, (gpointer) fld_nm_select);
+	    g_print ("%s%s\n", FORMAT_FLD, gst_structure_get_name (structure));
+	    gst_structure_foreach (structure, get_field, user_data);
 	}
     }
     else
@@ -2022,21 +2022,27 @@ static void get_pad(const GValue *item, gpointer fld_nm_select)
 
 /* Print caps details */
 
-static gboolean get_field(GQuark field, const GValue * value, gpointer fld_nm_select)
+static gboolean get_field(GQuark field, const GValue * value, gpointer user_data)
 {
+    MainUi *m_ui;
     const gchar *fld_nm;
     gchar *fld_val_str;
     char fourcc[5];
     char *p;
 
-    fld_val_str = gst_value_serialize (value);
     fld_nm = g_quark_to_string (field);
 
-    if (strcmp(fld_nm, (gchar *) fld_nm_select) == 0)
+    if (strcmp(fld_nm, FORMAT_FLD) == 0)
     {
+	fld_val_str = gst_value_serialize (value);
+
     	if (strlen(fld_val_str) > 5)			// There's a problem
+    	{
 	    printf("%s fourcc error: %s\n", debug_hdr, fld_val_str);
+	}
     	else
+    	{
+	    m_ui = (MainUi *) user_data;
 	    strcpy(fourcc, fld_val_str);
 	    // set the list field if different
 	    get_session(CLRFMT, &p);
@@ -2044,6 +2050,7 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer fld_nm_se
 	    //if (strcmp(p, fourcc) != 0)
 	    	
 	    m_ui->clrfmt_negotiated = TRUE;
+	}
     }
 
     g_free (fld_val_str);
