@@ -1971,18 +1971,20 @@ static void get_pad(const GValue *item, gpointer user_data)
 	return;
     }
 
+printf("%s get_pad - 2\n", debug_hdr);
     /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
     caps = gst_pad_get_current_caps (pad);
 
     if (!caps)
 	return;
 
+printf("%s get_pad - 3\n", debug_hdr);
     /* If caps are fixed get the format negotiated */
     fx = gst_caps_is_fixed (caps);
     
     if (fx)
     {
-	printf("%s print_pad_capabilities - Caps fixed:\n", debug_hdr);
+	printf("%s get_pad - Caps fixed:\n", debug_hdr); fflush(stdout);
 
 	g_return_if_fail (caps != NULL);
 
@@ -2008,11 +2010,12 @@ static void get_pad(const GValue *item, gpointer user_data)
     }
     else
     {
-	printf("%s print_pad_capabilities - Caps not fixed:\n", debug_hdr);
+	printf("%s get_pad - Caps not fixed:\n", debug_hdr); fflush(stdout);
     }
 
+printf("%s get_pad - 4\n", debug_hdr);
     /* Print and free */
-    printf("%s print_pad_capabilities - Caps for the pad:\n", debug_hdr);
+    printf("%s get_pad - Caps for the pad:\n", debug_hdr); fflush(stdout);
     print_caps (caps, "      ");
     gst_caps_unref (caps);
 
@@ -2119,6 +2122,7 @@ static void print_caps(const GstCaps * caps, const gchar * pfx)
 {
     guint i;
 
+    printf("%s print_caps - 1\n", debug_hdr); fflush(stdout);
     g_return_if_fail (caps != NULL);
 
     if (gst_caps_is_any (caps))
@@ -2135,6 +2139,7 @@ static void print_caps(const GstCaps * caps, const gchar * pfx)
    
     for (i = 0; i < gst_caps_get_size (caps); i++)
     {
+printf("%s print_caps - 2\n", debug_hdr); fflush(stdout);
 	GstStructure *structure = gst_caps_get_structure (caps, i);
 	 
 	g_print ("%s%s\n", pfx, gst_structure_get_name (structure));
@@ -2149,6 +2154,7 @@ static gboolean print_field(GQuark field, const GValue * value, gpointer pfx)
 {
     gchar *str = gst_value_serialize (value);
 
+printf("%s print_field - 1\n", debug_hdr); fflush(stdout);
     g_print ("%s  %15s: %s\n", (gchar *) pfx, g_quark_to_string (field), str);
     g_free (str);
 
