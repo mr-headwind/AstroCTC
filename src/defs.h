@@ -88,7 +88,7 @@ extern const GdkRGBA NIGHT;
 //#define PACKAGE_DATA_DIR "/home/tony/.local/share"	// Dev only
 #define APP_URI "http://AstroCTC.sourceforge.net"
 #define CAM_ABBR_SZ 39
-#define FORMAT_FLD "video"
+#define CLR_FORMAT_FLD "format"
 #endif
 
 

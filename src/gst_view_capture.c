@@ -1971,14 +1971,12 @@ static void get_pad(const GValue *item, gpointer user_data)
 	return;
     }
 
-printf("%s get_pad - 2\n", debug_hdr);
     /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
     caps = gst_pad_get_current_caps (pad);
 
     if (!caps)
 	return;
 
-printf("%s get_pad - 3\n", debug_hdr);
     /* If caps are fixed get the format negotiated */
     fx = gst_caps_is_fixed (caps);
     
@@ -1990,13 +1988,13 @@ printf("%s get_pad - 3\n", debug_hdr);
 
 	if (gst_caps_is_any (caps))
 	{
-	    g_print ("%sANY\n", FORMAT_FLD);
+	    g_print ("%sANY\n", CLR_FORMAT_FLD);
 	    return;
 	}
 
 	if (gst_caps_is_empty (caps))
 	{
-	    g_print ("%sEMPTY\n", FORMAT_FLD);
+	    g_print ("%sEMPTY\n", CLR_FORMAT_FLD);
 	    return;
 	}
    
@@ -2004,7 +2002,7 @@ printf("%s get_pad - 3\n", debug_hdr);
 	{
 	    GstStructure *structure = gst_caps_get_structure (caps, i);
 	     
-	    g_print ("%s%s\n", FORMAT_FLD, gst_structure_get_name (structure));
+	    g_print ("%s %s\n", CLR_FORMAT_FLD, gst_structure_get_name (structure));
 	    gst_structure_foreach (structure, get_field, user_data);
 	}
     }
@@ -2013,7 +2011,6 @@ printf("%s get_pad - 3\n", debug_hdr);
 	printf("%s get_pad - Caps not fixed:\n", debug_hdr); fflush(stdout);
     }
 
-printf("%s get_pad - 4\n", debug_hdr);
     /* Print and free */
     printf("%s get_pad - Caps for the pad:\n", debug_hdr); fflush(stdout);
     print_caps (caps, "      ");
@@ -2035,13 +2032,14 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 
     fld_nm = g_quark_to_string (field);
 
-    if (strcmp(fld_nm, FORMAT_FLD) == 0)
+    if (strcmp(fld_nm, CLR_FORMAT_FLD) == 0)
     {
 	fld_val_str = gst_value_serialize (value);
 
     	if (strlen(fld_val_str) > 5)			// There's a problem
     	{
 	    printf("%s fourcc error: %s\n", debug_hdr, fld_val_str);
+	    g_free (fld_val_str);
 	}
     	else
     	{
@@ -2053,10 +2051,10 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 	    //if (strcmp(p, fourcc) != 0)
 	    	
 	    m_ui->clrfmt_negotiated = TRUE;
+	    g_free (fld_val_str);
 	}
     }
 
-    g_free (fld_val_str);
 
     return TRUE;
 }
