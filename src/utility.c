@@ -146,6 +146,9 @@ static const char *app_messages[][2] =
     { "CAM0026", "Camera mode is incorrect %s. "},
     { "CAM0027", "Error: Could not find 'framerate' in caps filter. "},
     { "CAM0028", "Could not sync %s with parent. "},
+    { "CAM0029", "Could not retrieve pad to check negotiation status. "},
+    { "CAM0030", "Caps negotiation problem. Caps set to %s. "},
+    { "CAM0031", "Unknown or error 'fourcc' colour format found: %s. "},
     { "CAM0040", "The camera / driver does not support %s. "},
     { "APP0001", "Error: Filename may have only one Prefix, Mid or Suffix. "},
     { "APP0002", "Error: %s has an invalid value. "},
@@ -179,7 +182,7 @@ static const char *app_messages[][2] =
     { "UKN9999", "Error - Unknown error message given. "}			// NB - MUST be last
 };
 
-static const int Msg_Count = 54;
+static const int Msg_Count = 57;
 static char *Home;
 static char *logfile = NULL;
 static char *app_dir;

@@ -137,6 +137,8 @@ void debug_state(GstElement *, char *,  CamData *);
 void check_video_negotiated(GstElement *, CamData *, MainUi *);
 static gboolean get_field(GQuark, const GValue *, gpointer);
 static void get_pad(const GValue *, gpointer);
+
+/* Debug functions */
 static void print_pad_capabilities(GstPad *);
 static void print_caps(const GstCaps *, const gchar *);
 static gboolean print_field(GQuark, const GValue *, gpointer);
@@ -1342,17 +1344,13 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    break;
 
 	case GST_MESSAGE_STATE_CHANGED:
-printf("%s message watch: state changed\n", debug_hdr);
 	    /* Update the colour format once caps have been negotiated */
-printf("%s message watch: v_filter\n", debug_hdr);
 	    gst_objs = &(cam_data->gst_objs);
-//iterate_sink_pads(gst_objs->v_filter);
 	    check_video_negotiated(gst_objs->v_filter, cam_data, m_ui);
 
 	case GST_MESSAGE_ASYNC_DONE:
 	    /* Check need to set vidow window scrollbars */
 	    check_video_scroll(GST_MESSAGE_SRC_NAME(msg), "v_sink", m_ui);
-
 
 	    /* Action for capture only */
 	    if (cam_data->mode != CAM_MODE_CAPT)
@@ -1962,12 +1960,11 @@ static void get_pad(const GValue *item, gpointer user_data)
     guint i;
 
     /* Get pad */
-    printf("%s get_pad - found pad\n", debug_hdr);
     pad = (GstPad *) g_value_get_object (item);
 
     if (!pad)
     {
-	printf("%s get_pad - Could not retrieve pad\n", debug_hdr);
+	log_msg("CAM0029", NULL, NULL, NULL);
 	return;
     }
 
@@ -1982,38 +1979,28 @@ static void get_pad(const GValue *item, gpointer user_data)
     
     if (fx)
     {
-	printf("%s get_pad - Caps fixed:\n", debug_hdr); fflush(stdout);
-
 	g_return_if_fail (caps != NULL);
 
 	if (gst_caps_is_any (caps))
 	{
-	    g_print ("%sANY\n", CLR_FORMAT_FLD);
+	    log_msg("CAM0030", "ANY", NULL, NULL);
 	    return;
 	}
 
 	if (gst_caps_is_empty (caps))
 	{
-	    g_print ("%sEMPTY\n", CLR_FORMAT_FLD);
+	    log_msg("CAM0030", "EMPTY", NULL, NULL);
 	    return;
 	}
    
 	for (i = 0; i < gst_caps_get_size (caps); i++)
 	{
 	    GstStructure *structure = gst_caps_get_structure (caps, i);
-	     
-	    g_print ("%s %s\n", CLR_FORMAT_FLD, gst_structure_get_name (structure));
 	    gst_structure_foreach (structure, get_field, user_data);
 	}
     }
-    else
-    {
-	printf("%s get_pad - Caps not fixed:\n", debug_hdr); fflush(stdout);
-    }
 
-    /* Print and free */
-    printf("%s get_pad - Caps for the pad:\n", debug_hdr); fflush(stdout);
-    print_caps (caps, "      ");
+    /* Free caps */
     gst_caps_unref (caps);
 
     return;
@@ -2035,15 +2022,14 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
     if (strcmp(fld_nm, CLR_FORMAT_FLD) == 0)
     {
 	fld_val_str = gst_value_serialize (value);
+	m_ui = (MainUi *) user_data;
 
     	if (strlen(fld_val_str) > 5)			// There's a problem
     	{
-	    printf("%s fourcc error: %s\n", debug_hdr, fld_val_str);
-	    g_free (fld_val_str);
+	    log_msg("CAM0031", fld_val_str, "CAM0031", m_ui->window);
 	}
     	else
     	{
-	    m_ui = (MainUi *) user_data;
 	    strcpy(fourcc, fld_val_str);
 	    // set the list field if different
 	    get_session(CLRFMT, &p);
@@ -2051,13 +2037,17 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 	    //if (strcmp(p, fourcc) != 0)
 	    	
 	    m_ui->clrfmt_negotiated = TRUE;
-	    g_free (fld_val_str);
 	}
+
+	g_free (fld_val_str);
     }
 
 
     return TRUE;
 }
+
+
+// DEBUG FUNCTIONS
 
 
 /* Debug the state of a GST Element */
@@ -2120,7 +2110,6 @@ static void print_caps(const GstCaps * caps, const gchar * pfx)
 {
     guint i;
 
-    printf("%s print_caps - 1\n", debug_hdr); fflush(stdout);
     g_return_if_fail (caps != NULL);
 
     if (gst_caps_is_any (caps))
@@ -2137,7 +2126,6 @@ static void print_caps(const GstCaps * caps, const gchar * pfx)
    
     for (i = 0; i < gst_caps_get_size (caps); i++)
     {
-printf("%s print_caps - 2\n", debug_hdr); fflush(stdout);
 	GstStructure *structure = gst_caps_get_structure (caps, i);
 	 
 	g_print ("%s%s\n", pfx, gst_structure_get_name (structure));
@@ -2152,7 +2140,6 @@ static gboolean print_field(GQuark field, const GValue * value, gpointer pfx)
 {
     gchar *str = gst_value_serialize (value);
 
-printf("%s print_field - 1\n", debug_hdr); fflush(stdout);
     g_print ("%s  %15s: %s\n", (gchar *) pfx, g_quark_to_string (field), str);
     g_free (str);
 
