@@ -2016,6 +2016,7 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
     gchar *fld_val_str;
     char fourcc[5];
     char *p;
+    int hndlr_id;
 
     fld_nm = g_quark_to_string (field);
 
@@ -2024,17 +2025,28 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 	fld_val_str = gst_value_serialize (value);
 	m_ui = (MainUi *) user_data;
 
-    	if (strlen(fld_val_str) > 5)			// There's a problem
+    	if (strlen(fld_val_str) > 5)			
     	{
+	    /* There's a problem */
 	    log_msg("CAM0031", fld_val_str, "CAM0031", m_ui->window);
 	}
     	else
     	{
+	    /* Set the list field if a different colour has been negotiated */
 	    strcpy(fourcc, fld_val_str);
-	    // set the list field if different
 	    get_session(CLRFMT, &p);
 
-	    //if (strcmp(p, fourcc) != 0)
+	    if (strcmp(p, fourcc) != 0)
+	    {
+		/* Disable the handler first and unblock when finished */
+		hndlr_id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (m_ui->cbox_clrfmt), "hndlr_id"));
+		g_signal_handler_block (m_ui->cbox_clrfmt, hndlr_id);
+
+		/* Set the list, no need to cascade changes to Screen Res or Frame Rate */
+
+		/* Re-enable callback */
+		g_signal_handler_unblock (m_ui->cbox_clrfmt, hndlr_id);
+	    }
 	    	
 	    m_ui->clrfmt_negotiated = TRUE;
 	}

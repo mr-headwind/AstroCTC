@@ -892,6 +892,7 @@ void colour_fmt(int **row,
     char s[50];
     char fourcc[5];
     char *p;
+    int hndlr_id;
 
     static char *clr[] = { "I420", "RGB3" };			// Standby default
     const int clr_count = 2;
@@ -941,8 +942,9 @@ void colour_fmt(int **row,
     gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), sess_idx);
     set_session(CLRFMT, fourcc);
 
-    g_signal_connect(m_ui->cbox_clrfmt, "changed", G_CALLBACK(OnSetClrFmt), (gpointer) cam_data);
+    hndlr_id = g_signal_connect(m_ui->cbox_clrfmt, "changed", G_CALLBACK(OnSetClrFmt), (gpointer) cam_data);
     g_object_set_data (G_OBJECT (m_ui->cbox_clrfmt), "ui", m_ui);
+    g_object_set_data (G_OBJECT (m_ui->cbox_clrfmt), "hndlr_id", GINT_TO_POINTER (hndlr_id));
 
     return;
 }
