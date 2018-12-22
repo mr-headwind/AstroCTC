@@ -156,6 +156,7 @@ extern void OnPrepReticule (GstElement *, GstCaps *, gpointer);
 extern void OnDrawReticule (GstElement *, cairo_t *, guint64, guint64, gpointer);
 extern int check_dir(char *);
 extern int write_meta_file(char, CamData *, char *);
+extern int update_main_ui_clrfmt(char *, MainUi *);
 
 
 /* Globals */
@@ -2016,7 +2017,6 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
     gchar *fld_val_str;
     char fourcc[5];
     char *p;
-    int hndlr_id;
 
     fld_nm = g_quark_to_string (field);
 
@@ -2038,14 +2038,8 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 
 	    if (strcmp(p, fourcc) != 0)
 	    {
-		/* Disable the handler first and unblock when finished */
-		hndlr_id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (m_ui->cbox_clrfmt), "hndlr_id"));
-		g_signal_handler_block (m_ui->cbox_clrfmt, hndlr_id);
-
-		/* Set the list, no need to cascade changes to Screen Res or Frame Rate */
-
-		/* Re-enable callback */
-		g_signal_handler_unblock (m_ui->cbox_clrfmt, hndlr_id);
+		if (update_main_ui_clrfmt(fourcc, m_ui) != TRUE)
+		    log_msg("CAM00nn", "", NULL, NULL);
 	    }
 	    	
 	    m_ui->clrfmt_negotiated = TRUE;
@@ -2053,7 +2047,6 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 
 	g_free (fld_val_str);
     }
-
 
     return TRUE;
 }

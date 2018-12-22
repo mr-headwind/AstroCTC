@@ -85,6 +85,7 @@ int ctrl_flag_ok(struct v4l2_queryctrl *, GtkWidget *, char *, long, CamData *, 
 void update_main_ui_res(MainUi *, CamData *);
 void update_main_ui_fps(MainUi *, CamData *);
 void update_main_ui_video(long, long, MainUi *);
+int update_main_ui_clrfmt(char *, MainUi *);
 void set_scale_val(GtkWidget *, char *, long);
 int reset_cntl_panel(MainUi *, CamData *);
 void load_profiles(GtkWidget *, char *, int, int);
@@ -1706,6 +1707,25 @@ void update_main_ui_video(long width, long height, MainUi *m_ui)
 	gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (m_ui->scrollwin), height);
 
     return;
+}
+
+
+/* Set the colour format combobox to the given fourcc code, no need to cascade changes to Screen Res or Frame Rate */
+
+int update_main_ui_clrfmt(char *fourcc, MainUi *m_ui)
+{
+    int hndlr_id;
+
+    /* Disable the handler first and unblock when finished */
+    hndlr_id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (m_ui->cbox_clrfmt), "hndlr_id"));
+    g_signal_handler_block (m_ui->cbox_clrfmt, hndlr_id);
+
+    /* Set the list */
+
+    /* Re-enable callback */
+    g_signal_handler_unblock (m_ui->cbox_clrfmt, hndlr_id);
+
+    return TRUE;
 }
 
 
