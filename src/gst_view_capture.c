@@ -258,10 +258,12 @@ int gst_view_elements(CamData *cam_data, MainUi *m_ui)
     }
 
     /* Specify what kind of video is wanted from the camera */
+
+    /* Latest Version: Only use negotiated colour code for viewing 
     get_session(CLRFMT, &p);
     swap_fourcc(p, fourcc);
-//printf("%s gst_view_elements p: %s, fourcc: %s\n", debug_hdr, p, fourcc); fflush(stdout);
-//strcpy(fourcc, "YUY2");
+    */
+
     get_session(RESOLUTION, &p);
     res_to_long(p, &width, &height);
     get_session(FPS, &p);
@@ -2014,38 +2016,24 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 {
     MainUi *m_ui;
     const gchar *fld_nm;
-    gchar *fld_val_str;
-    char fourcc[5];
+    gchar *clrfmt;
     char *p;
 
     fld_nm = g_quark_to_string (field);
 
     if (strcmp(fld_nm, CLR_FORMAT_FLD) == 0)
     {
-	fld_val_str = gst_value_serialize (value);
+	clrfmt = gst_value_serialize (value);
 	m_ui = (MainUi *) user_data;
 
-    	if (strlen(fld_val_str) > 5)			
-    	{
-	    /* There's a problem */
-	    log_msg("CAM0031", fld_val_str, "CAM0031", m_ui->window);
-	}
+	/* Validate, Set the list field if a different colour format has been negotiated */
+    	if (strlen(clrfmt) > 5)			
+	    log_msg("CAM0031", clrfmt, "CAM0031", m_ui->window);
     	else
-    	{
-	    /* Set the list field if a different colour has been negotiated */
-	    strcpy(fourcc, fld_val_str);
-	    get_session(CLRFMT, &p);
+	    update_main_ui_clrfmt(clrfmt, m_ui);
 
-	    if (strcmp(p, fourcc) != 0)
-	    {
-		if (update_main_ui_clrfmt(fourcc, m_ui) != TRUE)
-		    log_msg("CAM00nn", "", NULL, NULL);
-	    }
-	    	
-	    m_ui->clrfmt_negotiated = TRUE;
-	}
-
-	g_free (fld_val_str);
+	m_ui->clrfmt_negotiated = TRUE;
+	g_free (clrfmt);
     }
 
     return TRUE;

@@ -947,6 +947,9 @@ void colour_fmt(int **row,
     g_object_set_data (G_OBJECT (m_ui->cbox_clrfmt), "ui", m_ui);
     g_object_set_data (G_OBJECT (m_ui->cbox_clrfmt), "hndlr_id", GINT_TO_POINTER (hndlr_id));
 
+    /* Latest Version: Only use negotiated colour code for viewing, but keep list as validator */
+    gtk_widget_set_sensitive (m_ui->cbox_clrfmt, TRUE);
+
     return;
 }
 
@@ -1712,20 +1715,61 @@ void update_main_ui_video(long width, long height, MainUi *m_ui)
 
 /* Set the colour format combobox to the given fourcc code, no need to cascade changes to Screen Res or Frame Rate */
 
-int update_main_ui_clrfmt(char *fourcc, MainUi *m_ui)
+int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
 {
-    int hndlr_id;
+    int hndlr_id, idx;
+    char fourcc[5];
+    char *p;
+    struct v4l2_fmtdesc *vfmt;
+    struct v4l2_list *fmt_node;
+    CamData *cam_data;
+
+    /* Check setting against negotiated */
+    get_session(CLRFMT, &p);
+
+    if (strcmp(p, clrfmt) == 0)
+    	return TRUE;
 
     /* Disable the handler first and unblock when finished */
     hndlr_id = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (m_ui->cbox_clrfmt), "hndlr_id"));
     g_signal_handler_block (m_ui->cbox_clrfmt, hndlr_id);
 
     /* Set the list */
+    cam_data = g_object_get_data (G_OBJECT(m_ui->window), "cam_data");
+    fmt_node = cam_data->cam->fmt_head;
+    idx = 0;
+
+    while(fmt_node != NULL)
+    {
+    	vfmt = (struct v4l2_fmtdesc *) fmt_node->v4l2_data;
+	pxl2fourcc(vfmt->pixelformat, fourcc);
+
+	if (strcmp(fourcc, clrfmt) == 0)
+	{
+	    gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), idx);
+	    set_session(CLRFMT, fourcc);
+	    idx = -1;
+	    break;
+	}
+
+    	fmt_node = fmt_node->next;
+    	idx++;
+    }
+
+    if (idx != -1)				// No match found
+    {
+	log_msg("CAM0032", clrfmt, NULL, NULL);
+	idx = FALSE;
+    }
+    else
+    {	
+    	idx = TRUE;
+    }
 
     /* Re-enable callback */
     g_signal_handler_unblock (m_ui->cbox_clrfmt, hndlr_id);
 
-    return TRUE;
+    return idx;
 }
 
 
