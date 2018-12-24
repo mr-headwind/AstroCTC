@@ -1744,6 +1744,7 @@ int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
     	vfmt = (struct v4l2_fmtdesc *) fmt_node->v4l2_data;
 	pxl2fourcc(vfmt->pixelformat, fourcc);
 
+printf("%s update_main_ui_clrfmt  fourcc: %s   clrfmt: %s\n", debug_hdr, fourcc, clrfmt); fflush(stdout);
 	if (strcmp(fourcc, clrfmt) == 0)
 	{
 	    gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), idx);
