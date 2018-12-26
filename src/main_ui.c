@@ -114,6 +114,7 @@ extern void save_ctrl(struct v4l2_queryctrl *, char *, long, CamData *, GtkWidge
 extern GtkWidget * find_widget_by_name(GtkWidget *, char *);
 extern void match_session(char *, char *, int, int *);
 extern int get_user_pref(char *, char **);
+extern void swap_fourcc(char *, char *);
 //extern void debug_session();
 
 extern void OnSetProfile(GtkWidget*, gpointer);
@@ -948,7 +949,7 @@ void colour_fmt(int **row,
     g_object_set_data (G_OBJECT (m_ui->cbox_clrfmt), "hndlr_id", GINT_TO_POINTER (hndlr_id));
 
     /* Latest Version: Only use negotiated colour code for viewing, but keep list as validator */
-    gtk_widget_set_sensitive (m_ui->cbox_clrfmt, TRUE);
+    gtk_widget_set_sensitive (m_ui->cbox_clrfmt, FALSE);
 
     return;
 }
@@ -1718,7 +1719,7 @@ void update_main_ui_video(long width, long height, MainUi *m_ui)
 int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
 {
     int hndlr_id, idx;
-    char fourcc[5];
+    char fourcc[5], tmp_fcc[5];
     char *p;
     struct v4l2_fmtdesc *vfmt;
     struct v4l2_list *fmt_node;
@@ -1742,7 +1743,8 @@ int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
     while(fmt_node != NULL)
     {
     	vfmt = (struct v4l2_fmtdesc *) fmt_node->v4l2_data;
-	pxl2fourcc(vfmt->pixelformat, fourcc);
+	pxl2fourcc(vfmt->pixelformat, tmp_fcc);
+	swap_fourcc(tmp_fcc, fourcc);
 
 printf("%s update_main_ui_clrfmt  fourcc: %s   clrfmt: %s\n", debug_hdr, fourcc, clrfmt); fflush(stdout);
 	if (strcmp(fourcc, clrfmt) == 0)
