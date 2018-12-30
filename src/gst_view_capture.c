@@ -2026,6 +2026,7 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 	clrfmt = gst_value_serialize (value);
 	m_ui = (MainUi *) user_data;
 
+printf("%s get_field   clrfmt: %s\n", debug_hdr, clrfmt); fflush(stdout);
 	/* Validate, Set the list field if a different colour format has been negotiated */
     	if (strlen(clrfmt) > 5)			
 	    log_msg("CAM0031", clrfmt, "CAM0031", m_ui->window);

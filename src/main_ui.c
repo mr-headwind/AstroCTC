@@ -1710,11 +1710,14 @@ void update_main_ui_video(long width, long height, MainUi *m_ui)
 }
 
 
-/* Set the colour format combobox to the given fourcc code, no need to cascade changes to Screen Res or Frame Rate */
+// Set the colour format combobox to the given fourcc code, no need to cascade changes to Screen Res or Frame Rate
+// The reason this gets called is because gstreamer may negotiate a different colour format to the last one used
+// and may not even match anything listed for the camera in the camera details function or it may be an identical
+// or compatible one. In the latter case, show the negotiated fourcc but store the original.
 
 int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
 {
-    int hndlr_id, idx;
+    int hndlr_id, i, fnd_idx;
     char fourcc[5];
     char s[50];
     char *p;
@@ -1735,32 +1738,44 @@ int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
     /* Set the list */
     cam_data = g_object_get_data (G_OBJECT(m_ui->window), "cam_data");
     fmt_node = cam_data->cam->fmt_head;
-    idx = 0;
+    i = 0;
+    fnd_idx = -1;
 
     while(fmt_node != NULL)
     {
     	vfmt = (struct v4l2_fmtdesc *) fmt_node->v4l2_data;
 	pxl2fourcc(vfmt->pixelformat, fourcc);
 
+printf("%s update_main_ui_clrfmt   fmt_index: %d\n", debug_hdr, vfmt->index); fflush(stdout);
+	/* Try exact match or an equivalent or compatible one */
 	if (strcmp(fourcc, clrfmt) == 0)
 	{
-	    gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), idx);
+	    fnd_idx = i;
 	    set_session(CLRFMT, fourcc);
-	    idx = -1;
 	    break;
+	}
+	else
+	{
+	    swap_fourcc(fourcc, tmp_fourcc);
+
+	    if (strcmp(tmp_fourcc, clrfmt) == 0)
+		set_session(CLRFMT, fourcc);
 	}
 
     	fmt_node = fmt_node->next;
-    	idx++;
+    	i++;
     }
 
-    if (idx != -1)				// No match found, add to list and set
+    /* No match found, just add to list and set */
+    if (fnd_idx == -1)			
     {
 	log_msg("CAM0032", clrfmt, NULL, NULL);
-	sprintf(s, "%d", idx);
+	sprintf(s, "%d", i);
+	fnd_idx = i;
 	gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT (m_ui->cbox_clrfmt), s, clrfmt);
-	gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), idx);
-	set_session(CLRFMT, clrfmt);
+    }
+
+    gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), fnd_idx);
 	idx = FALSE;
     }
     else
