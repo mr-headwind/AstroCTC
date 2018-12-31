@@ -114,6 +114,7 @@ extern void save_ctrl(struct v4l2_queryctrl *, char *, long, CamData *, GtkWidge
 extern GtkWidget * find_widget_by_name(GtkWidget *, char *);
 extern void match_session(char *, char *, int, int *);
 extern int get_user_pref(char *, char **);
+extern void swap_fourcc(char *, char *);
 //extern void debug_session();
 
 extern void OnSetProfile(GtkWidget*, gpointer);
@@ -1717,8 +1718,8 @@ void update_main_ui_video(long width, long height, MainUi *m_ui)
 
 int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
 {
-    int hndlr_id, i, fnd_idx;
-    char fourcc[5];
+    int hndlr_id, r, i, idx;
+    char fourcc[5], tmp_fourcc[5];
     char s[50];
     char *p;
     struct v4l2_fmtdesc *vfmt;
@@ -1739,19 +1740,20 @@ int update_main_ui_clrfmt(char *clrfmt, MainUi *m_ui)
     cam_data = g_object_get_data (G_OBJECT(m_ui->window), "cam_data");
     fmt_node = cam_data->cam->fmt_head;
     i = 0;
-    fnd_idx = -1;
+    idx = -1;
+    r = FALSE;
 
     while(fmt_node != NULL)
     {
     	vfmt = (struct v4l2_fmtdesc *) fmt_node->v4l2_data;
 	pxl2fourcc(vfmt->pixelformat, fourcc);
 
-printf("%s update_main_ui_clrfmt   fmt_index: %d\n", debug_hdr, vfmt->index); fflush(stdout);
 	/* Try exact match or an equivalent or compatible one */
 	if (strcmp(fourcc, clrfmt) == 0)
 	{
-	    fnd_idx = i;
+	    idx = i;
 	    set_session(CLRFMT, fourcc);
+	    r = TRUE;
 	    break;
 	}
 	else
@@ -1759,7 +1761,10 @@ printf("%s update_main_ui_clrfmt   fmt_index: %d\n", debug_hdr, vfmt->index); ff
 	    swap_fourcc(fourcc, tmp_fourcc);
 
 	    if (strcmp(tmp_fourcc, clrfmt) == 0)
+	    {
 		set_session(CLRFMT, fourcc);
+		r = TRUE;
+	    }
 	}
 
     	fmt_node = fmt_node->next;
@@ -1767,21 +1772,17 @@ printf("%s update_main_ui_clrfmt   fmt_index: %d\n", debug_hdr, vfmt->index); ff
     }
 
     /* No match found, just add to list and set */
-    if (fnd_idx == -1)			
-    {
+    if (idx == -1 && r == FALSE)			
 	log_msg("CAM0032", clrfmt, NULL, NULL);
-	sprintf(s, "%d", i);
-	fnd_idx = i;
+
+    if (idx == -1)
+    {
+	idx = i;
+	sprintf(s, "%d", idx);
 	gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT (m_ui->cbox_clrfmt), s, clrfmt);
     }
 
-    gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), fnd_idx);
-	idx = FALSE;
-    }
-    else
-    {	
-    	idx = TRUE;
-    }
+    gtk_combo_box_set_active(GTK_COMBO_BOX (m_ui->cbox_clrfmt), idx);
 
     /* Latest Version: Only use negotiated colour code for viewing, but keep list as validator */
     gtk_widget_set_sensitive (m_ui->cbox_clrfmt, FALSE);
@@ -1789,7 +1790,7 @@ printf("%s update_main_ui_clrfmt   fmt_index: %d\n", debug_hdr, vfmt->index); ff
     /* Re-enable callback */
     g_signal_handler_unblock (m_ui->cbox_clrfmt, hndlr_id);
 
-    return idx;
+    return r;
 }
 
 

@@ -1009,7 +1009,7 @@ void set_capture_btns (MainUi *m_ui, int start_sens, int stop_sens)
     gtk_widget_set_sensitive (GTK_WIDGET (m_ui->cap_pause_tb), stop_sens);
 
     /* Controls (always same as start) */
-    gtk_widget_set_sensitive (m_ui->cbox_clrfmt, start_sens); 
+    //gtk_widget_set_sensitive (m_ui->cbox_clrfmt, start_sens);		// Only use negotiated now 
     gtk_widget_set_sensitive (m_ui->cbox_res, start_sens); 
     gtk_widget_set_sensitive (m_ui->cbox_fps, start_sens); 
     gtk_widget_set_sensitive (m_ui->oth_ctrls_btn, start_sens); 
@@ -2026,7 +2026,6 @@ static gboolean get_field(GQuark field, const GValue * value, gpointer user_data
 	clrfmt = gst_value_serialize (value);
 	m_ui = (MainUi *) user_data;
 
-printf("%s get_field   clrfmt: %s\n", debug_hdr, clrfmt); fflush(stdout);
 	/* Validate, Set the list field if a different colour format has been negotiated */
     	if (strlen(clrfmt) > 5)			
 	    log_msg("CAM0031", clrfmt, "CAM0031", m_ui->window);
