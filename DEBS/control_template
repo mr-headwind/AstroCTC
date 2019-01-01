@@ -1,5 +1,5 @@
 Package: astroctc
-Version: 0.53
+Version: 0.60
 Section: base
 Priority: optional
 Architecture: amd64 or i386

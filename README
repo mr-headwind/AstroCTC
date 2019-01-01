@@ -100,6 +100,7 @@
 	sudo apt-get update
 	sudo apt-get install gstreamer1.0*
 	sudo apt-get install gstreamer-tools
+	sudo apt-get install libgstreamer-plugins-base1.0-dev
     
     Additionally the following packages may be required (Note: this is how for Ubuntu):
     	sudo apt-get install libv4l-dev
