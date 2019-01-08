@@ -468,7 +468,6 @@ void add_camera_list(GtkWidget **cam_menu, MainUi *m_ui, CamData *cam_data)
 
     //camlist = gst_camera_devices("v4l2src");
     //camlist = gst_camera_devices("dshowvideosrc");
-printf("%s add_camera_list 1\n", debug_hdr); fflush(stdout);
     cam_data->camlist = dev_camera_devices(m_ui->window);
 
     /* Empty list */
@@ -490,16 +489,13 @@ printf("%s add_camera_list 1\n", debug_hdr); fflush(stdout);
     get_session("CAMERA", &prev_nm);
     i = 0;
 
-printf("%s add_camera_list 2\n", debug_hdr); fflush(stdout);
     while(tmp != NULL)
     {
-printf("%s add_camera_list 3\n", debug_hdr); fflush(stdout);
 	cam_nm = tmp->cam->vcaps.card;
 	cam_dev = tmp->cam->video_dev;
 	cam_sel = gtk_menu_item_new_with_label (cam_nm);
 
 	sprintf(s, "cam_%d", i++);
-printf("%s add_camera_list 4  s %s\n", debug_hdr, s); fflush(stdout);
 	gtk_widget_set_name (cam_sel, s);
 
 	/* Add to menu */
@@ -513,13 +509,8 @@ printf("%s add_camera_list 4  s %s\n", debug_hdr, s); fflush(stdout);
 	/* Show menu item */
 	gtk_widget_show (cam_sel);
 	
-printf("%s add_camera_list 5\n", debug_hdr); fflush(stdout);
-printf("%s add_camera_list 5a  cur_cam %s\n", debug_hdr, cam_data->current_cam); fflush(stdout);
-printf("%s add_camera_list 5b  cam_nm %s\n", debug_hdr, cam_nm); fflush(stdout);
-printf("%s add_camera_list 5c  prev_nm %s\n", debug_hdr, prev_nm); fflush(stdout);
 	if ((strlen(cam_data->current_cam) == 0) || (strcmp(cam_nm, prev_nm) == 0))
 	{
-printf("%s add_camera_list 6\n", debug_hdr); fflush(stdout);
 	    strcpy(cam_data->current_cam, cam_nm);
 	    strcpy(cam_data->current_dev, cam_dev);
 
@@ -529,13 +520,10 @@ printf("%s add_camera_list 6\n", debug_hdr); fflush(stdout);
 	    cam_data->current_dev_abbr[CAM_ABBR_SZ] = '\0';
 
 	    cam_data->cam = tmp->cam;
-printf("%s add_camera_list 7\n", debug_hdr); fflush(stdout);
 	}
 
 	tmp = tmp->next;
-printf("%s add_camera_list 8\n", debug_hdr); fflush(stdout);
     }
-printf("%s add_camera_list 9\n", debug_hdr); fflush(stdout);
 
     set_session("CAMERA", cam_data->current_cam);
 
@@ -1840,14 +1828,20 @@ int reset_cntl_panel(MainUi *m_ui, CamData *cam_data)
 
     child_widgets = g_list_last(child_widgets);
 
+printf("%s reset_cntl_panel 1\n", debug_hdr); fflush(stdout);
     while (child_widgets != NULL)
     {
 	widget = child_widgets->data;
 	widget_name = gtk_widget_get_name (widget);
 
+printf("%s reset_cntl_panel 2\n", debug_hdr); fflush(stdout);
 	if ((widget_name != NULL) && (strcmp(widget_name, "GtkLabel") != 0))
+{
+printf("%s reset_cntl_panel 2a  nm: %s\n", debug_hdr, widget_name); fflush(stdout);
 	    gtk_widget_destroy (widget);
+}
 
+printf("%s reset_cntl_panel 3\n", debug_hdr); fflush(stdout);
 	child_widgets = g_list_previous(child_widgets);
     }
 
@@ -1855,6 +1849,7 @@ int reset_cntl_panel(MainUi *m_ui, CamData *cam_data)
 
     /* Recreate the new control widgets */
     row = 2;
+printf("%s reset_cntl_panel 4\n", debug_hdr); fflush(stdout);
     video_settings(&row, cam_data, m_ui);
     exposure_settings(&row, cam_data, m_ui);
 

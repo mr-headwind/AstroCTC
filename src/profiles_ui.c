@@ -46,6 +46,7 @@
 #include <defs.h>
 #include <preferences.h>
 #include <main.h>
+#include <session.h>
 
 
 /* Defines */
@@ -118,6 +119,8 @@ extern int write_user_prefs(GtkWidget *);
 extern void load_profiles(GtkWidget *, char *, int, int);
 extern int get_user_pref(char *, char **);
 extern int save_session(char *);
+extern int set_session(char *, char *);
+extern int get_session(char *, char **);
 extern gint query_dialog(GtkWidget *, char *, char *);
 
 
@@ -665,12 +668,15 @@ void del_profile_list(ProfileUi *p_ui)
 
 void save_profile(char *nm)
 {
-    char *profile_dir;
-    char *fn;
+    char *profile_dir, *fn, *cam_nm;
 
     profile_dir = profile_dir_path();
     fn = (char *) malloc(strlen(nm) + strlen(profile_dir) + 2);
     sprintf(fn, "%s/%s", profile_dir, nm);
+
+    /* Force the canera into the new profile */
+    get_session(CAMERA, &cam_nm);
+    set_session(CAMERA, cam_nm);
 
     save_session(fn);
 
