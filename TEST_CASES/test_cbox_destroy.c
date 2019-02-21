@@ -8,6 +8,7 @@
 */
 
 
+static GtkWidget *grid;
 
 
 /* Functions */
@@ -29,6 +30,7 @@ static void OnDestroyCbox (GtkWidget *widget, gpointer data)
     g_print ("Destroy cbox\n");
     GtkWidget *cbox = (GtkWidget *) data;
     gtk_widget_destroy (cbox);
+    //gtk_container_remove (GTK_CONTAINER (grid), cbox);	// Works
 }
 
 static void OnReShow (GtkWidget *widget, gpointer data)
@@ -45,7 +47,6 @@ static void OnReShow (GtkWidget *widget, gpointer data)
 int main (int   argc, char *argv[])
 {
     GtkWidget *window;
-    GtkWidget *grid;
     GtkWidget *clr_btn, *dest_btn, *show_btn, *quit_btn;
     GtkWidget *cbox;
 
