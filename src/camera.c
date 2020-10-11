@@ -186,6 +186,7 @@ struct camlistNode* dev_camera_devices(GtkWidget *window)
     char video_dev[300];
     const char *sysfsclass = V4L_SYS_CLASS;
     struct camlistNode *v_node;
+    unsigned capabilities;
 
     /* Open video directory */
     if((dp = opendir(sysfsclass)) == NULL)
@@ -224,7 +225,7 @@ struct camlistNode* dev_camera_devices(GtkWidget *window)
 	sprintf(video_dev, "%s/%s", DEV_DIR, ep->d_name);
 
 	/* Open the camera */
-	if ((fd = cam_open(video_dev, O_RDONLY, window)) == -1)
+	if ((fd = cam_open(video_dev, O_RDWR, window)) == -1)
 	    return NULL;
 
 	/* Connect to the camera and get caps */
@@ -235,8 +236,22 @@ struct camlistNode* dev_camera_devices(GtkWidget *window)
 
 	if (! camera_caps(v_node->cam, window))
 	    return NULL;
+	
+	/* Only add devices capable of capture */
+	capabilities = v_node->cam->vcaps.capabilities;
 
-	add_listNode(v_node, &head);
+	if (capabilities & V4L2_CAP_DEVICE_CAPS) 
+	    capabilities = v_node->cam->vcaps.device_caps;
+
+	if (! (capabilities & (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE)))
+	{
+	    free(v_node-> cam); 
+	    free(v_node); 
+	}
+	else
+	{
+	    add_listNode(v_node, &head);
+	}
 	
 	v4l2_close(fd);
     }
