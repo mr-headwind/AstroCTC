@@ -26,6 +26,7 @@
 **
 ** History
 **	12-Aug-2015	Initial code
+**	20-Nov-2020	Changes to move to css
 **
 */
 
@@ -66,7 +67,7 @@ int other_ctrl_main(GtkWidget *, CamData *);
 OthCtrlUi * new_other_ctrl_ui();
 void other_ctrl_ui(OthCtrlUi *, CamData *);
 void other_ctrl_grid(OthCtrlUi *, CamData *);
-void create_oth_ctrl(struct v4l2_list *, PangoFontDescription **, int, OthCtrlUi *, CamData *);
+void create_oth_ctrl(struct v4l2_list *, int, OthCtrlUi *, CamData *);
 void OnOthCtrlOK(GtkWidget *, gpointer);
 void OnOthCtrlDefVal(GtkWidget *, gpointer);
 void OnOthCtrlReset(GtkWidget *, gpointer);
@@ -76,12 +77,9 @@ extern void app_msg(char*, char *, GtkWidget*);
 extern void register_window(GtkWidget *);
 extern void deregister_window(GtkWidget *);
 extern int cam_ctrl_reset(CamData *, GtkWidget *, char, GtkWidget *);
-extern void scale_cam_ctrl(struct v4l2_queryctrl *, PangoFontDescription **, int , 
-			   GtkWidget *, GtkWidget *, CamData *);
-extern void menu_cam_ctrl(struct v4l2_list *, PangoFontDescription **, int, GtkWidget *,
-			  GtkWidget *, CamData *);
-extern void radio_cam_ctrl(struct v4l2_list *, PangoFontDescription **, int, GtkWidget *,
-			   GtkWidget *, CamData *);
+extern void scale_cam_ctrl(struct v4l2_queryctrl *, int , GtkWidget *, GtkWidget *, CamData *);
+extern void menu_cam_ctrl(struct v4l2_list *, int, GtkWidget *, GtkWidget *, CamData *);
+extern void radio_cam_ctrl(struct v4l2_list *, int, GtkWidget *, GtkWidget *, CamData *);
 
 
 /* Globals */
@@ -181,13 +179,9 @@ void other_ctrl_ui(OthCtrlUi *o_ui, CamData *cam_data)
 
 void other_ctrl_grid(OthCtrlUi *o_ui, CamData *cam_data)
 {  
-    PangoFontDescription *pf;
     int row;
     struct v4l2_list *tmp, *last;
     GtkWidget *label;
-
-    /* Font and layout setup */
-    pf = pango_font_description_from_string ("Sans 9");
 
     /* Container */
     o_ui->oth_cntr = gtk_grid_new();
@@ -198,8 +192,8 @@ void other_ctrl_grid(OthCtrlUi *o_ui, CamData *cam_data)
 
     /* Overall label - apply a b/g colour and bolding */
     label = gtk_label_new("Other Settings");
+    gtk_widget_set_name(label, "data_4DB");
     gtk_grid_attach(GTK_GRID (o_ui->oth_cntr), label, 0, 0, 2, 1);
-    gtk_widget_override_color(label, GTK_STATE_FLAG_NORMAL, &DARK_BLUE);
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_START);
 
     /* Iterate thru the camera controls fo find the non-standard (ie not on main window) ones */
@@ -208,7 +202,7 @@ void other_ctrl_grid(OthCtrlUi *o_ui, CamData *cam_data)
 
     while((tmp = get_next_oth_ctrl(last, cam_data)) != NULL)
     {
-	create_oth_ctrl(tmp, &pf, row, o_ui, cam_data);
+	create_oth_ctrl(tmp, row, o_ui, cam_data);
 	row++;
 	last = tmp;
     }
@@ -218,21 +212,18 @@ void other_ctrl_grid(OthCtrlUi *o_ui, CamData *cam_data)
 
     for(tmp = cam_data->cam->pctl_head; tmp != NULL; tmp = last)
     {
-	create_oth_ctrl(tmp, &pf, row, o_ui, cam_data);
+	create_oth_ctrl(tmp, row, o_ui, cam_data);
 	row++;
 	last = tmp->next;
     }
 
     /* Add some decoration to the control grid */ 
     o_ui->cntl_ev_box = gtk_event_box_new ();
-    gtk_widget_override_background_color(o_ui->cntl_ev_box, GTK_STATE_FLAG_NORMAL, &BLUE_GRAY);
+    gtk_widget_set_name(o_ui->cntl_ev_box, "ev_1");
     gtk_container_add(GTK_CONTAINER (o_ui->cntl_ev_box), o_ui->oth_cntr);  
 
     o_ui->cntl_frame = gtk_frame_new(NULL);
     gtk_container_add(GTK_CONTAINER (o_ui->cntl_frame), o_ui->cntl_ev_box);
-
-    /* Free font */
-    pango_font_description_free (pf);
 
     return;
 }
@@ -240,7 +231,7 @@ void other_ctrl_grid(OthCtrlUi *o_ui, CamData *cam_data)
 
 /* Create a screen control */
 
-void create_oth_ctrl(struct v4l2_list *tmp, PangoFontDescription **pf, int row, OthCtrlUi *o_ui, CamData *cam_data)
+void create_oth_ctrl(struct v4l2_list *tmp, int row, OthCtrlUi *o_ui, CamData *cam_data)
 {  
     struct v4l2_queryctrl *qctrl;
 
@@ -250,18 +241,17 @@ void create_oth_ctrl(struct v4l2_list *tmp, PangoFontDescription **pf, int row, 
     if (qctrl->type == V4L2_CTRL_TYPE_MENU)
     {
 	/* Create a new menu control (list or radio) */
-	menu_cam_ctrl(tmp, pf, row, o_ui->oth_cntr, o_ui->window, cam_data);
+	menu_cam_ctrl(tmp, row, o_ui->oth_cntr, o_ui->window, cam_data);
     }
     else if (qctrl->type == V4L2_CTRL_TYPE_BOOLEAN)
     {
 	/* Create a new radio control */
-	radio_cam_ctrl(tmp, pf, row, o_ui->oth_cntr, o_ui->window, cam_data);
+	radio_cam_ctrl(tmp, row, o_ui->oth_cntr, o_ui->window, cam_data);
     }
     else
     {
 	/* Create a new slider control */
-	//scale_cam_ctrl(qctrl, &(*pf), row, o_ui->oth_cntr, o_ui->window, cam_data);
-	scale_cam_ctrl(qctrl, pf, row, o_ui->oth_cntr, o_ui->window, cam_data);
+	scale_cam_ctrl(qctrl, row, o_ui->oth_cntr, o_ui->window, cam_data);
     }
 
     return;

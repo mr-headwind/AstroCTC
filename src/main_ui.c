@@ -26,6 +26,7 @@
 **
 ** History
 **	27-Dec-2013	Initial code
+**	20-Nov-2020	Changes to move to css
 **
 */
 
@@ -45,7 +46,6 @@
 #include <gdk/gdkkeysyms.h>  
 #include <linux/videodev2.h>
 #include <cairo/cairo.h>
-//#include <gtk/gtkfontchooser.h>
 #include <session.h>
 #include <main.h>
 #include <cam.h>
@@ -61,26 +61,26 @@ GtkWidget* create_presetbar(MainUi *);
 GtkWidget* create_cntl_panel(MainUi *, CamData *);
 void video_settings(int*, CamData *, MainUi *);
 void exposure_settings(int*, CamData *, MainUi *);
-void create_panel_btn(GtkWidget **, char *, char *, int, int, PangoFontDescription **, MainUi *);
+void create_panel_btn(GtkWidget **, char *, char *, int, int, MainUi *);
 GtkWidget* create_menu(MainUi *, CamData *);
 void add_camera_list(GtkWidget**, MainUi *, CamData *);
-void colour_fmt(int **, PangoFontDescription **, CamData *, MainUi *);
-void clrfmt_res(int **, PangoFontDescription **, CamData *, MainUi *);
+void colour_fmt(int **, CamData *, MainUi *);
+void clrfmt_res(int **, CamData *, MainUi *);
 void clrfmt_res_list(MainUi *, CamData *);
-void clrfmt_res_fps(int **, PangoFontDescription **, CamData *, MainUi *);
+void clrfmt_res_fps(int **, CamData *, MainUi *);
 void clrfmt_res_fps_list(MainUi *, CamData *);
-void setup_label_combobx(char *, PangoFontDescription **, GtkWidget *, int, GtkWidget **, char *);
+void setup_label_combobx(char *, GtkWidget *, int, GtkWidget **, char *);
 void cbox_def_vals(GtkWidget **, char *[], int);
-void scale_cam_ctrl(struct v4l2_queryctrl *, PangoFontDescription **, int , GtkWidget *, GtkWidget *, CamData *);
-void menu_cam_ctrl(struct v4l2_list *, PangoFontDescription **, int, GtkWidget *, GtkWidget *, CamData *);
-void radio_cam_ctrl(struct v4l2_list *, PangoFontDescription **, int, GtkWidget *, GtkWidget *, CamData *);
-void menu_list_ctrl(struct v4l2_list *, PangoFontDescription **, int, GtkWidget *, GtkWidget *, CamData *);
-void menu_radio_item(GtkWidget **, GtkWidget *, PangoFontDescription **, 
+void scale_cam_ctrl(struct v4l2_queryctrl *, int , GtkWidget *, GtkWidget *, CamData *);
+void menu_cam_ctrl(struct v4l2_list *, int, GtkWidget *, GtkWidget *, CamData *);
+void radio_cam_ctrl(struct v4l2_list *, int, GtkWidget *, GtkWidget *, CamData *);
+void menu_list_ctrl(struct v4l2_list *, int, GtkWidget *, GtkWidget *, CamData *);
+void menu_radio_item(GtkWidget **, GtkWidget *, 
 		     int, char *, long, struct v4l2_list *, struct v4l2_queryctrl *, CamData *, GtkWidget *);
-void boolean_radio_item(GtkWidget **, GtkWidget *, PangoFontDescription **, 
+void boolean_radio_item(GtkWidget **, GtkWidget *,
 		        int, char *, long, struct v4l2_queryctrl *, CamData *, GtkWidget *);
 void check_audio(struct v4l2_queryctrl *, long *);
-GtkWidget * ctrl_label(char *, PangoFontDescription **, char *, int, GtkWidget *);
+GtkWidget * ctrl_label(char *, char *, int, GtkWidget *);
 int ctrl_flag_ok(struct v4l2_queryctrl *, GtkWidget *, char *, long, CamData *, GtkWidget *);
 void update_main_ui_res(MainUi *, CamData *);
 void update_main_ui_fps(MainUi *, CamData *);
@@ -115,6 +115,7 @@ extern GtkWidget * find_widget_by_name(GtkWidget *, char *);
 extern void match_session(char *, char *, int, int *);
 extern int get_user_pref(char *, char **);
 extern void swap_fourcc(char *, char *);
+extern void set_css();
 //extern void debug_session();
 
 extern void OnSetProfile(GtkWidget*, gpointer);
@@ -168,10 +169,6 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
     GtkWidget *cntl_frame_grid;  
     GtkWidget *menu_bar;  
     GtkWidget *toolbar, *presetbar;  
-    PangoFontDescription *font_desc;
-
-    /* Initial */
-    font_desc = pango_font_description_from_string ("Sans 9");
 
     /* Set up the UI window */
     m_ui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);  
@@ -188,7 +185,6 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
 
     /* DRAWING AREA TO SHOW VIDEO */
     m_ui->video_window = gtk_drawing_area_new();
-    gtk_widget_set_double_buffered (m_ui->video_window, FALSE);
     gtk_widget_set_size_request (m_ui->video_window, STD_VWIDTH, STD_VHEIGHT);
     gtk_widget_set_halign (m_ui->video_window, GTK_ALIGN_CENTER);
     gtk_widget_set_valign (m_ui->video_window, GTK_ALIGN_CENTER);
@@ -223,7 +219,7 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
 
     /* INFORMATION AREA AT BOTTOM OF WINDOW */
     m_ui->status_info = gtk_label_new(NULL);
-    gtk_widget_override_font (m_ui->status_info, font_desc);
+    gtk_widget_set_name(m_ui->status_info, "data_4");
     gtk_widget_set_margin_top(GTK_WIDGET (m_ui->status_info), 5);
     gtk_label_set_text(GTK_LABEL (m_ui->status_info), " ");
     gtk_widget_set_halign(GTK_WIDGET (m_ui->status_info), GTK_ALIGN_START);
@@ -240,10 +236,8 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
     /* Exit when window closed */
     g_signal_connect(m_ui->window, "destroy", G_CALLBACK(OnQuit), m_ui->window);  
 
-    /* Clean up */
-    pango_font_description_free (font_desc);
-
     /* Show window */
+    set_css();
     gtk_widget_show_all(m_ui->window);
     gtk_window_get_size (GTK_WINDOW(m_ui->window), &m_ui->main_width, &m_ui->main_height);
 
@@ -544,7 +538,6 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     GtkToolItem *item;  
     GtkWidget *tool_icon;  
     GtkWidget *label;
-    PangoFontDescription *font_desc, *font_desc2;
     int i, idx;
     char s[100];
     static char *secs[] = { "60", "90", "120", "150", "180" };
@@ -556,8 +549,6 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     toolbar = gtk_toolbar_new();
     gtk_toolbar_set_icon_size(GTK_TOOLBAR (toolbar), GTK_ICON_SIZE_SMALL_TOOLBAR);
     gtk_toolbar_set_style(GTK_TOOLBAR (toolbar), GTK_TOOLBAR_BOTH_HORIZ);
-    font_desc = pango_font_description_from_string ("Sans 9");
-    font_desc2 = pango_font_description_from_string ("Sans 8");
 
     /* Start capture */
     idx = 0;
@@ -565,7 +556,6 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     tool_icon = gtk_image_new_from_icon_name("media-record", GTK_ICON_SIZE_SMALL_TOOLBAR);
     m_ui->cap_start_tb = gtk_tool_button_new(tool_icon, "Start Capture");
     gtk_tool_item_set_is_important (m_ui->cap_start_tb, TRUE);
-    gtk_widget_override_font (GTK_WIDGET (m_ui->cap_start_tb), font_desc);
     gtk_tool_item_set_expand(m_ui->cap_start_tb, FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR (toolbar), m_ui->cap_start_tb, idx);
 
@@ -579,7 +569,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     /* Capture duration */
     idx++;
     label = gtk_label_new("Duration  ");
-    gtk_widget_override_font (label, font_desc);
+    gtk_widget_set_name(label, "data_4");
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), label);
@@ -587,9 +577,8 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
 
     idx++;
     m_ui->cbox_dur = gtk_combo_box_text_new_with_entry();
-    gtk_widget_override_font (m_ui->cbox_dur, font_desc2);
+    gtk_widget_set_name(m_ui->cbox_dur, "combobox1");
     m_ui->cbox_entry_dur = gtk_bin_get_child(GTK_BIN (m_ui->cbox_dur));
-    gtk_widget_override_font (m_ui->cbox_entry_dur, font_desc2);
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->cbox_entry_dur), 4);
 
     for(i = 0; i < DUR_COUNT; i++)
@@ -616,7 +605,6 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     tool_icon = gtk_image_new_from_icon_name("media-playback-stop", GTK_ICON_SIZE_SMALL_TOOLBAR);
     m_ui->cap_stop_tb = gtk_tool_button_new(tool_icon, "Stop");
     gtk_tool_item_set_is_important (m_ui->cap_stop_tb, TRUE);
-    gtk_widget_override_font (GTK_WIDGET (m_ui->cap_stop_tb), font_desc);
     gtk_tool_item_set_expand(m_ui->cap_stop_tb, FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR (toolbar), m_ui->cap_stop_tb, idx);
     gtk_widget_set_sensitive (GTK_WIDGET (m_ui->cap_stop_tb), FALSE);
@@ -634,7 +622,6 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     tool_icon = gtk_image_new_from_icon_name("media-playback-pause", GTK_ICON_SIZE_SMALL_TOOLBAR);
     m_ui->cap_pause_tb = gtk_tool_button_new(tool_icon, "Pause");
     gtk_tool_item_set_is_important (m_ui->cap_pause_tb, TRUE);
-    gtk_widget_override_font (GTK_WIDGET (m_ui->cap_pause_tb), font_desc);
     gtk_tool_item_set_expand(m_ui->cap_pause_tb, FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR (toolbar), m_ui->cap_pause_tb, idx);
     gtk_widget_set_sensitive (GTK_WIDGET (m_ui->cap_pause_tb), FALSE);
@@ -650,7 +637,6 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     idx++;
     m_ui->snap_tb = gtk_tool_button_new(NULL, "Snapshot");
     gtk_tool_item_set_is_important (m_ui->snap_tb, TRUE);
-    gtk_widget_override_font (GTK_WIDGET (m_ui->snap_tb), font_desc);
     gtk_tool_item_set_expand(m_ui->snap_tb, FALSE);
     gtk_toolbar_insert(GTK_TOOLBAR (toolbar), m_ui->snap_tb, idx);
 
@@ -659,8 +645,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     /* Snapshot count - normally one, but a sequence is allowed */
     idx++;
     m_ui->cbox_seq = gtk_combo_box_text_new();
-    gtk_widget_override_font (m_ui->cbox_seq, font_desc2);
-    gtk_widget_set_name(m_ui->cbox_seq, "seq_count");
+    gtk_widget_set_name(m_ui->cbox_seq, "combobox1");
 
     for(i = 0; i < SEQ_COUNT; i++)
     {
@@ -675,10 +660,6 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     gtk_container_add(GTK_CONTAINER (item), m_ui->cbox_seq);
     gtk_toolbar_insert(GTK_TOOLBAR (toolbar), item, idx);
 
-    //GtkWidgetPath *widget_path = gtk_widget_get_path(cbox_seq);
-    //char *pp = gtk_widget_path_to_string(widget_path);
-    //printf("%s seq path: %s\n", debug_hdr, pp);
-
     /* Separator */
     idx++;
     item = gtk_separator_tool_item_new();
@@ -687,7 +668,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     /* Object title */
     idx++;
     label = gtk_label_new("Title  ");
-    gtk_widget_override_font (label, font_desc);
+    gtk_widget_set_name(label, "data_4");
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), label);
@@ -695,16 +676,13 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
 
     idx++;
     m_ui->obj_title = gtk_entry_new();
+    gtk_widget_set_name(m_ui->obj_title, "ent_2");
     gtk_entry_set_max_length(GTK_ENTRY (m_ui->obj_title), 30);
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->obj_title), 15);
-    gtk_widget_override_font (m_ui->obj_title, font_desc);
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), m_ui->obj_title);
     gtk_toolbar_insert(GTK_TOOLBAR (toolbar), item, idx);
-
-    pango_font_description_free (font_desc);
-    pango_font_description_free (font_desc2);
 
     return toolbar;
 }
@@ -718,7 +696,6 @@ GtkWidget* create_presetbar(MainUi *m_ui)
     GtkToolItem *item;  
     GtkWidget *label;
     GtkWidget *mbtn;
-    PangoFontDescription *font_desc;
     int idx;
     char *p;
     gchar *nm;
@@ -726,13 +703,11 @@ GtkWidget* create_presetbar(MainUi *m_ui)
     /* New toolbar */
     toolbar = gtk_toolbar_new();
     gtk_toolbar_set_style(GTK_TOOLBAR (toolbar), GTK_TOOLBAR_TEXT);
-    font_desc = pango_font_description_from_string ("Sans 9");
 
     /* List of saved profiles */
     idx = 0;
     label = gtk_label_new("  Capture Presets  ");
-    gtk_widget_override_font (label, font_desc);
-    gtk_widget_override_color(label, GTK_STATE_FLAG_NORMAL, &DARK_BLUE);
+    gtk_widget_set_name (label, "data_4DB");
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), label);
@@ -740,7 +715,7 @@ GtkWidget* create_presetbar(MainUi *m_ui)
 
     idx++;
     m_ui->cbox_profile = gtk_combo_box_text_new();
-    gtk_widget_override_font (m_ui->cbox_profile, font_desc);
+    gtk_widget_set_name (m_ui->cbox_profile, "combobox2");
 
     /* Load any preset profiles */
     get_user_pref(DEFAULT_PROFILE, &p);
@@ -757,7 +732,6 @@ GtkWidget* create_presetbar(MainUi *m_ui)
     /* Preset profile maintenance button */
     idx++;
     mbtn = gtk_button_new_with_label(" Manage Presets... ");  
-    gtk_widget_override_font (mbtn, font_desc);
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), mbtn);
@@ -768,7 +742,6 @@ GtkWidget* create_presetbar(MainUi *m_ui)
     /* Save current profile button */
     idx++;
     m_ui->save_profile_btn = gtk_button_new_with_label("  Save  ");  
-    gtk_widget_override_font (m_ui->save_profile_btn, font_desc);
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), m_ui->save_profile_btn);
@@ -785,8 +758,6 @@ GtkWidget* create_presetbar(MainUi *m_ui)
 
     g_signal_connect(m_ui->save_profile_btn, "clicked", G_CALLBACK(OnSavePreset), m_ui);
 
-    pango_font_description_free (font_desc);
-
     return toolbar;
 }
 
@@ -796,7 +767,6 @@ GtkWidget* create_presetbar(MainUi *m_ui)
 GtkWidget* create_cntl_panel(MainUi *m_ui, CamData *cam_data)
 {  
     GtkWidget *frame;  
-    PangoFontDescription *font_desc;
     char s[100];
     int row;
 
@@ -810,13 +780,8 @@ GtkWidget* create_cntl_panel(MainUi *m_ui, CamData *cam_data)
     /* Overall label - apply a b/g colour and bolding */
     sprintf(s, "%s Camera Settings", TITLE);
     m_ui->cntl_hdg = gtk_label_new(s);
+    gtk_widget_set_name (GTK_WIDGET (m_ui->cntl_hdg), "cam_hdg");
     gtk_grid_attach(GTK_GRID (m_ui->cntl_grid), m_ui->cntl_hdg, 0, 0, 2, 2);
-
-    gtk_widget_override_background_color(m_ui->cntl_hdg, GTK_STATE_FLAG_NORMAL, &BLUE_GRAY);
-    font_desc = pango_font_description_from_string ("Sans 10");
-    pango_font_description_set_weight(font_desc, PANGO_WEIGHT_BOLD);
-    gtk_widget_override_font (GTK_WIDGET (m_ui->cntl_hdg), font_desc);
-    pango_font_description_free (font_desc);
 
     if (cam_data->cam == NULL)
 	return m_ui->cntl_grid;
@@ -833,7 +798,7 @@ GtkWidget* create_cntl_panel(MainUi *m_ui, CamData *cam_data)
 
     /* Add some decoration to the control grid */ 
     m_ui->cntl_ev_box = gtk_event_box_new ();
-    gtk_widget_override_background_color(m_ui->cntl_ev_box, GTK_STATE_FLAG_NORMAL, &BLUE_GRAY);
+    gtk_widget_set_name(m_ui->cntl_ev_box, "ev_1");
     gtk_container_add(GTK_CONTAINER (m_ui->cntl_ev_box), m_ui->cntl_grid);  
 
     frame = gtk_frame_new(NULL);
@@ -850,31 +815,25 @@ void video_settings(int *row,
 		    MainUi *m_ui)
 {  
     GtkWidget *label;
-    PangoFontDescription *font_desc;
 
     /* Video settings heading */
     label = gtk_label_new("Video Settings");
     gtk_widget_set_name(label, "fmt_head");
     gtk_widget_set_margin_top(GTK_WIDGET (label), 10);
     gtk_grid_attach(GTK_GRID (m_ui->cntl_grid), label, 0, *row, 1, 1);
-    gtk_widget_override_color(label, GTK_STATE_FLAG_NORMAL, &DARK_BLUE);
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_START);
     (*row)++;
 
     /* Enumerate the supported video formats, resolutions, fps */
-    font_desc = pango_font_description_from_string ("Sans 9");
     
     /* Colour format */
-    colour_fmt(&row, &font_desc, cam_data, m_ui);
+    colour_fmt(&row, cam_data, m_ui);
 
     /* Resolution */
-    clrfmt_res(&row, &font_desc, cam_data, m_ui);
+    clrfmt_res(&row, cam_data, m_ui);
 
     /* Frame rate - fps */
-    clrfmt_res_fps(&row, &font_desc, cam_data, m_ui);
-
-    /* Free the font */
-    pango_font_description_free (font_desc);
+    clrfmt_res_fps(&row, cam_data, m_ui);
 
     return;
 }
@@ -883,7 +842,6 @@ void video_settings(int *row,
 /* Add the Colour Format combobox to the Video Settings sub-panel */
 
 void colour_fmt(int **row,
-		PangoFontDescription **font_desc,
 		CamData *cam_data,
 		MainUi *m_ui)
 {  
@@ -900,7 +858,7 @@ void colour_fmt(int **row,
     const int clr_count = 2;
     
     /* Combobox and label */
-    setup_label_combobx("Colour Format", &(*font_desc), m_ui->cntl_grid, **row, 
+    setup_label_combobx("Colour Format", m_ui->cntl_grid, **row, 
     			&(m_ui->cbox_clrfmt), "fmt");
     (**row)++;
 
@@ -955,14 +913,13 @@ void colour_fmt(int **row,
 /* Add the Resolution combobox to the Video Settings sub-panel */
 
 void clrfmt_res(int **row,
-		PangoFontDescription **font_desc,
 		CamData *cam_data,
 		MainUi *m_ui)
 {  
     int hndlr_id;
 
     /* Combobox and label */
-    setup_label_combobx("Resolution", &(*font_desc), m_ui->cntl_grid, **row, 
+    setup_label_combobx("Resolution", m_ui->cntl_grid, **row, 
     			&(m_ui->cbox_res), "res");
     (**row)++;
 
@@ -1059,14 +1016,13 @@ void clrfmt_res_list(MainUi *m_ui, CamData *cam_data)
 /* Add the Frames per Second combobox to the Video Settings sub-panel */
 
 void clrfmt_res_fps(int **row,
-		    PangoFontDescription **font_desc,
 		    CamData *cam_data,
 		    MainUi *m_ui)
 {  
     int hndlr_id;
 
     /* Combobox and label */
-    setup_label_combobx("Frame Rate", &(*font_desc), m_ui->cntl_grid, **row, 
+    setup_label_combobx("Frame Rate", m_ui->cntl_grid, **row, 
     			&(m_ui->cbox_fps), "fps");
     (**row)++;
 
@@ -1190,7 +1146,6 @@ void clrfmt_res_fps_list(MainUi *m_ui, CamData *cam_data)
 /* Create a label and combobox */
 
 void setup_label_combobx(char *label_str,
-			 PangoFontDescription **font_desc,
 			 GtkWidget *grid, 
 			 int row, 
 			 GtkWidget **cbox,
@@ -1200,18 +1155,13 @@ void setup_label_combobx(char *label_str,
     char nm[40];
 
     label = gtk_label_new(label_str);
-    pango_font_description_set_weight(*font_desc, PANGO_WEIGHT_BOLD);
-    gtk_widget_override_font (label, *font_desc);
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     sprintf(nm, "%s_lbl", prefix);
     gtk_widget_set_name(label, nm);
     gtk_grid_attach(GTK_GRID (grid), label, 0, row, 1, 1);
 
     *cbox = gtk_combo_box_text_new();
-    pango_font_description_set_weight(*font_desc, PANGO_WEIGHT_NORMAL);
-    gtk_widget_override_font (*cbox, *font_desc);
-    sprintf(nm, "%s_cbx", prefix);
-    gtk_widget_set_name(*cbox, nm);
+    gtk_widget_set_name (*cbox, "combobox2");
     gtk_grid_attach(GTK_GRID (grid), *cbox, 1, row, 1, 1);
 
     return;
@@ -1227,7 +1177,7 @@ void cbox_def_vals(GtkWidget **cbox, char *arr[], int max_rows)
     char *p;
 
     /* Highlight the problem */
-    gtk_widget_override_color(*cbox, GTK_STATE_FLAG_NORMAL, &RED1);
+    gtk_widget_set_name (*cbox, "combobox_def");
     gtk_widget_set_tooltip_text (*cbox, "The camera does not support this function. "
     					"An alternative method will be used for a sample set.");
 
@@ -1250,44 +1200,40 @@ void exposure_settings(int *row, CamData *cam_data, MainUi *m_ui)
     int init;
     GtkWidget *label;  
     struct v4l2_queryctrl *qctrl;
-    PangoFontDescription *font_desc;
 
     /* Control settings heading */
     label = gtk_label_new("Control Settings");
     gtk_widget_set_name(label, "exp_head");
     gtk_widget_set_margin_top(GTK_WIDGET (label), 10);
     gtk_grid_attach(GTK_GRID (m_ui->cntl_grid), label, 0, *row, 1, 1);
-    gtk_widget_override_color(label, GTK_STATE_FLAG_NORMAL, &DARK_BLUE);
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_START);
     (*row)++;
 
     /* Enumerate the standard controls found for the camera */
-    font_desc = pango_font_description_from_string ("Sans 9");
     init = TRUE;
     std_controls(cam_data->cam);
 
     while((qctrl = get_next_ctrl(init)) != NULL)
     {
 	/* Create a new slider control */
-	scale_cam_ctrl(qctrl, &font_desc, *row, m_ui->cntl_grid, m_ui->window, cam_data);
+	scale_cam_ctrl(qctrl, *row, m_ui->cntl_grid, m_ui->window, cam_data);
 	init = FALSE;
 	(*row)++;
     }
 
     /* More Settings */
-    create_panel_btn(&(m_ui->oth_ctrls_btn), " More Settings... ", "more_ctl_btn", 0, *row, &font_desc, m_ui);
+    create_panel_btn(&(m_ui->oth_ctrls_btn), " More Settings... ", "more_ctl_btn", 0, *row, m_ui);
     g_signal_connect(m_ui->oth_ctrls_btn, "clicked", G_CALLBACK(OnOtherCtrl), cam_data);
 
     /* Default control values */
-    create_panel_btn(&(m_ui->def_val_btn), "  Default  ", "def_val_btn", 1, *row, &font_desc, m_ui);
+    create_panel_btn(&(m_ui->def_val_btn), "  Default  ", "def_val_btn", 1, *row, m_ui);
     g_signal_connect(m_ui->def_val_btn, "clicked", G_CALLBACK(OnCtrlDefVal), (gpointer) cam_data);
 
     /* Reset */
-    create_panel_btn(&(m_ui->reset_btn), "Reset", "reset_val_btn", 2, *row, &font_desc, m_ui);
+    create_panel_btn(&(m_ui->reset_btn), "Reset", "reset_val_btn", 2, *row, m_ui);
     g_signal_connect(m_ui->reset_btn, "clicked", G_CALLBACK(OnCtrlReset), (gpointer) cam_data);
 
     (*row)++;
-    pango_font_description_free (font_desc);
 
     return;
 }
@@ -1296,15 +1242,13 @@ void exposure_settings(int *row, CamData *cam_data, MainUi *m_ui)
 /* Control Panel - create standard button */
 
 void create_panel_btn(GtkWidget **btn, 
-		      char *lbl, char *nm, 
+		      char *lbl,
+		      char *w_nm,
 		      int col, int row, 
-		      PangoFontDescription **pf,
 		      MainUi *m_ui)
 {  
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_NORMAL);
     *btn = gtk_button_new_with_label(lbl);  
-    gtk_widget_set_name(*btn, nm);
-    gtk_widget_override_font (*btn, *pf);
+    gtk_widget_set_name(*btn, w_nm);
     gtk_widget_set_margin_top(GTK_WIDGET (*btn), 20);
     gtk_grid_attach(GTK_GRID (m_ui->cntl_grid), *btn, col, row, 1, 1);
     g_object_set_data (G_OBJECT (*btn), "ui", m_ui);
@@ -1316,7 +1260,6 @@ void create_panel_btn(GtkWidget **btn,
 /* Create a label and slider (scale) for a camera control */
 
 void scale_cam_ctrl(struct v4l2_queryctrl *qctrl, 
-		    PangoFontDescription **pf, 
 		    int row,
 		    GtkWidget *grid, 
 		    GtkWidget *window, 
@@ -1330,15 +1273,13 @@ void scale_cam_ctrl(struct v4l2_queryctrl *qctrl,
     session_ctrl_val(qctrl, ctl_key, &ctl_val);
 
     /* Label */
-    ctrl_label(qctrl->name, &(*pf), ctl_key, row, grid);
+    ctrl_label(qctrl->name, ctl_key, row, grid);
 
     /* Slider control */
     exp_scale = gtk_scale_new_with_range (GTK_ORIENTATION_HORIZONTAL, 
 					  qctrl->minimum, 
 					  qctrl->maximum,
 					  qctrl->step);
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_NORMAL);
-    gtk_widget_override_font (exp_scale, *pf);
     gtk_scale_set_draw_value (GTK_SCALE (exp_scale), TRUE);
     gtk_range_set_value(GTK_RANGE (exp_scale), ctl_val);
     gtk_grid_attach(GTK_GRID (grid), exp_scale, 1, row, 1, 1);
@@ -1360,7 +1301,6 @@ void scale_cam_ctrl(struct v4l2_queryctrl *qctrl,
 /* Create a menu control (list or radio) for a camera control */
 
 void menu_cam_ctrl(struct v4l2_list *ctlNode, 
-		   PangoFontDescription **pf, 
 		   int row,
 		   GtkWidget *grid, 
 		   GtkWidget *window, 
@@ -1372,9 +1312,9 @@ void menu_cam_ctrl(struct v4l2_list *ctlNode,
     qctrl = (struct v4l2_queryctrl *) ctlNode->v4l2_data;
 
     if (((qctrl->maximum - qctrl->minimum) / qctrl->step) > 3)
-	menu_list_ctrl(ctlNode, &(*pf), row, grid, window, cam_data);
+	menu_list_ctrl(ctlNode, row, grid, window, cam_data);
     else
-	radio_cam_ctrl(ctlNode, &(*pf), row, grid, window, cam_data);
+	radio_cam_ctrl(ctlNode, row, grid, window, cam_data);
 	
     return;
 }
@@ -1383,7 +1323,6 @@ void menu_cam_ctrl(struct v4l2_list *ctlNode,
 /* Create a drop-down list for a camera control */
 
 void menu_list_ctrl(struct v4l2_list *ctlNode, 
-		    PangoFontDescription **pf, 
 		    int row,
 		    GtkWidget *grid, 
 		    GtkWidget *window, 
@@ -1402,7 +1341,7 @@ void menu_list_ctrl(struct v4l2_list *ctlNode,
     session_ctrl_val(qctrl, ctl_key, &ctl_val);
 
     /* Combobox and label */
-    setup_label_combobx(qctrl->name, &(*pf), grid, row, &(cam_ctrl_cbox), "");
+    setup_label_combobx(qctrl->name, grid, row, &(cam_ctrl_cbox), "menu");
     gtk_widget_set_name(cam_ctrl_cbox, ctl_key);
 
     /* List items */
@@ -1435,7 +1374,6 @@ void menu_list_ctrl(struct v4l2_list *ctlNode,
 /* Create a radio group for a camera control */
 
 void radio_cam_ctrl(struct v4l2_list *ctlNode, 
-		    PangoFontDescription **pf, 
 		    int row,
 		    GtkWidget *grid, 
 		    GtkWidget *window, 
@@ -1454,18 +1392,17 @@ void radio_cam_ctrl(struct v4l2_list *ctlNode,
     check_audio(qctrl, &ctl_val);
 
     /* Label (plus overrides) */
-    label = ctrl_label(qctrl->name, &(*pf), ctl_key, row, grid);
+    label = ctrl_label(qctrl->name, ctl_key, row, grid);
     gtk_widget_set_margin_top(GTK_WIDGET (label), 2);
 
     /* Radio group */
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_NORMAL);
     vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 3);
 
     /* Radio for what */
     if (qctrl->type == V4L2_CTRL_TYPE_BOOLEAN)
     {
-	boolean_radio_item(&radio_grp, vbox, &(*pf), 0, ctl_key, ctl_val, qctrl, cam_data, window);
-	boolean_radio_item(&radio_grp, vbox, &(*pf), 1, ctl_key, ctl_val, qctrl, cam_data, window);
+	boolean_radio_item(&radio_grp, vbox, 0, ctl_key, ctl_val, qctrl, cam_data, window);
+	boolean_radio_item(&radio_grp, vbox, 1, ctl_key, ctl_val, qctrl, cam_data, window);
     }
     else if (qctrl->type == V4L2_CTRL_TYPE_MENU)
     {
@@ -1474,7 +1411,7 @@ void radio_cam_ctrl(struct v4l2_list *ctlNode,
 
 	while(tmp != NULL)
 	{
-	    menu_radio_item(&radio_grp, vbox, &(*pf), i, ctl_key, ctl_val, tmp, qctrl, cam_data, window);
+	    menu_radio_item(&radio_grp, vbox, i, ctl_key, ctl_val, tmp, qctrl, cam_data, window);
 	    tmp = tmp->next;
 	    i++;
 	}
@@ -1495,7 +1432,6 @@ void radio_cam_ctrl(struct v4l2_list *ctlNode,
 
 void menu_radio_item(GtkWidget **radio_grp, 
 		     GtkWidget *vbox,
-		     PangoFontDescription **pf, 
 		     int i, 
 		     char *ctl_key,
 		     long ctl_val,
@@ -1523,7 +1459,6 @@ void menu_radio_item(GtkWidget **radio_grp,
     if (ctl_val == i)
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (radio), TRUE);
 
-    gtk_widget_override_font (radio, *pf);
     gtk_box_pack_start (GTK_BOX (vbox), radio, FALSE, FALSE, 0);
 
     handler_id = g_signal_connect(radio, "toggled", G_CALLBACK(OnSetCtrlRadio), (gpointer) cam_data);
@@ -1542,7 +1477,6 @@ void menu_radio_item(GtkWidget **radio_grp,
 
 void boolean_radio_item(GtkWidget **radio_grp, 
 		        GtkWidget *vbox,
-		        PangoFontDescription **pf, 
 		        int i,
 			char *ctl_key,
 		        long ctl_val,
@@ -1566,7 +1500,6 @@ void boolean_radio_item(GtkWidget **radio_grp,
     if (ctl_val == i)
 	gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (radio), TRUE);
 
-    gtk_widget_override_font (radio, *pf);
     gtk_box_pack_start (GTK_BOX (vbox), radio, FALSE, FALSE, 0);
 
     handler_id = g_signal_connect(radio, "toggled", G_CALLBACK(OnSetCtrlRadio), (gpointer) cam_data);
@@ -1599,14 +1532,12 @@ void check_audio(struct v4l2_queryctrl *qctrl, long *ctl_val)
 
 /* Create a label for a camera control */
 
-GtkWidget * ctrl_label(char *nm, PangoFontDescription **pf, char *ctl_key, int row, GtkWidget *grid)
+GtkWidget * ctrl_label(char *nm, char *ctl_key, int row, GtkWidget *grid)
 {
     GtkWidget *label;  
     char s[100];
 
     label = gtk_label_new(nm);
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_BOLD);
-    gtk_widget_override_font (label, *pf);
     gtk_grid_attach(GTK_GRID (grid), label, 0, row, 1, 1);
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_valign(GTK_WIDGET (label), GTK_ALIGN_START);
@@ -1909,17 +1840,21 @@ void load_profiles(GtkWidget *cbox, char *active, int hndlr_id, int clear_indi)
 void set_night_view_off(MainUi *m_ui)
 {
     GtkAllocation allocation;
+    GdkDrawingContext *dc;
+    cairo_region_t *cr_t;
+    cairo_t *cr;
 
     /* Initial */
     m_ui->night_view = FALSE;
     GdkWindow *window = gtk_widget_get_window (m_ui->window);
-    cairo_t *cr;
 
     /* Disconnect callback */
     g_signal_handler_disconnect (m_ui->window, (gulong) m_ui->nvexp_hndlr_id);
 
     /* Normal view */
-    cr = gdk_cairo_create (window);
+    cr_t = cairo_region_create ();
+    dc = gdk_window_begin_draw_frame (window, cr_t);
+    cr = gdk_drawing_context_get_cairo_context (dc);
     gtk_widget_draw (m_ui->window, cr);
     cairo_destroy (cr);
 
@@ -1932,15 +1867,19 @@ void set_night_view_off(MainUi *m_ui)
 void set_night_view_on(MainUi *m_ui)
 {
     GtkAllocation allocation;
+    GdkDrawingContext *dc;
+    cairo_region_t *cr_t;
+    cairo_t *cr;
 
     /* Initial */
     m_ui->night_view = TRUE;
     GdkWindow *window = gtk_widget_get_window (m_ui->window);
-    cairo_t *cr;
 
     /* Main window night vision setup */
     gtk_widget_get_allocation (m_ui->window, &allocation);
-    cr = gdk_cairo_create (window);
+    cr_t = cairo_region_create ();
+    dc = gdk_window_begin_draw_frame (window, cr_t);
+    cr = gdk_drawing_context_get_cairo_context (dc);
     cairo_set_source_rgba (cr, NIGHT.red, NIGHT.green, NIGHT.blue, NIGHT.alpha);
     cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);

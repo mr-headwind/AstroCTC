@@ -69,8 +69,8 @@ int capture_main(GtkWidget *);
 CaptUi * new_capt_ui();
 void capture_ui(CaptUi *);
 void capt_grid(CaptUi *);
-void capt_entry(char *, GtkWidget **, PangoFontDescription **, GtkWidget *, int, CaptUi *);
-void capt_radio(char *, char *, PangoFontDescription **, GtkWidget *, int, CaptUi *);
+void capt_entry(char *, GtkWidget **, GtkWidget *, int, CaptUi *);
+void capt_radio(char *, char *, GtkWidget *, int, CaptUi *);
 int validate_capt(CaptUi *);
 int validate_numb(GtkWidget *, char *, int, int *, CaptUi *);
 void OnCaptRadio(GtkWidget *, gpointer);
@@ -186,30 +186,24 @@ void capture_ui(CaptUi *c_ui)
 
 void capt_grid(CaptUi *c_ui)
 {  
-    PangoFontDescription *pf_body;
     int row;
 
-    /* Font and layout setup */
-    pf_body = pango_font_description_from_string ("Sans 9");
-
+    /* Layout setup */
     c_ui->capt_cntr = gtk_grid_new();
     gtk_widget_set_name(c_ui->capt_cntr, "capt_cntr");
     gtk_container_set_border_width (GTK_CONTAINER (c_ui->capt_cntr), 10);
     row = 0;
 
     /* Allow the type of capture required */
-    capt_radio("Duration (secs)", "1_dur", &pf_body, c_ui->capt_cntr, row, c_ui);
-    capt_entry("capt_dur", &(c_ui->capt_duration), &pf_body, c_ui->capt_cntr, row, c_ui);
+    capt_radio("Duration (secs)", "1_dur", c_ui->capt_cntr, row, c_ui);
+    capt_entry("capt_dur", &(c_ui->capt_duration), c_ui->capt_cntr, row, c_ui);
     row++;
 
-    capt_radio("Number of Frames", "2_frames", &pf_body, c_ui->capt_cntr, row, c_ui);
-    capt_entry("capt_frames", &(c_ui->capt_frames), &pf_body, c_ui->capt_cntr, row, c_ui);
+    capt_radio("Number of Frames", "2_frames", c_ui->capt_cntr, row, c_ui);
+    capt_entry("capt_frames", &(c_ui->capt_frames), c_ui->capt_cntr, row, c_ui);
     row++;
 
-    capt_radio("Unlimited", "3_unltd", &pf_body, c_ui->capt_cntr, row, c_ui);
-
-    /* Free font */
-    pango_font_description_free (pf_body);
+    capt_radio("Unlimited", "3_unltd", c_ui->capt_cntr, row, c_ui);
 
     return;
 }
@@ -217,11 +211,10 @@ void capt_grid(CaptUi *c_ui)
 
 /* Create entry fields */
 
-void capt_entry(char *nm, GtkWidget **ent, PangoFontDescription **pf, GtkWidget *grid, int row, CaptUi *c_ui)
+void capt_entry(char *nm, GtkWidget **ent, GtkWidget *grid, int row, CaptUi *c_ui)
 {  
     *ent = gtk_entry_new();
     gtk_widget_set_name(*ent, nm);
-    gtk_widget_override_font (*ent, *pf);
     gtk_entry_set_max_length(GTK_ENTRY (*ent), 7);
     gtk_entry_set_width_chars(GTK_ENTRY (*ent), 7);
     gtk_widget_set_margin_start (*ent, 10);
@@ -241,7 +234,7 @@ void capt_entry(char *nm, GtkWidget **ent, PangoFontDescription **pf, GtkWidget 
 
 /* Create radio buttons */
 
-void capt_radio(char *desc, char *nm, PangoFontDescription **pf, GtkWidget *grid, int row, CaptUi *c_ui)
+void capt_radio(char *desc, char *nm, GtkWidget *grid, int row, CaptUi *c_ui)
 {  
     int i;
     char s[10];
@@ -259,7 +252,6 @@ void capt_radio(char *desc, char *nm, PangoFontDescription **pf, GtkWidget *grid
 	radio = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (c_ui->radio_grp), desc);
     }
 
-    gtk_widget_override_font (radio, *pf);
     gtk_widget_set_name(radio, nm);
 
     g_signal_connect(radio, "toggled", G_CALLBACK(OnCaptRadio), (gpointer) c_ui);

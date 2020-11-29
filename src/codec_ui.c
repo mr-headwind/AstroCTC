@@ -75,7 +75,7 @@ void codec_extra(CodecUi *);
 void mpeg2_extra(CodecUi *);
 void codec_table(CodecUi *);
 void codec_prop_ui(CodecUi *);
-void add_to_grid(char *, GtkWidget *, char *, int *, GtkWidget *, PangoFontDescription **);
+void add_to_grid(char *, GtkWidget *, char *, int *, GtkWidget *);
 int codec_save_reqd(CodecUi *);
 int extra_save_reqd(CodecUi *);
 void extra_save_undo(CodecUi *);
@@ -410,11 +410,6 @@ void codec_prop_ui(CodecUi *p_ui)
 
 void fixed_details(CodecUi *p_ui)
 {  
-    PangoFontDescription *pf_fixed;
-
-    /* Font and layout setup */
-    pf_fixed = pango_font_description_from_string ("Sans 9");
-
     /* Create the grid */
     p_ui->fixed_cntr = gtk_grid_new();
     gtk_widget_set_halign(GTK_WIDGET (p_ui->fixed_cntr), GTK_ALIGN_CENTER);
@@ -422,30 +417,27 @@ void fixed_details(CodecUi *p_ui)
 
     /* Fixed codec details */
     add_to_grid ("Id (fourcc)", p_ui->l_fcc, p_ui->codec->fourcc, 
-    		 &(p_ui->row), p_ui->fixed_cntr, &pf_fixed);
+    		 &(p_ui->row), p_ui->fixed_cntr);
    
     add_to_grid ("Description", p_ui->l_short_desc, p_ui->codec->short_desc, 
-    		 &(p_ui->row), p_ui->fixed_cntr, &pf_fixed);
+    		 &(p_ui->row), p_ui->fixed_cntr);
    
     add_to_grid (" ", p_ui->l_long_desc, p_ui->codec->long_desc, 
-    		 &(p_ui->row), p_ui->fixed_cntr, &pf_fixed);
+    		 &(p_ui->row), p_ui->fixed_cntr);
    
     add_to_grid ("File Extension", p_ui->l_extn, p_ui->codec->extn, 
-    		 &(p_ui->row), p_ui->fixed_cntr, &pf_fixed);
+    		 &(p_ui->row), p_ui->fixed_cntr);
    
     if (*(p_ui->codec->encoder) != '\0')
 	add_to_grid ("Encoder", p_ui->l_enc, p_ui->codec->encoder, 
-		     &(p_ui->row), p_ui->fixed_cntr, &pf_fixed);
+		     &(p_ui->row), p_ui->fixed_cntr);
     else
 	add_to_grid ("Encoder", p_ui->l_enc, "N/A", 
-		     &(p_ui->row), p_ui->fixed_cntr, &pf_fixed);
+		     &(p_ui->row), p_ui->fixed_cntr);
    
     add_to_grid ("Muxer", p_ui->l_mux, p_ui->codec->muxer, 
-    		 &(p_ui->row), p_ui->fixed_cntr, &pf_fixed);
+    		 &(p_ui->row), p_ui->fixed_cntr);
    
-    /* Free font */
-    pango_font_description_free (pf_fixed);
-
     return;
 }
 
@@ -470,26 +462,18 @@ void mpeg2_extra(CodecUi *p_ui)
     char s[10];
     char *p;
     GtkWidget *label;
-    PangoFontDescription *pf_extra;
-
-    /* Font and layout setup */
-    pf_extra = pango_font_description_from_string ("Sans 9");
 
     /* Label */
-    pango_font_description_set_weight(pf_extra, PANGO_WEIGHT_BOLD);
-
     label = gtk_label_new("Frame Rate");
-    gtk_widget_override_font (label, pf_extra);
+    gtk_widget_set_name (label, "title_7");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_bottom (label, 10);
     gtk_widget_set_margin_end (label, 10);
     gtk_grid_attach(GTK_GRID (p_ui->fixed_cntr), label, 0, p_ui->row, 1, 1);
 
-    pango_font_description_set_weight(pf_extra, PANGO_WEIGHT_NORMAL);
-
     /* Combobox */
     p_ui->cbox_mpg2 = gtk_combo_box_text_new();
-    gtk_widget_override_font (p_ui->cbox_mpg2, pf_extra);
+    gtk_widget_set_name (p_ui->cbox_mpg2, "data_4");
 
     /* Add list items, note current value index and set active */
     p_ui->mpg2_init[0] = '\0';
@@ -517,9 +501,6 @@ void mpeg2_extra(CodecUi *p_ui)
     gtk_combo_box_set_active(GTK_COMBO_BOX (p_ui->cbox_mpg2), curr_idx);
     gtk_grid_attach(GTK_GRID (p_ui->fixed_cntr), p_ui->cbox_mpg2, 1, p_ui->row, 1, 1);
     g_signal_connect(p_ui->cbox_mpg2, "changed", G_CALLBACK(OnSetMpeg2), (gpointer) p_ui);
-
-    /* Free font */
-    pango_font_description_free (pf_extra);
 
     return;
 }
@@ -580,9 +561,7 @@ void codec_table(CodecUi *p_ui)
 
     /* Header font */
     colhdr = gtk_tree_view_column_get_button (column);
-    pango_font_description_set_weight(pf, PANGO_WEIGHT_BOLD);
-    gtk_widget_override_font (colhdr, pf);
-    pango_font_description_set_weight(pf, PANGO_WEIGHT_NORMAL);
+    gtk_widget_set_name (colhdr, "title_7");
 
     /* Column */
     renderer = gtk_cell_renderer_text_new ();
@@ -595,9 +574,7 @@ void codec_table(CodecUi *p_ui)
 
     /* Header font */
     colhdr = gtk_tree_view_column_get_button (column);
-    pango_font_description_set_weight(pf, PANGO_WEIGHT_BOLD);
-    gtk_widget_override_font (colhdr, pf);
-    pango_font_description_set_weight(pf, PANGO_WEIGHT_NORMAL);
+    gtk_widget_set_name (colhdr, "title_7");
 
     /* Column */
     renderer = gtk_cell_renderer_text_new ();
@@ -612,9 +589,7 @@ void codec_table(CodecUi *p_ui)
 
     /* Header font */
     colhdr = gtk_tree_view_column_get_button (column);
-    pango_font_description_set_weight(pf, PANGO_WEIGHT_BOLD);
-    gtk_widget_override_font (colhdr, pf);
-    pango_font_description_set_weight(pf, PANGO_WEIGHT_NORMAL);
+    gtk_widget_set_name (colhdr, "title_7");
 
     /* Create a container for the view */
     p_ui->codec_cntr = gtk_scrolled_window_new(NULL, NULL);
@@ -635,23 +610,21 @@ void codec_table(CodecUi *p_ui)
 /* Add a row to a grid */
 
 void add_to_grid(char *nm, GtkWidget *item, char *txt, 
-		 int *row, GtkWidget *grid, PangoFontDescription **pf)
+		 int *row, GtkWidget *grid)
 {  
     GtkWidget *label;
 
     /* Label */
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_BOLD);
     label = gtk_label_new(nm);
-    gtk_widget_override_font (label, *pf);
+    gtk_widget_set_name (label, "title_7");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_bottom (label, 10);
     gtk_widget_set_margin_end (label, 10);
     gtk_grid_attach(GTK_GRID (grid), label, 0, *row, 1, 1);
 
     /* Detail */
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_NORMAL);
     item = gtk_label_new(txt);
-    gtk_widget_override_font (item, *pf);
+    gtk_widget_set_name (item, "data_4");
     gtk_widget_set_halign(GTK_WIDGET (item), GTK_ALIGN_START);
     gtk_widget_set_margin_bottom (item, 10);
     gtk_grid_attach(GTK_GRID (grid), item, 1, *row, 1, 1);

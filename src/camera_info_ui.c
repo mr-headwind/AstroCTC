@@ -29,6 +29,7 @@
 **
 ** History
 **	24-Apr-2014	Initial code
+**      20-Nov-2020     Changes to move to css
 **
 */
 
@@ -136,7 +137,6 @@ GtkWidget* cam_info_ui(CamData *cam_data)
     GtkTextBuffer *txt_buffer;  
     GtkTextIter iter;
     GtkWidget *menu_bar;
-    PangoFontDescription *font_desc;
     char buffer[500];
     int rc;
     int close_hndlr_id;
@@ -152,18 +152,11 @@ GtkWidget* cam_info_ui(CamData *cam_data)
     mbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 5);
 
     /* Label for file name */
-    font_desc = pango_font_description_from_string ("Sans 9");
-
     label_t = gtk_label_new("Filename:");
-    pango_font_description_set_weight(font_desc, PANGO_WEIGHT_BOLD);
-    gtk_widget_override_font (GTK_WIDGET (label_t), font_desc);
+    gtk_widget_set_name(label_t, "title_7");
 
     label_f = gtk_label_new(camfile);
-    pango_font_description_set_weight(font_desc, PANGO_WEIGHT_NORMAL);
-    gtk_widget_override_color(label_f, GTK_STATE_FLAG_NORMAL, &DARK_BLUE);
-    gtk_widget_override_font (GTK_WIDGET (label_f), font_desc);
-
-    pango_font_description_free (font_desc);
+    gtk_widget_set_name(label_f, "data_4DB");
 
     lbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start (GTK_BOX (lbox), label_t, FALSE, FALSE, 0);

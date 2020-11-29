@@ -26,6 +26,7 @@
 **
 ** History
 **	8-Aug-2014	Initial code
+**      20-Nov-2020     Changes to move to css
 **
 */
 
@@ -86,18 +87,18 @@ int user_prefs_init(GtkWidget *);
 PrefUi * new_pref_ui();
 void user_prefs_ui(PrefUi *);
 void pref_control(PrefUi *);
-void image_type(PrefUi *, PangoFontDescription **, PangoFontDescription **);
-void video_capture(PrefUi *, PangoFontDescription **, PangoFontDescription **);
-void fn_template(PrefUi *, PangoFontDescription **, PangoFontDescription **);
-void file_location(PrefUi *, PangoFontDescription **, PangoFontDescription **);
-void audio_mute(PrefUi *, PangoFontDescription **);
-void empty_title(PrefUi *, PangoFontDescription **);
-void meta_data_file(PrefUi *, PangoFontDescription **);
-void pref_label_1(char *, PangoFontDescription **, GtkWidget **, GtkAlign, const GdkRGBA *, int);
-void pref_label_2(char *, PangoFontDescription **, GtkWidget **, GtkAlign, int, int);
-void pref_label_3(char *, PangoFontDescription **, GtkWidget *, int *);
-void pref_radio(char *, PangoFontDescription **, GtkWidget *, char, int *);
-void pref_boolean(char *, char *, int, PangoFontDescription **, GtkWidget **);
+void image_type(PrefUi *);
+void video_capture(PrefUi *);
+void fn_template(PrefUi *);
+void file_location(PrefUi *);
+void audio_mute(PrefUi *);
+void empty_title(PrefUi *);
+void meta_data_file(PrefUi *);
+void pref_label_1(char *, GtkWidget **, GtkAlign, int);
+void pref_label_2(char *, GtkWidget **, GtkAlign, int, int);
+void pref_label_3(char *, GtkWidget *, int *);
+void pref_radio(char *, GtkWidget *, char, int *);
+void pref_boolean(char *, char *, int, GtkWidget **);
 void set_fn_template(char, char, char, char *, PrefUi *);
 int validate_fn_prefs(char, char, char);
 int set_fn_idx(char, int, char [][10]);
@@ -293,38 +294,30 @@ void user_prefs_ui(PrefUi *p_ui)
 void pref_control(PrefUi *p_ui)
 {  
     GtkWidget *label;  
-    PangoFontDescription *pf_body, *pf_hdr;
     int row;
 
-    /* Font and layout setup */
-    pf_body = pango_font_description_from_string ("Sans 9");
-    pf_hdr = pango_font_description_from_string ("Sans 10");
-
+    /* Layout setup */
     p_ui->pref_cntr = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
     gtk_widget_set_name(p_ui->pref_cntr, "pref_cntr");
     gtk_container_set_border_width (GTK_CONTAINER (p_ui->pref_cntr), 10);
 
     /* Image type (and optional quality) for snapshots */
-    image_type(p_ui, &pf_body, &pf_hdr);
+    image_type(p_ui);
 
     /* Video capture */
-    video_capture(p_ui, &pf_body, &pf_hdr);
+    video_capture(p_ui);
 
     /* Filename template */
-    fn_template(p_ui, &pf_body, &pf_hdr);
+    fn_template(p_ui);
 
     /* Capture and snapshot location */
-    file_location(p_ui, &pf_body, &pf_hdr);
+    file_location(p_ui);
 
     /* General Capture and Snapshot options - Audio mute, Empty Title, Meta Data */
-    pref_label_1("General Capture & Snapshot", &(pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 10);
-    audio_mute(p_ui, &pf_body);
-    empty_title(p_ui, &pf_body);
-    meta_data_file(p_ui, &pf_body);
-
-    /* Free font */
-    pango_font_description_free (pf_body);
-    pango_font_description_free (pf_hdr);
+    pref_label_1("General Capture & Snapshot", &(p_ui->pref_cntr), GTK_ALIGN_START, 10);
+    audio_mute(p_ui);
+    empty_title(p_ui);
+    meta_data_file(p_ui);
 
     return;
 }
@@ -332,9 +325,7 @@ void pref_control(PrefUi *p_ui)
 
 /* Image type options */
 
-void image_type(PrefUi *p_ui,
-		PangoFontDescription **pf_body,
-		PangoFontDescription **pf_hdr)
+void image_type(PrefUi *p_ui)
 {  
     int i, curr_idx;
     char *p, *img_p;
@@ -347,17 +338,17 @@ void image_type(PrefUi *p_ui,
     const int fits_count = 2;
 
     /* Heading */
-    pref_label_1("Snapshot", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 0);
+    pref_label_1("Snapshot", &(p_ui->pref_cntr), GTK_ALIGN_START, 0);
 
     /* Put in horizontal box */
     p_ui->snap_cntr = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Image Type", &(*pf_body), &(p_ui->snap_cntr), GTK_ALIGN_END, 20, 0);
+    pref_label_2("Image Type", &(p_ui->snap_cntr), GTK_ALIGN_END, 20, 0);
 
     /* Combobox */
     p_ui->cbox_fmt = gtk_combo_box_text_new();
-    gtk_widget_override_font (p_ui->cbox_fmt, *pf_body);
+    gtk_widget_set_name (p_ui->cbox_fmt, "combobox2");
 
     /* Add list items, note current value index and set active */
     curr_idx = 0;
@@ -384,12 +375,11 @@ void image_type(PrefUi *p_ui,
     gtk_widget_set_margin_top (p_ui->jqual_cntr, 2);
 
     /* Label */
-    pref_label_2("Quality (%)", &(*pf_body), &(p_ui->jqual_cntr), GTK_ALIGN_END, 0, 0);
+    pref_label_2("Quality (%)", &(p_ui->jqual_cntr), GTK_ALIGN_END, 0, 0);
 
     /* Jpeg quality */
     p_ui->jpeg_qual = gtk_entry_new();
     gtk_widget_set_name(p_ui->jpeg_qual, "jpeg_qual");
-    gtk_widget_override_font (p_ui->jpeg_qual, *pf_body);
     gtk_widget_set_halign(GTK_WIDGET (p_ui->jpeg_qual), GTK_ALIGN_START);
     gtk_entry_set_max_length(GTK_ENTRY (p_ui->jpeg_qual), 4);
     gtk_entry_set_width_chars(GTK_ENTRY (p_ui->jpeg_qual), 4);
@@ -405,7 +395,6 @@ void image_type(PrefUi *p_ui,
     /* FITS bits per pixel */
     p_ui->cbox_fits_bits = gtk_combo_box_text_new();
     gtk_widget_set_name(p_ui->cbox_fits_bits, "fits_bits");
-    gtk_widget_override_font (p_ui->cbox_fits_bits, *pf_body);
     gtk_widget_set_halign(GTK_WIDGET (p_ui->cbox_fits_bits), GTK_ALIGN_START);
     g_object_set_data (G_OBJECT (p_ui->cbox_fits_bits), "all_pad", GINT_TO_POINTER (16));
 
@@ -432,12 +421,11 @@ void image_type(PrefUi *p_ui,
     gtk_box_pack_start (GTK_BOX (p_ui->snap_cntr), p_ui->opt_cntr, FALSE, FALSE, 5);
 
     /* Label */
-    pref_label_2("Delay (secs)", &(*pf_body), &(p_ui->snap_cntr), GTK_ALIGN_END, 0, 5);
+    pref_label_2("Delay (secs)", &(p_ui->snap_cntr), GTK_ALIGN_END, 0, 5);
 
     /* Default delay */
     p_ui->snap_delay = gtk_entry_new();
     gtk_widget_set_name(p_ui->snap_delay, "snap_delay");
-    gtk_widget_override_font (p_ui->snap_delay, *pf_body);
     gtk_widget_set_halign(GTK_WIDGET (p_ui->snap_delay), GTK_ALIGN_START);
     gtk_entry_set_max_length(GTK_ENTRY (p_ui->snap_delay), 2);
     gtk_entry_set_width_chars(GTK_ENTRY (p_ui->snap_delay), 4);
@@ -455,9 +443,7 @@ void image_type(PrefUi *p_ui,
 
 /* Video capture options */
 
-void video_capture(PrefUi *p_ui,
-		   PangoFontDescription **pf_body,
-		   PangoFontDescription **pf_hdr)
+void video_capture(PrefUi *p_ui)
 {  
     GtkWidget *prop_btn;
     GtkWidget *h_box;
@@ -467,17 +453,17 @@ void video_capture(PrefUi *p_ui,
     codec_t *p_codec;
 
     /* Heading */
-    pref_label_1("Video Capture", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 0);
+    pref_label_1("Video Capture", &(p_ui->pref_cntr), GTK_ALIGN_START, 0);
 
     /* Put in horizontal box */
     h_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Capture Format", &(*pf_body), &h_box, GTK_ALIGN_END, 20, 0);
+    pref_label_2("Capture Format", &h_box, GTK_ALIGN_END, 20, 0);
 
     /* Combobox */
     p_ui->cbox_codec = gtk_combo_box_text_new();
-    gtk_widget_override_font (p_ui->cbox_codec, *pf_body);
+    gtk_widget_set_name (p_ui->cbox_codec, "combobox2");
 
     /* Get the codec array */
     p_codec = get_codec_arr(&codec_max);
@@ -500,17 +486,16 @@ void video_capture(PrefUi *p_ui,
     
     /* Properties */
     prop_btn = gtk_button_new_with_label("Properties...");
-    gtk_widget_override_font (prop_btn, *pf_body);
+    gtk_widget_set_name (prop_btn, "btn_1");
     g_signal_connect(prop_btn, "clicked", G_CALLBACK(OnCodecProp), (gpointer) p_ui);
     gtk_box_pack_start (GTK_BOX (h_box), prop_btn, FALSE, FALSE, 3);
 
     /* Label */
-    pref_label_2("Duration (secs)", &(*pf_body), &h_box, GTK_ALIGN_END, 0, 0);
+    pref_label_2("Duration (secs)", &h_box, GTK_ALIGN_END, 0, 0);
 
     /* Duration (default) */
     p_ui->capt_duration = gtk_entry_new();
     gtk_widget_set_name(p_ui->capt_duration, "capt_dur");
-    gtk_widget_override_font (p_ui->capt_duration, *pf_body);
     gtk_widget_set_halign(GTK_WIDGET (p_ui->capt_duration), GTK_ALIGN_START);
     gtk_entry_set_max_length(GTK_ENTRY (p_ui->capt_duration), 4);
     gtk_entry_set_width_chars(GTK_ENTRY (p_ui->capt_duration), 4);
@@ -527,9 +512,7 @@ void video_capture(PrefUi *p_ui,
 
 /* Timestamp inclusion */
 
-void fn_template(PrefUi *p_ui,
-		 PangoFontDescription **pf_body,
-		 PangoFontDescription **pf_hdr)
+void fn_template(PrefUi *p_ui)
 {  
     int row;
     char *p;
@@ -537,7 +520,7 @@ void fn_template(PrefUi *p_ui,
     char s[30];
 
     /* Heading */
-    pref_label_1("File Names", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 7);
+    pref_label_1("File Names", &(p_ui->pref_cntr), GTK_ALIGN_START, 7);
 
     /* Place the file name template items in a grid */
     p_ui->fn_grid = gtk_grid_new();
@@ -546,34 +529,30 @@ void fn_template(PrefUi *p_ui,
     /* Sequence No */
     get_user_pref(FN_ID, &p);
     id = *p;
-    pref_label_3("Sequence Id", &(*pf_body), p_ui->fn_grid, &row);
-    pref_radio("id", &(*pf_body), p_ui->fn_grid, id, &row);
+    pref_label_3("Sequence Id", p_ui->fn_grid, &row);
+    pref_radio("id", p_ui->fn_grid, id, &row);
     row++;
 
     /* Title */
     get_user_pref(FN_TITLE, &p);
     tt = *p;
-    pref_label_3("Title", &(*pf_body), p_ui->fn_grid, &row);
-    pref_radio("tt", &(*pf_body), p_ui->fn_grid, tt, &row);
+    pref_label_3("Title", p_ui->fn_grid, &row);
+    pref_radio("tt", p_ui->fn_grid, tt, &row);
     row++;
 
     /* Timestamp */
     get_user_pref(FN_TIMESTAMP, &p);
     ts = *p;
-    pref_label_3("Timestamp", &(*pf_body), p_ui->fn_grid, &row);
-    pref_radio("ts", &(*pf_body), p_ui->fn_grid, ts, &row);
+    pref_label_3("Timestamp", p_ui->fn_grid, &row);
+    pref_radio("ts", p_ui->fn_grid, ts, &row);
     row++;
 
     /* Connect signal handler for radio buttons */
     set_fn_handler(p_ui);
 
     /* Mock-up */
-    pango_font_description_set_style(*pf_body, PANGO_STYLE_ITALIC);
-
     set_fn_template(id, tt, ts, s, p_ui);
     p_ui->fn_tmpl = gtk_label_new(s);
-    gtk_widget_set_name(p_ui->fn_tmpl, "fn_mockup");
-    gtk_widget_override_font (p_ui->fn_tmpl, *pf_body);
     set_tmpl_colour(p_ui->fn_tmpl, s);
     gtk_widget_set_halign(GTK_WIDGET (p_ui->fn_tmpl), GTK_ALIGN_START);
     gtk_grid_attach(GTK_GRID (p_ui->fn_grid), p_ui->fn_tmpl, 1, row, 3, 1);
@@ -581,34 +560,27 @@ void fn_template(PrefUi *p_ui,
     /* Add grid to main vbox */
     gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->fn_grid, FALSE, FALSE, 0);
 
-    pango_font_description_set_style(*pf_body, PANGO_STYLE_NORMAL);
-
     return;
 }
 
 
 /* Capture and Snapshot location directory */
 
-void file_location(PrefUi *p_ui,
-		   PangoFontDescription **pf_body,
-		   PangoFontDescription **pf_hdr)
+void file_location(PrefUi *p_ui)
 {  
     GtkWidget *browse_btn;
     GtkWidget *h_box;
     char *p;
 
     /* Heading */
-    pref_label_1("Capture Location", &(*pf_hdr), &(p_ui->pref_cntr), GTK_ALIGN_START, &DARK_BLUE, 7);
+    pref_label_1("Capture Location", &(p_ui->pref_cntr), GTK_ALIGN_START, 7);
 
     /* Put in horizontal box */
     h_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Directory */
-    pango_font_description_set_weight(*pf_body, PANGO_WEIGHT_NORMAL);
-
     p_ui->capt_dir = gtk_entry_new();
     gtk_widget_set_name(p_ui->capt_dir, "capt_dir");
-    gtk_widget_override_font (p_ui->capt_dir, *pf_body);
     gtk_widget_set_halign(GTK_WIDGET (p_ui->capt_dir), GTK_ALIGN_START);
     gtk_entry_set_max_length(GTK_ENTRY (p_ui->capt_dir), 256);
     gtk_entry_set_width_chars(GTK_ENTRY (p_ui->capt_dir), 40);
@@ -619,7 +591,7 @@ void file_location(PrefUi *p_ui,
 
     /* Browse button */
     browse_btn = gtk_button_new_with_label("Browse...");
-    gtk_widget_override_font (browse_btn, *pf_body);
+    gtk_widget_set_name (browse_btn, "btn_1");
     g_signal_connect(browse_btn, "clicked", G_CALLBACK(OnPrefBrowse), (gpointer) p_ui);
     gtk_box_pack_start (GTK_BOX (h_box), browse_btn, FALSE, FALSE, 0);
 
@@ -631,7 +603,7 @@ void file_location(PrefUi *p_ui,
 
 /* Audio mute - True means silence */
 
-void audio_mute(PrefUi *p_ui, PangoFontDescription **pf_body)
+void audio_mute(PrefUi *p_ui)
 {  
     int i;
     char *p;
@@ -640,7 +612,7 @@ void audio_mute(PrefUi *p_ui, PangoFontDescription **pf_body)
     p_ui->audio_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Audio Mute", &(*pf_body), &p_ui->audio_hbox, GTK_ALIGN_END, 20, 0);
+    pref_label_2("Audio Mute", &p_ui->audio_hbox, GTK_ALIGN_END, 20, 0);
 
     /* Set up current preference */
     get_user_pref(AUDIO_MUTE, &p);
@@ -651,7 +623,7 @@ void audio_mute(PrefUi *p_ui, PangoFontDescription **pf_body)
     	if (atoi(p) == 0)
 	    i = FALSE;
 
-    pref_boolean("Off", "On", i, &(*pf_body), &p_ui->audio_hbox);
+    pref_boolean("Off", "On", i, &p_ui->audio_hbox);
     gtk_widget_set_tooltip_text (p_ui->audio_hbox, "This will only apply if the camera supports audio");
     gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->audio_hbox, FALSE, FALSE, 0);
 
@@ -661,7 +633,7 @@ void audio_mute(PrefUi *p_ui, PangoFontDescription **pf_body)
 
 /* Empty Title warning */
 
-void empty_title(PrefUi *p_ui, PangoFontDescription **pf_body)
+void empty_title(PrefUi *p_ui)
 {  
     int i;
     char *p;
@@ -670,7 +642,7 @@ void empty_title(PrefUi *p_ui, PangoFontDescription **pf_body)
     p_ui->title_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Display Empty Title warning message", &(*pf_body), &p_ui->title_hbox, GTK_ALIGN_END, 20, 0);
+    pref_label_2("Display Empty Title warning message", &p_ui->title_hbox, GTK_ALIGN_END, 20, 0);
 
     /* Set up current preference */
     get_user_pref(WARN_EMPTY_TITLE, &p);
@@ -681,7 +653,7 @@ void empty_title(PrefUi *p_ui, PangoFontDescription **pf_body)
     	if (atoi(p) == 0)
 	    i = FALSE;
 
-    pref_boolean("Off", "On", i, &(*pf_body), &p_ui->title_hbox);
+    pref_boolean("Off", "On", i, &p_ui->title_hbox);
     gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->title_hbox, FALSE, FALSE, 0);
 
     return;
@@ -690,7 +662,7 @@ void empty_title(PrefUi *p_ui, PangoFontDescription **pf_body)
 
 /* Write Meta Data file for capture and snapshot */
 
-void meta_data_file(PrefUi *p_ui, PangoFontDescription **pf_body)
+void meta_data_file(PrefUi *p_ui)
 {  
     int i;
     char *p;
@@ -699,7 +671,7 @@ void meta_data_file(PrefUi *p_ui, PangoFontDescription **pf_body)
     p_ui->meta_hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
 
     /* Label */
-    pref_label_2("Write a Meta Data file", &(*pf_body), &p_ui->meta_hbox, GTK_ALIGN_END, 20, 0);
+    pref_label_2("Write a Meta Data file", &p_ui->meta_hbox, GTK_ALIGN_END, 20, 0);
 
     /* Set up current preference */
     get_user_pref(META_DATA, &p);
@@ -710,7 +682,7 @@ void meta_data_file(PrefUi *p_ui, PangoFontDescription **pf_body)
     	if (atoi(p) == 0)
 	    i = FALSE;
 
-    pref_boolean("Off", "On", i, &(*pf_body), &p_ui->meta_hbox);
+    pref_boolean("Off", "On", i, &p_ui->meta_hbox);
     gtk_box_pack_start (GTK_BOX (p_ui->pref_cntr), p_ui->meta_hbox, FALSE, FALSE, 0);
 
     return;
@@ -719,61 +691,48 @@ void meta_data_file(PrefUi *p_ui, PangoFontDescription **pf_body)
 
 /* Create a label */
 
-void pref_label_1(char *title, PangoFontDescription **pf, GtkWidget **cntr, GtkAlign align, const GdkRGBA *color, int top)
+void pref_label_1(char *title, GtkWidget **cntr, GtkAlign align, int top)
 {  
     GtkWidget *label;
 
-    pango_font_description_set_style(*pf, PANGO_STYLE_ITALIC);
-
     label = gtk_label_new(title);
-    gtk_widget_override_color(label, GTK_STATE_FLAG_NORMAL, color);
-    gtk_widget_override_font (label, *pf);
+    gtk_widget_set_name (label, "data_7iDB");
     gtk_widget_set_halign(GTK_WIDGET (label), align);
     gtk_widget_set_margin_top (label, top);
     gtk_box_pack_start (GTK_BOX (*cntr), label, FALSE, FALSE, 0);
 
-    pango_font_description_set_style(*pf, PANGO_STYLE_NORMAL);
-
     return;
 }
 
 
 /* Create a label */
 
-void pref_label_2(char *title, PangoFontDescription **pf, GtkWidget **cntr, GtkAlign align, int start, int pad)
+void pref_label_2(char *title, GtkWidget **cntr, GtkAlign align, int start, int pad)
 {  
     GtkWidget *label;
 
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_BOLD);
-
     label = gtk_label_new(title);
-    gtk_widget_override_font (label, *pf);
+    gtk_widget_set_name (label, "title_7");
     gtk_widget_set_halign(GTK_WIDGET (label), align);
     gtk_widget_set_margin_start (label, start);
     gtk_box_pack_start (GTK_BOX (*cntr), label, FALSE, FALSE, pad);
 
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_NORMAL);
-
     return;
 }
 
 
 /* Create a label */
 
-void pref_label_3(char *title, PangoFontDescription **pf, GtkWidget *grid, int *row)
+void pref_label_3(char *title, GtkWidget *grid, int *row)
 {  
     GtkWidget *label;
 
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_BOLD);
-
     label = gtk_label_new(title);
-    gtk_widget_override_font (label, *pf);
+    gtk_widget_set_name (label, "title_7");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_start (label, 20);
     gtk_widget_set_margin_end (label, 10);
     gtk_grid_attach(GTK_GRID (grid), label, 0, *row, 1, 1);
-
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_NORMAL);
 
     return;
 }
@@ -781,7 +740,7 @@ void pref_label_3(char *title, PangoFontDescription **pf, GtkWidget *grid, int *
 
 /* Create radio buttons */
 
-void pref_radio(char *nm, PangoFontDescription **pf, GtkWidget *grid, char active, int *row)
+void pref_radio(char *nm, GtkWidget *grid, char active, int *row)
 {  
     int i;
     char s[10];
@@ -801,7 +760,6 @@ void pref_radio(char *nm, PangoFontDescription **pf, GtkWidget *grid, char activ
 	    radio = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (radio_grp), rads[i]);
 	}
 
-	gtk_widget_override_font (radio, *pf);
 	sprintf(s, "%s_%s", nm, rads[i]);
 	gtk_widget_set_name(radio, s);
 
@@ -817,15 +775,13 @@ void pref_radio(char *nm, PangoFontDescription **pf, GtkWidget *grid, char activ
 
 /* Create boolean radio buttons */
 
-void pref_boolean(char *s1, char *s2, int active, PangoFontDescription **pf, GtkWidget **h_box)
+void pref_boolean(char *s1, char *s2, int active, GtkWidget **h_box)
 {  
     GtkWidget *radio_grp;
     GtkWidget *radio;
 
     radio_grp = gtk_radio_button_new_with_label (NULL, s1);
     radio = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (radio_grp), s2);
-    gtk_widget_override_font (radio_grp, *pf);
-    gtk_widget_override_font (radio, *pf);
     gtk_widget_set_name(radio_grp, "rb_0");
     gtk_widget_set_name(radio, "rb_1");
 
@@ -1000,9 +956,9 @@ int set_fn_val(char cc)
 void set_tmpl_colour(GtkWidget *tmpl, char *s)
 {
     if (strncmp(s, "capture.", 8) == 0)
-	gtk_widget_override_color(tmpl, GTK_STATE_FLAG_NORMAL, &RED1);
+	gtk_widget_set_name(tmpl, "data_4iR");
     else
-	gtk_widget_override_color(tmpl, GTK_STATE_FLAG_NORMAL, &MID_BLUE);
+	gtk_widget_set_name(tmpl, "data_4iMB");
 
     return;
 }

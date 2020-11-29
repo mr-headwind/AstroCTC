@@ -26,6 +26,7 @@
 **
 ** History
 **	15-Aug-2014	Initial code
+**      20-Nov-2020     Changes to move to css
 **
 */
 
@@ -244,22 +245,17 @@ void profile_control(ProfileUi *p_ui)
 void profile_list(ProfileUi *p_ui)
 {
     GtkWidget *label;
-    PangoFontDescription *font_desc;
     int i, init;
     char s[20];
     char *nm;
 
-    /* Set font */
-    font_desc = pango_font_description_from_string ("Sans 9");
-
     /* Label */
     label = gtk_label_new("  Capture Presets  ");
-    gtk_widget_override_font (label, font_desc);
-    gtk_widget_override_color(label, GTK_STATE_FLAG_NORMAL, &DARK_BLUE);
+    gtk_widget_set_name(label, "data_4DB");
 
     /* Saved profiles */
     p_ui->cbox_profile = gtk_combo_box_text_new();
-    gtk_widget_override_font (p_ui->cbox_profile, font_desc);
+    gtk_widget_set_name(label, "combobox2");
 
     /* Load any preset profiles */
     load_profiles(p_ui->cbox_profile, p_ui->cur_profile, p_ui->preset_hndlr_id, FALSE);
@@ -267,8 +263,6 @@ void profile_list(ProfileUi *p_ui)
     /* Setup */
     p_ui->cur_cbox_txt = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (p_ui->cbox_profile)); 
     p_ui->preset_hndlr_id = g_signal_connect(p_ui->cbox_profile, "changed", G_CALLBACK(OnSetProfile), p_ui);
-
-    pango_font_description_free (font_desc);
 
     /* Put into a box container */
     p_ui->prf_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 2);
@@ -319,27 +313,20 @@ void cmd_buttons(ProfileUi *p_ui)
 void profile_nm(ProfileUi *p_ui)
 {
     GtkWidget *label;
-    PangoFontDescription *font_desc;
 
-    /* Set font */
-    font_desc = pango_font_description_from_string ("Sans 9");
 
     /* Label */
     label = gtk_label_new("Enter Preset name and press 'Enter'");
-    gtk_widget_override_font (label, font_desc);
-    gtk_widget_override_color(label, GTK_STATE_FLAG_NORMAL, &DARK_BLUE);
+    gtk_widget_set_name(label, "data_4DB");
 
     /* Entry */
     p_ui->profile_nm = gtk_entry_new();
-    gtk_widget_set_name(p_ui->profile_nm, "p_name");
-    gtk_widget_override_font (p_ui->profile_nm, font_desc);
+    gtk_widget_set_name(p_ui->profile_nm, "ent_2");
     gtk_entry_set_width_chars(GTK_ENTRY (p_ui->profile_nm), 30);
     gtk_widget_set_margin_start (p_ui->profile_nm, 10);
     gtk_widget_set_margin_end (p_ui->profile_nm, 10);
 
     g_signal_connect(p_ui->profile_nm, "activate", G_CALLBACK(OnSetProfileName), (gpointer) p_ui);
-
-    pango_font_description_free (font_desc);
 
     /* Put into a box container */
     p_ui->nm_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);

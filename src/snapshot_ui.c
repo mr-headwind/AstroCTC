@@ -26,6 +26,7 @@
 **
 ** History
 **	23-Jun-2015	Initial code
+**      20-Nov-2020     Changes to move to css
 **
 */
 
@@ -68,9 +69,9 @@ int snap_ui_main(GtkWidget *);
 SnapUi * new_snap_ui();
 void snapshot_ui(SnapUi *);
 void snap_details(SnapUi *);
-void delay_option(int, SnapUi *, PangoFontDescription **);
-void snap_spin(int, int, int, GtkWidget **, PangoFontDescription **, GtkWidget *, int);
-GtkWidget * snap_label(char *, PangoFontDescription **, GtkWidget *, int);
+void delay_option(int, SnapUi *);
+void snap_spin(int, int, int, GtkWidget **, GtkWidget *, int);
+GtkWidget * snap_label(char *, GtkWidget *, int);
 void OnDelayOpt(GtkToggleButton *, gpointer);
 void OnSnapOK(GtkWidget *, gpointer);
 void OnSnapCancel(GtkWidget *, gpointer);
@@ -178,45 +179,35 @@ void snapshot_ui(SnapUi *s_ui)
 
 void snap_details(SnapUi *s_ui)
 {  
-    PangoFontDescription *pf, *pf2;
     GtkWidget *label;
     int row;
     char *p;
 
-    /* Font and layout setup */
-    pf = pango_font_description_from_string ("Sans 9");
-    pf2 = pango_font_description_from_string ("Sans 7");
-
+    /* Layout setup */
     s_ui->snap_cntr = gtk_grid_new();
     gtk_widget_set_name(s_ui->snap_cntr, "snap_cntr");
     gtk_container_set_border_width (GTK_CONTAINER (s_ui->snap_cntr), 10);
     row = 0;
 
     /* Number of frames to grab, delay (if any)(one off or between each frame) */
-    snap_label("No. of Frames", &pf, s_ui->snap_cntr, row);
-    snap_spin(1, 100000, 1, &(s_ui->frames), &pf, s_ui->snap_cntr, row);
+    snap_label("No. of Frames", s_ui->snap_cntr, row);
+    snap_spin(1, 100000, 1, &(s_ui->frames), s_ui->snap_cntr, row);
     row++;
 
     get_user_pref(SNAPSHOT_DELAY, &p);
-    snap_label("Delay (secs)", &pf, s_ui->snap_cntr, row);
-    snap_spin(0, 1000, atoi(p), &(s_ui->delay), &pf, s_ui->snap_cntr, row);
+    snap_label("Delay (secs)", s_ui->snap_cntr, row);
+    snap_spin(0, 1000, atoi(p), &(s_ui->delay), s_ui->snap_cntr, row);
 
     /* At 1 second delay is recommended */
-    pango_font_description_set_style(pf2, PANGO_STYLE_ITALIC);
-
     label = gtk_label_new ("(At least 1 second is recommended)");
-    gtk_widget_override_font (label, pf2);
+    gtk_widget_set_name(label, "data_6i");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
 
     gtk_grid_attach(GTK_GRID (s_ui->snap_cntr), label, 3, row, 1, 1);
     row++;
 
     /* Delay options */
-    delay_option(row, s_ui, &pf);
-    
-    /* Free font */
-    pango_font_description_free (pf);
-    pango_font_description_free (pf2);
+    delay_option(row, s_ui);
 
     return;
 }
@@ -224,20 +215,16 @@ void snap_details(SnapUi *s_ui)
 
 /* Create label */
 
-GtkWidget * snap_label(char *title, PangoFontDescription **pf, GtkWidget *grid, int row)
+GtkWidget * snap_label(char *title, GtkWidget *grid, int row)
 {  
     GtkWidget *label;
 
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_BOLD);
-
     label = gtk_label_new (title);
-    gtk_widget_override_font (label, *pf);
+    gtk_widget_set_name(label, "title_7");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_end (label, 2);
 
     gtk_grid_attach(GTK_GRID (grid), label, 0, row, 1, 1);
-    
-    pango_font_description_set_weight(*pf, PANGO_WEIGHT_NORMAL);
 
     return label;
 }
@@ -245,11 +232,10 @@ GtkWidget * snap_label(char *title, PangoFontDescription **pf, GtkWidget *grid, 
 
 /* Create entry fields */
 
-void snap_spin(int min, int max, int val, GtkWidget **spin, PangoFontDescription **pf, GtkWidget *grid, int row)
+void snap_spin(int min, int max, int val, GtkWidget **spin, GtkWidget *grid, int row)
 {  
     *spin = gtk_spin_button_new_with_range (min, max, 1);
 
-    gtk_widget_override_font (*spin, *pf);
     gtk_widget_set_halign(GTK_WIDGET (*spin), GTK_ALIGN_START);
     gtk_widget_set_margin_start (*spin, 5);
     gtk_widget_set_margin_end (*spin, 5);
@@ -269,13 +255,12 @@ void snap_spin(int min, int max, int val, GtkWidget **spin, PangoFontDescription
 
 /* Delay once only or between each frame group */
 
-void delay_option(int row, SnapUi *s_ui, PangoFontDescription **pf)
+void delay_option(int row, SnapUi *s_ui)
 {  
     GtkWidget *label;
     GtkWidget *grp_box;
 
     s_ui->delay_opt = gtk_check_button_new_with_label("Frame Group Delay");
-    gtk_widget_override_font (s_ui->delay_opt, *pf);
     gtk_widget_set_margin_start (s_ui->delay_opt, 5);
     gtk_widget_set_margin_end (s_ui->delay_opt, 5);
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (s_ui->delay_opt), TRUE);
@@ -289,19 +274,19 @@ void delay_option(int row, SnapUi *s_ui, PangoFontDescription **pf)
     gtk_widget_set_margin_end (grp_box, 40);
 
     label = gtk_label_new ("every");
-    gtk_widget_override_font (label, *pf);
+    gtk_widget_set_name (label, "data_4");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_box_pack_start (GTK_BOX (grp_box), label, FALSE, FALSE, 0);
 
     label = gtk_label_new ("frames");
-    gtk_widget_override_font (label, *pf);
+    gtk_widget_set_name (label, "data_4");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_START);
     gtk_box_pack_end (GTK_BOX (grp_box), label, FALSE, FALSE, 0);
 
     s_ui->grp_delay = gtk_entry_new();
+    gtk_widget_set_name (label, "ent_2");
     gtk_entry_set_max_length(GTK_ENTRY (s_ui->grp_delay), 5);
     gtk_entry_set_width_chars(GTK_ENTRY (s_ui->grp_delay), 5);
-    gtk_widget_override_font (s_ui->grp_delay, *pf);
     gtk_entry_set_text (GTK_ENTRY (s_ui->grp_delay), "1");
     gtk_box_pack_end (GTK_BOX (grp_box), s_ui->grp_delay, FALSE, FALSE, 0);
 
