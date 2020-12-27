@@ -219,6 +219,8 @@ void capt_entry(char *nm, GtkWidget **ent, GtkWidget *grid, int row, CaptUi *c_u
     gtk_entry_set_width_chars(GTK_ENTRY (*ent), 7);
     gtk_widget_set_margin_start (*ent, 10);
     gtk_widget_set_margin_end (*ent, 10);
+    gtk_widget_set_margin_bottom(*ent, 3);
+    gtk_widget_set_valign (*ent, GTK_ALIGN_CENTER);
 
     if (row == 0)
     	gtk_widget_set_sensitive(*ent, TRUE);
@@ -253,6 +255,9 @@ void capt_radio(char *desc, char *nm, GtkWidget *grid, int row, CaptUi *c_ui)
     }
 
     gtk_widget_set_name(radio, nm);
+    gtk_widget_set_margin_bottom(radio, 3);
+    gtk_widget_set_valign (radio, GTK_ALIGN_CENTER);
+    gtk_widget_set_halign (radio, GTK_ALIGN_START);
 
     g_signal_connect(radio, "toggled", G_CALLBACK(OnCaptRadio), (gpointer) c_ui);
     gtk_grid_attach(GTK_GRID (grid), radio, 0, row, 1, 1);

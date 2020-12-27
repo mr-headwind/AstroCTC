@@ -129,10 +129,10 @@ GtkWidget* view_file_ui(char *fn)
 
     /* Label for file name */
     label_t = gtk_label_new("Filename:");
-    gtk_widget_set_name(label_t, "title_7");
+    gtk_widget_set_name(label_t, "lbl_6");
 
     label_f = gtk_label_new(fn);
-    gtk_widget_set_name(label_f, "data_4DB");
+    gtk_widget_set_name(label_f, "lbl_2");
 
     lbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_box_pack_start (GTK_BOX (lbox), label_t, FALSE, FALSE, 0);
@@ -146,6 +146,7 @@ GtkWidget* view_file_ui(char *fn)
 
     /* Text area for file contents */
     txt_view = gtk_text_view_new();
+    gtk_widget_set_name(txt_view, "txtview");
     gtk_container_add(GTK_CONTAINER(scrollwin), txt_view);
     txt_buffer = gtk_text_view_get_buffer (GTK_TEXT_VIEW (txt_view));
     gtk_widget_set_size_request (scrollwin, 500, 400);

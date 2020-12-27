@@ -465,7 +465,7 @@ void mpeg2_extra(CodecUi *p_ui)
 
     /* Label */
     label = gtk_label_new("Frame Rate");
-    gtk_widget_set_name (label, "title_7");
+    gtk_widget_set_name (label, "lbl_11");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_bottom (label, 10);
     gtk_widget_set_margin_end (label, 10);
@@ -473,7 +473,7 @@ void mpeg2_extra(CodecUi *p_ui)
 
     /* Combobox */
     p_ui->cbox_mpg2 = gtk_combo_box_text_new();
-    gtk_widget_set_name (p_ui->cbox_mpg2, "data_4");
+    gtk_widget_set_name (p_ui->cbox_mpg2, "combobox_2");
 
     /* Add list items, note current value index and set active */
     p_ui->mpg2_init[0] = '\0';
@@ -561,7 +561,7 @@ void codec_table(CodecUi *p_ui)
 
     /* Header font */
     colhdr = gtk_tree_view_column_get_button (column);
-    gtk_widget_set_name (colhdr, "title_7");
+    gtk_widget_set_name (colhdr, "lbl_11");
 
     /* Column */
     renderer = gtk_cell_renderer_text_new ();
@@ -574,7 +574,7 @@ void codec_table(CodecUi *p_ui)
 
     /* Header font */
     colhdr = gtk_tree_view_column_get_button (column);
-    gtk_widget_set_name (colhdr, "title_7");
+    gtk_widget_set_name (colhdr, "lbl_11");
 
     /* Column */
     renderer = gtk_cell_renderer_text_new ();
@@ -589,7 +589,7 @@ void codec_table(CodecUi *p_ui)
 
     /* Header font */
     colhdr = gtk_tree_view_column_get_button (column);
-    gtk_widget_set_name (colhdr, "title_7");
+    gtk_widget_set_name (colhdr, "lbl_11");
 
     /* Create a container for the view */
     p_ui->codec_cntr = gtk_scrolled_window_new(NULL, NULL);
@@ -616,7 +616,7 @@ void add_to_grid(char *nm, GtkWidget *item, char *txt,
 
     /* Label */
     label = gtk_label_new(nm);
-    gtk_widget_set_name (label, "title_7");
+    gtk_widget_set_name (label, "lbl_11");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_bottom (label, 10);
     gtk_widget_set_margin_end (label, 10);
@@ -624,7 +624,7 @@ void add_to_grid(char *nm, GtkWidget *item, char *txt,
 
     /* Detail */
     item = gtk_label_new(txt);
-    gtk_widget_set_name (item, "data_4");
+    gtk_widget_set_name (item, "lbl_1");
     gtk_widget_set_halign(GTK_WIDGET (item), GTK_ALIGN_START);
     gtk_widget_set_margin_bottom (item, 10);
     gtk_grid_attach(GTK_GRID (grid), item, 1, *row, 1, 1);

@@ -130,7 +130,6 @@ void other_ctrl_ui(OthCtrlUi *o_ui, CamData *cam_data)
     /* Set up the UI window */
     o_ui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(o_ui->window), OTHER_CTRL_UI);
-    //gtk_window_set_default_size(GTK_WINDOW(o_ui->window), 350, 350);
     gtk_container_set_border_width(GTK_CONTAINER(o_ui->window), 5);
     g_object_set_data (G_OBJECT (o_ui->window), "ui", o_ui);
 
@@ -181,7 +180,7 @@ void other_ctrl_grid(OthCtrlUi *o_ui, CamData *cam_data)
 {  
     int row;
     struct v4l2_list *tmp, *last;
-    GtkWidget *label;
+    GtkWidget *label, *hbox;
 
     /* Container */
     o_ui->oth_cntr = gtk_grid_new();
@@ -190,11 +189,15 @@ void other_ctrl_grid(OthCtrlUi *o_ui, CamData *cam_data)
     gtk_grid_set_column_spacing(GTK_GRID (o_ui->oth_cntr), 5);
     gtk_container_set_border_width (GTK_CONTAINER (o_ui->oth_cntr), 5);
 
-    /* Overall label - apply a b/g colour and bolding */
+    /* Overall label */
     label = gtk_label_new("Other Settings");
-    gtk_widget_set_name(label, "data_4DB");
-    gtk_grid_attach(GTK_GRID (o_ui->oth_cntr), label, 0, 0, 2, 1);
-    gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_START);
+    gtk_widget_set_name(label, "lbl_5");
+    hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_box_pack_start(GTK_BOX (hbox), label, FALSE, FALSE, 10);
+    gtk_grid_attach(GTK_GRID (o_ui->oth_cntr), hbox, 0, 0, 2, 1);
+    gtk_widget_set_halign(hbox, GTK_ALIGN_START);
+    //gtk_grid_attach(GTK_GRID (o_ui->oth_cntr), label, 0, 0, 2, 1);
+    //gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_START);
 
     /* Iterate thru the camera controls fo find the non-standard (ie not on main window) ones */
     last = NULL;
@@ -293,20 +296,20 @@ void OnOthCtrlReset(GtkWidget *reset_btn, gpointer user_data)
 
 void OnOthCtrlOK(GtkWidget *w, gpointer user_data)
 { 
-    OthCtrlUi *ui;
+    OthCtrlUi *o_ui;
     GtkWidget *window;
 
     /* Get data */
     window = (GtkWidget *) user_data;
-    ui = (OthCtrlUi *) g_object_get_data (G_OBJECT (window), "ui");
+    o_ui = (OthCtrlUi *) g_object_get_data (G_OBJECT (window), "ui");
 
     /* Close the window, free the screen data and block any secondary close signal */
-    g_signal_handler_block (window, ui->close_handler);
+    g_signal_handler_block (window, o_ui->close_handler);
 
     deregister_window(window);
     gtk_window_close(GTK_WINDOW(window));
 
-    free(ui);
+    free(o_ui);
 
     return;
 }

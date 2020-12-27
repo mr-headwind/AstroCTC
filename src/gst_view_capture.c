@@ -113,6 +113,7 @@ int view_clear_pipeline(CamData *, MainUi *);
 int cam_set_state(CamData *, GstState, GtkWidget *);
 int create_element(GstElement **, char *, char *, CamData *, MainUi *);
 void check_unref(GstElement **, char *, int);
+void init_video_capt(video_capt_t *);
 void set_capture_btns(MainUi *, int, int);
 void swap_fourcc(char *, char *);
 void capture_limits(app_gst_objects *, MainUi *);
@@ -147,7 +148,7 @@ extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void res_to_long(char *, long *, long *);
 extern void get_session(char*, char**);
 extern void dttm_stamp(char *, size_t);
-extern void get_file_name(char *, char *, char *, char *, char, char, char);
+extern void get_file_name(char *, int, char *, char *, char *, char, char, char);
 extern codec_t * get_codec(char *);
 extern int get_user_pref(char *, char **);
 extern int codec_property_type(char *, char *);
@@ -410,7 +411,7 @@ int gst_capture_init(CamData *cam_data, MainUi *m_ui, int duration, int no_frame
     char seq_no_s[10];
 
     /* Set up convenience pointer */
-    memset(&(cam_data->u.v_capt), 0, sizeof(video_capt_t));
+    init_video_capt(&(cam_data->u.v_capt));
     capt = &(cam_data->u.v_capt);
 
     /* Preferences */
@@ -444,7 +445,7 @@ int gst_capture_init(CamData *cam_data, MainUi *m_ui, int duration, int no_frame
     	return FALSE;
     }
 
-    get_file_name(capt->fn, 
+    get_file_name(capt->fn, (int) sizeof(capt->fn), 
     		  seq_no_s, 
 		  (char *) capt->obj_title,
 		  capt->tm_stmp, capt->id, capt->tt, capt->ts);
@@ -824,7 +825,7 @@ int start_capt_pipeline(CamData *cam_data, MainUi *m_ui)
 {
     GstBus *bus;
     guint source_id;
-    char s[100];
+    char *s;
 
     /* Set up sync handler for setting the xid once the pipeline is started */
     bus = gst_pipeline_get_bus (GST_PIPELINE (cam_data->pipeline));
@@ -841,6 +842,7 @@ int start_capt_pipeline(CamData *cam_data, MainUi *m_ui)
     //source_id = gst_bus_add_watch (bus, (GstBusFunc) bus_message_watch, m_ui);	xxxx IS THIS NEEDED ?
 
     /* Inforamtion status line */
+    s = (char *) malloc(strlen(cam_data->current_cam) + strlen(cam_data->current_dev) + 50);
     sprintf(s, "Camera %.30s (%.30s) is capturing", cam_data->current_cam, cam_data->current_dev);
 
     if (m_ui->duration > 0)
@@ -852,6 +854,7 @@ int start_capt_pipeline(CamData *cam_data, MainUi *m_ui)
 
     gtk_label_set_text (GTK_LABEL (m_ui->status_info), s);
     gst_object_unref (bus);
+    free(s);
 
     return TRUE;
 }
@@ -1273,6 +1276,25 @@ void check_unref(GstElement **element, char *desc, int unref_indi)
 }
 
 
+/* Initialise video capture structure */
+
+void init_video_capt(video_capt_t *v_capt)
+{
+    //memset(&(cam_data->u.v_capt), 0, sizeof(video_capt_t));
+    memset(v_capt->tm_stmp, '\0', sizeof(v_capt->tm_stmp));
+    memset(v_capt->out_name, '\0', sizeof(v_capt->out_name));
+    memset(v_capt->fn, '\0', sizeof(v_capt->fn));
+    memset(v_capt->cam_fcc, '\0', sizeof(v_capt->cam_fcc));
+
+    v_capt->capt_opt = v_capt->capt_reqd = v_capt->capt_actl = v_capt->capt_frames = v_capt->capt_dropped = 0;
+    v_capt->id = v_capt->tt = v_capt->ts = '\0';
+    v_capt->codec = v_capt->locn = NULL;
+    v_capt->codec_data = NULL;
+
+    return;
+}
+
+
 /* Bus watch for the video window handle */
 
 GstBusSyncReply bus_sync_handler (GstBus * bus, GstMessage * message, gpointer user_data)
@@ -1307,8 +1329,8 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 {
     CamData *cam_data;
     MainUi *m_ui;
-    GError *err;
-    gchar *msg_str;
+    GError *err = NULL;
+    gchar *msg_str = NULL;
     app_gst_objects *gst_objs;
 
     /* Get data */
@@ -1328,7 +1350,7 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    else
 		log_msg("CAM0023", "Capture", "CAM0023", m_ui->window);
 
-	    g_free (err);
+	    g_error_free (err);
 	    g_free (msg_str);
 	    break;
 
@@ -1342,7 +1364,7 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    else
 		log_msg("CAM0023", "Capture", "CAM0023", m_ui->window);
 
-	    g_free (err);
+	    g_error_free (err);
 	    g_free (msg_str);
 	    break;
 
@@ -1360,6 +1382,10 @@ gboolean bus_message_watch (GstBus *bus, GstMessage *msg, gpointer user_data)
 	    	break;
 
 	    /* Only concerned with pipeline messages at present */
+	    /*
+	    if (strcmp(GST_MESSAGE_SRC_NAME (msg), "cam_video") != 0)
+	    	break;
+	    */
 	    if (GST_MESSAGE_SRC (msg) != GST_OBJECT (cam_data->pipeline))
 	    	break;
 
@@ -1539,7 +1565,8 @@ void * monitor_duration(void *arg)
 	    }
 
 	    cam_data->u.v_capt.capt_actl = (long) (difftime(time(NULL), start_time) - total_pause);
-	    sprintf(new_status, "%s    (%ld of %d)\n", info_txt, cam_data->u.v_capt.capt_actl, m_ui->duration);
+	    snprintf(new_status, (int) sizeof(new_status), "%s    (%ld of %d)\n", 
+	    	    					   info_txt, cam_data->u.v_capt.capt_actl, m_ui->duration);
 	}
 
 	gtk_label_set_text (GTK_LABEL (m_ui->status_info), new_status);

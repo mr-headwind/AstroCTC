@@ -111,7 +111,7 @@ void settings_meta(FILE *, CamData *);
 void debug_session();
 
 extern int find_ctl(camera_t *, char *);
-extern void get_file_name(char *, char *, char *, char *, char, char, char);
+extern void get_file_name(char *, int, char *, char *, char *, char, char, char);
 extern struct v4l2_queryctrl * get_next_ctrl(int);
 extern struct v4l2_list * get_next_oth_ctrl(struct v4l2_list *, CamData *);
 extern void session_ctrl_val(struct v4l2_queryctrl *, char *, long *);
@@ -711,15 +711,16 @@ void free_session()
 int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
 {
     FILE *mf = NULL;
-    char buf[256];
+    char *buf;
     char fn[100];
-
     int i;
 
     /* Set file name and open */
+    buf = (char *) malloc(strlen(cam_data->u.v_capt.locn) + strlen(cam_data->u.v_capt.fn) + 20);
+
     if (capt_type == 'v')
     {
-	sprintf(buf, "%s/%s.metadata", cam_data->u.v_capt.locn, cam_data->u.v_capt.fn);
+ 	sprintf(buf, "%s/%s.metadata", cam_data->u.v_capt.locn, cam_data->u.v_capt.fn);
     }
     else if (capt_type == 's')
     {
@@ -729,7 +730,7 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
 	}
 	else
 	{
-	    get_file_name(fn, "xxx", (char *) cam_data->u.s_capt.obj_title, tm_stmp,
+	    get_file_name(fn, (int) sizeof(fn), "xxx", (char *) cam_data->u.s_capt.obj_title, tm_stmp,
 			  cam_data->u.s_capt.id, cam_data->u.s_capt.tt, cam_data->u.s_capt.ts);
 	    sprintf(buf, "%s/%s.metadata", cam_data->u.s_capt.locn, fn);
 	}
@@ -752,6 +753,7 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
     settings_meta(mf, cam_data);
 
     fclose(mf);
+    free(buf);
 
     return TRUE;
 }
@@ -762,7 +764,7 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
 void video_meta(FILE *mf, CamData *cam_data)
 {
     char desc[100];
-    char s[100];
+    char s[200];
 
     /* Common details */
     common_meta(mf, cam_data->u.v_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.v_capt.out_name);
@@ -828,42 +830,43 @@ void video_meta(FILE *mf, CamData *cam_data)
 
 void snap_meta(FILE *mf, CamData *cam_data)
 {
-    char s[100];
+    char s[201];
+    const int max_s = 200;
 
     /* Common details */
     common_meta(mf, cam_data->u.s_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.s_capt.out_name);
 
     /* Codec format */
-    sprintf(s, "Codec: %s", cam_data->u.s_capt.codec);
+    snprintf(s, max_s, "Codec: %s", cam_data->u.s_capt.codec);
 
     if (strcmp(cam_data->u.s_capt.codec, "jpg") == 0)
-	sprintf(s, "%s (%u%%)\n", s, cam_data->u.s_capt.jpeg_quality);
+	snprintf(s, max_s, "%s (%u%%)\n", s, cam_data->u.s_capt.jpeg_quality);
     else
-	sprintf(s, "%s\n", s);
+	snprintf(s, max_s, "%s\n", s);
 
     fputs(s, mf);
 
     /* Frames requested */
-    sprintf(s, "Frames Requested: %ld\n", cam_data->u.s_capt.snap_max);
+    snprintf(s, max_s, "Frames Requested: %ld\n", cam_data->u.s_capt.snap_max);
     fputs(s, mf);
 
     /* Options - Delay, Frame Group Delay every n frames */
     if (cam_data->u.s_capt.delay <= 0)
-	sprintf(s, "Delay: Immediate\n");
+	snprintf(s, max_s, "Delay: Immediate\n");
     else
-	sprintf(s, "Delay: %d seconds\n", cam_data->u.s_capt.delay);
+	snprintf(s, max_s, "Delay: %d seconds\n", cam_data->u.s_capt.delay);
 
     fputs(s, mf);
 
     if (cam_data->u.s_capt.delay_grp > 0)
     {
-	sprintf(s, "       and a delay of %d seconds every %d frames\n", cam_data->u.s_capt.delay,
+	snprintf(s, max_s, "       and a delay of %d seconds every %d frames\n", cam_data->u.s_capt.delay,
 									 cam_data->u.s_capt.delay_grp);
 	fputs(s, mf);
     }
 
     /* Frames delivered */
-    sprintf(s, "Frames delivered: %ld\n", cam_data->u.s_capt.snap_count);
+    snprintf(s, max_s, "Frames delivered: %ld\n", cam_data->u.s_capt.snap_count);
     fputs(s, mf);
 
     return;

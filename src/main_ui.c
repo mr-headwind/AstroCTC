@@ -219,7 +219,7 @@ void main_ui(CamData *cam_data, MainUi *m_ui)
 
     /* INFORMATION AREA AT BOTTOM OF WINDOW */
     m_ui->status_info = gtk_label_new(NULL);
-    gtk_widget_set_name(m_ui->status_info, "data_4");
+    gtk_widget_set_name(m_ui->status_info, "lbl_1");
     gtk_widget_set_margin_top(GTK_WIDGET (m_ui->status_info), 5);
     gtk_label_set_text(GTK_LABEL (m_ui->status_info), " ");
     gtk_widget_set_halign(GTK_WIDGET (m_ui->status_info), GTK_ALIGN_START);
@@ -569,7 +569,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     /* Capture duration */
     idx++;
     label = gtk_label_new("Duration  ");
-    gtk_widget_set_name(label, "data_4");
+    gtk_widget_set_name(label, "lbl_1");
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), label);
@@ -577,7 +577,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
 
     idx++;
     m_ui->cbox_dur = gtk_combo_box_text_new_with_entry();
-    gtk_widget_set_name(m_ui->cbox_dur, "combobox1");
+    gtk_widget_set_name(m_ui->cbox_dur, "combobox_1");
     m_ui->cbox_entry_dur = gtk_bin_get_child(GTK_BIN (m_ui->cbox_dur));
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->cbox_entry_dur), 4);
 
@@ -645,7 +645,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     /* Snapshot count - normally one, but a sequence is allowed */
     idx++;
     m_ui->cbox_seq = gtk_combo_box_text_new();
-    gtk_widget_set_name(m_ui->cbox_seq, "combobox1");
+    gtk_widget_set_name(m_ui->cbox_seq, "combobox_1");
 
     for(i = 0; i < SEQ_COUNT; i++)
     {
@@ -668,7 +668,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
     /* Object title */
     idx++;
     label = gtk_label_new("Title  ");
-    gtk_widget_set_name(label, "data_4");
+    gtk_widget_set_name(label, "lbl_1");
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), label);
@@ -676,7 +676,7 @@ GtkWidget* create_toolbar(MainUi *m_ui, CamData *cam_data)
 
     idx++;
     m_ui->obj_title = gtk_entry_new();
-    gtk_widget_set_name(m_ui->obj_title, "ent_2");
+    gtk_widget_set_name(m_ui->obj_title, "ent_1");
     gtk_entry_set_max_length(GTK_ENTRY (m_ui->obj_title), 30);
     gtk_entry_set_width_chars(GTK_ENTRY (m_ui->obj_title), 15);
     item = gtk_tool_item_new();
@@ -707,7 +707,7 @@ GtkWidget* create_presetbar(MainUi *m_ui)
     /* List of saved profiles */
     idx = 0;
     label = gtk_label_new("  Capture Presets  ");
-    gtk_widget_set_name (label, "data_4DB");
+    gtk_widget_set_name (label, "lbl_2");
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, FALSE);
     gtk_container_add(GTK_CONTAINER (item), label);
@@ -715,7 +715,7 @@ GtkWidget* create_presetbar(MainUi *m_ui)
 
     idx++;
     m_ui->cbox_profile = gtk_combo_box_text_new();
-    gtk_widget_set_name (m_ui->cbox_profile, "combobox2");
+    gtk_widget_set_name (m_ui->cbox_profile, "combobox_2");
 
     /* Load any preset profiles */
     get_user_pref(DEFAULT_PROFILE, &p);
@@ -777,7 +777,7 @@ GtkWidget* create_cntl_panel(MainUi *m_ui, CamData *cam_data)
     gtk_grid_set_column_spacing(GTK_GRID (m_ui->cntl_grid), 5);
     gtk_container_set_border_width (GTK_CONTAINER (m_ui->cntl_grid), 5);
 
-    /* Overall label - apply a b/g colour and bolding */
+    /* Overall label */
     sprintf(s, "%s Camera Settings", TITLE);
     m_ui->cntl_hdg = gtk_label_new(s);
     gtk_widget_set_name (GTK_WIDGET (m_ui->cntl_hdg), "cam_hdg");
@@ -1161,7 +1161,7 @@ void setup_label_combobx(char *label_str,
     gtk_grid_attach(GTK_GRID (grid), label, 0, row, 1, 1);
 
     *cbox = gtk_combo_box_text_new();
-    gtk_widget_set_name (*cbox, "combobox2");
+    gtk_widget_set_name (*cbox, "combobox_2");
     gtk_grid_attach(GTK_GRID (grid), *cbox, 1, row, 1, 1);
 
     return;
@@ -1839,24 +1839,22 @@ void load_profiles(GtkWidget *cbox, char *active, int hndlr_id, int clear_indi)
 
 void set_night_view_off(MainUi *m_ui)
 {
-    GtkAllocation allocation;
-    GdkDrawingContext *dc;
-    cairo_region_t *cr_t;
-    cairo_t *cr;
+    //GtkAllocation allocation;
+    //cairo_t *cr;
 
     /* Initial */
     m_ui->night_view = FALSE;
-    GdkWindow *window = gtk_widget_get_window (m_ui->window);
 
     /* Disconnect callback */
+    gtk_widget_queue_draw(m_ui->window);
     g_signal_handler_disconnect (m_ui->window, (gulong) m_ui->nvexp_hndlr_id);
 
-    /* Normal view */
-    cr_t = cairo_region_create ();
-    dc = gdk_window_begin_draw_frame (window, cr_t);
-    cr = gdk_drawing_context_get_cairo_context (dc);
+    /* Normal view **
+    GdkWindow *window = gtk_widget_get_window (m_ui->window);
+    cr = gdk_cairo_create (window);
     gtk_widget_draw (m_ui->window, cr);
     cairo_destroy (cr);
+    */
 
     return;
 }
@@ -1866,29 +1864,29 @@ void set_night_view_off(MainUi *m_ui)
 
 void set_night_view_on(MainUi *m_ui)
 {
-    GtkAllocation allocation;
-    GdkDrawingContext *dc;
-    cairo_region_t *cr_t;
-    cairo_t *cr;
+    //GtkAllocation allocation;
+    //cairo_t *cr;
 
     /* Initial */
     m_ui->night_view = TRUE;
-    GdkWindow *window = gtk_widget_get_window (m_ui->window);
 
     /* Main window night vision setup */
+    gtk_widget_queue_draw(m_ui->window);
+    m_ui->nvexp_hndlr_id = g_signal_connect (m_ui->window, "draw", G_CALLBACK (OnNvExpose), m_ui);
+
+    /*
+    GdkWindow *window = gtk_widget_get_window (m_ui->window);
+
     gtk_widget_get_allocation (m_ui->window, &allocation);
-    cr_t = cairo_region_create ();
-    dc = gdk_window_begin_draw_frame (window, cr_t);
-    cr = gdk_drawing_context_get_cairo_context (dc);
+    cr = gdk_cairo_create (window);
     cairo_set_source_rgba (cr, NIGHT.red, NIGHT.green, NIGHT.blue, NIGHT.alpha);
     cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 
-    /* Night view */
+    ** Night view **
     cairo_paint (cr);
     cairo_destroy (cr);
-
-    m_ui->nvexp_hndlr_id = g_signal_connect (m_ui->window, "draw", G_CALLBACK (OnNvExpose), m_ui);
+    */
 
     return;
 }

@@ -107,8 +107,8 @@ void set_fn_pref(char *, char *, char *, const gchar *);
 void set_fn_handler(PrefUi *);
 void set_tmpl_colour(GtkWidget *, char *);
 char find_active_by_parent(GtkWidget *, char);
-void get_file_name(char *, char *, char *, char *, char, char, char);
-void file_name_item(char *, char, char, char, char, char *, char *, char *); 
+void get_file_name(char *, int, char *, char *, char *, char, char, char);
+void file_name_item(char *, int, char, char, char, char, char *, char *, char *); 
 int read_user_prefs(GtkWidget *);
 int write_user_prefs(GtkWidget *);
 void set_default_prefs();
@@ -348,7 +348,7 @@ void image_type(PrefUi *p_ui)
 
     /* Combobox */
     p_ui->cbox_fmt = gtk_combo_box_text_new();
-    gtk_widget_set_name (p_ui->cbox_fmt, "combobox2");
+    gtk_widget_set_name (p_ui->cbox_fmt, "combobox_2");
 
     /* Add list items, note current value index and set active */
     curr_idx = 0;
@@ -394,7 +394,7 @@ void image_type(PrefUi *p_ui)
 
     /* FITS bits per pixel */
     p_ui->cbox_fits_bits = gtk_combo_box_text_new();
-    gtk_widget_set_name(p_ui->cbox_fits_bits, "fits_bits");
+    gtk_widget_set_name(p_ui->cbox_fits_bits, "combobox_2");
     gtk_widget_set_halign(GTK_WIDGET (p_ui->cbox_fits_bits), GTK_ALIGN_START);
     g_object_set_data (G_OBJECT (p_ui->cbox_fits_bits), "all_pad", GINT_TO_POINTER (16));
 
@@ -463,7 +463,7 @@ void video_capture(PrefUi *p_ui)
 
     /* Combobox */
     p_ui->cbox_codec = gtk_combo_box_text_new();
-    gtk_widget_set_name (p_ui->cbox_codec, "combobox2");
+    gtk_widget_set_name (p_ui->cbox_codec, "combobox_2");
 
     /* Get the codec array */
     p_codec = get_codec_arr(&codec_max);
@@ -696,7 +696,7 @@ void pref_label_1(char *title, GtkWidget **cntr, GtkAlign align, int top)
     GtkWidget *label;
 
     label = gtk_label_new(title);
-    gtk_widget_set_name (label, "data_7iDB");
+    gtk_widget_set_name (label, "lbl_9");
     gtk_widget_set_halign(GTK_WIDGET (label), align);
     gtk_widget_set_margin_top (label, top);
     gtk_box_pack_start (GTK_BOX (*cntr), label, FALSE, FALSE, 0);
@@ -712,7 +712,7 @@ void pref_label_2(char *title, GtkWidget **cntr, GtkAlign align, int start, int 
     GtkWidget *label;
 
     label = gtk_label_new(title);
-    gtk_widget_set_name (label, "title_7");
+    gtk_widget_set_name (label, "lbl_11");
     gtk_widget_set_halign(GTK_WIDGET (label), align);
     gtk_widget_set_margin_start (label, start);
     gtk_box_pack_start (GTK_BOX (*cntr), label, FALSE, FALSE, pad);
@@ -728,7 +728,7 @@ void pref_label_3(char *title, GtkWidget *grid, int *row)
     GtkWidget *label;
 
     label = gtk_label_new(title);
-    gtk_widget_set_name (label, "title_7");
+    gtk_widget_set_name (label, "lbl_11");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_start (label, 20);
     gtk_widget_set_margin_end (label, 10);
@@ -956,9 +956,9 @@ int set_fn_val(char cc)
 void set_tmpl_colour(GtkWidget *tmpl, char *s)
 {
     if (strncmp(s, "capture.", 8) == 0)
-	gtk_widget_set_name(tmpl, "data_4iR");
+	gtk_widget_set_name(tmpl, "lbl_3");
     else
-	gtk_widget_set_name(tmpl, "data_4iMB");
+	gtk_widget_set_name(tmpl, "lbl_4");
 
     return;
 }
@@ -984,7 +984,7 @@ void set_fn_pref(char *id, char *tt, char *ts, const gchar *nm)
 
 /* Construct a filename */
 
-void get_file_name(char *fn, 
+void get_file_name(char *fn, int fn_sz, 
 		   char *id, char *title, char *tm_stmp, 
 		   char idp, char ttp, char tsp)
 {
@@ -1006,9 +1006,9 @@ void get_file_name(char *fn,
 	strcpy(s, title);
 
     /* Build name */
-    file_name_item(fn, 'P', idp, ttp, tsp, id, s, tm_stmp);
-    file_name_item(fn, 'M', idp, ttp, tsp, id, s, tm_stmp);
-    file_name_item(fn, 'S', idp, ttp, tsp, id, s, tm_stmp);
+    file_name_item(fn, fn_sz, 'P', idp, ttp, tsp, id, s, tm_stmp);
+    file_name_item(fn, fn_sz, 'M', idp, ttp, tsp, id, s, tm_stmp);
+    file_name_item(fn, fn_sz, 'S', idp, ttp, tsp, id, s, tm_stmp);
 
     /* Fail safe in case all are set to 'N', otherwise remove lazy '_' */
     if (*fn == '\0')
@@ -1024,18 +1024,24 @@ void get_file_name(char *fn,
 
 /* Set a part of a file name */
 
-void file_name_item(char *fn, char cc, 
+void file_name_item(char *fn, int fn_sz, char cc, 
 		    char idp, char ttp, char tsp,
 		    char *id, char *title, char *tm_stmp) 
 {
+    char *dup_fn;
+
+    dup_fn = strdup(fn);
+
     if (idp == cc)
-    	sprintf(fn, "%s%s_", fn, id);
+    	snprintf(fn, fn_sz, "%s%s_", dup_fn, id);
 
     else if (ttp == cc)
-	sprintf(fn, "%s%s_", fn, title);
+    	snprintf(fn, fn_sz, "%s%s_", dup_fn, title);
 
     else if (tsp == cc)
-	sprintf(fn, "%s%s_", fn, tm_stmp);
+    	snprintf(fn, fn_sz, "%s%s_", dup_fn, tm_stmp);
+
+    free(dup_fn);
 
     return;
 }

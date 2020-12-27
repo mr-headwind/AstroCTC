@@ -178,7 +178,7 @@ void profile_ui(ProfileUi *p_ui)
     p_ui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title(GTK_WINDOW(p_ui->window), PROFILE_UI);
     gtk_window_set_position(GTK_WINDOW(p_ui->window), GTK_WIN_POS_CENTER_ON_PARENT);
-    gtk_window_set_default_size(GTK_WINDOW(p_ui->window), 200, 200);
+    gtk_window_set_default_size(GTK_WINDOW(p_ui->window), 200, 100);
     gtk_container_set_border_width(GTK_CONTAINER(p_ui->window), 10);
     gtk_window_set_transient_for (GTK_WINDOW (p_ui->window), GTK_WINDOW (p_ui->main_window));
     g_object_set_data (G_OBJECT (p_ui->window), "ui", p_ui);
@@ -251,11 +251,11 @@ void profile_list(ProfileUi *p_ui)
 
     /* Label */
     label = gtk_label_new("  Capture Presets  ");
-    gtk_widget_set_name(label, "data_4DB");
+    gtk_widget_set_name(label, "lbl_2");
 
     /* Saved profiles */
     p_ui->cbox_profile = gtk_combo_box_text_new();
-    gtk_widget_set_name(label, "combobox2");
+    gtk_widget_set_name(p_ui->cbox_profile, "combobox2");
 
     /* Load any preset profiles */
     load_profiles(p_ui->cbox_profile, p_ui->cur_profile, p_ui->preset_hndlr_id, FALSE);
@@ -317,7 +317,7 @@ void profile_nm(ProfileUi *p_ui)
 
     /* Label */
     label = gtk_label_new("Enter Preset name and press 'Enter'");
-    gtk_widget_set_name(label, "data_4DB");
+    gtk_widget_set_name(label, "lbl_5");
 
     /* Entry */
     p_ui->profile_nm = gtk_entry_new();
@@ -750,14 +750,14 @@ void delete_profile(char *nm, ProfileUi *p_ui)
 
 static void OnSetProfile(GtkWidget *cbox, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
 
     /* Get data */
-    ui = (ProfileUi *) user_data;
-    ui->cur_cbox_txt = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (cbox)); 
+    p_ui = (ProfileUi *) user_data;
+    p_ui->cur_cbox_txt = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (cbox)); 
 
     /* Set the availability of each button */
-    set_btn_sensitivity(ui);
+    set_btn_sensitivity(p_ui);
 
     return;
 }
@@ -767,53 +767,53 @@ static void OnSetProfile(GtkWidget *cbox, gpointer user_data)
 
 void OnSetProfileName(GtkWidget *prf_nm, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
     const gchar *nm;
 
     /* Get data */
-    ui = (ProfileUi *) user_data;
+    p_ui = (ProfileUi *) user_data;
     nm = gtk_entry_get_text (GTK_ENTRY (prf_nm)); 
 
     /* Validate name */
-    if (validate_profile_nm((char *) nm, ui) == FALSE)
+    if (validate_profile_nm((char *) nm, p_ui) == FALSE)
         return;
 
-    switch(ui->btn_action)
+    switch(p_ui->btn_action)
     {
     	case 1:			// Save as
-	    ui->btn_action = 0;
+	    p_ui->btn_action = 0;
 
 	    /* Save to file */
 	    save_profile((char *) nm);
 
 	    /* Add to list and set as current */
-	    add_profile_list((char *) nm, ui);
+	    add_profile_list((char *) nm, p_ui);
 
 	    break;
 
     	case 2:			// Rename
-	    ui->btn_action = 0;
+	    p_ui->btn_action = 0;
 
 	    /* Rename file */
-	    rename_profile(ui->cur_cbox_txt, (char *) nm, ui);
+	    rename_profile(p_ui->cur_cbox_txt, (char *) nm, p_ui);
 
 	    /* Default preference */
-	    reset_default_profile(ui->cur_cbox_txt, (char *) nm, ui);
+	    reset_default_profile(p_ui->cur_cbox_txt, (char *) nm, p_ui);
 
 	    /* Replace in list */
-	    del_profile_list(ui);
-	    add_profile_list((char *) nm, ui);
+	    del_profile_list(p_ui);
+	    add_profile_list((char *) nm, p_ui);
 
 	    break;
 
 	default:
-	    ui->btn_action = 0;
+	    p_ui->btn_action = 0;
 	    break;
     }
 
     /* Reset window */
-    gtk_widget_show (ui->cmd_btn_grid);
-    gtk_widget_hide (ui->nm_box);
+    gtk_widget_show (p_ui->cmd_btn_grid);
+    gtk_widget_hide (p_ui->nm_box);
 
     return;
 }
@@ -823,14 +823,14 @@ void OnSetProfileName(GtkWidget *prf_nm, gpointer user_data)
 
 void OnProfileDef(GtkWidget *btn, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
 
     /* Get data */
-    ui = (ProfileUi *) user_data;
+    p_ui = (ProfileUi *) user_data;
 
     /* Save default preference */
-    set_user_pref(DEFAULT_PROFILE, ui->cur_cbox_txt);
-    write_user_prefs(ui->window);
+    set_user_pref(DEFAULT_PROFILE, p_ui->cur_cbox_txt);
+    write_user_prefs(p_ui->window);
 
     return;
 }
@@ -840,13 +840,13 @@ void OnProfileDef(GtkWidget *btn, gpointer user_data)
 
 void OnProfileSave(GtkWidget *btn, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
 
     /* Get data */
-    ui = (ProfileUi *) user_data;
+    p_ui = (ProfileUi *) user_data;
 
     /* Save to file */
-    save_profile((char *) ui->cur_cbox_txt);
+    save_profile((char *) p_ui->cur_cbox_txt);
 
     return;
 }
@@ -856,18 +856,18 @@ void OnProfileSave(GtkWidget *btn, gpointer user_data)
 
 void OnProfileSaveAs(GtkWidget *btn, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
 
     /* Get data */
-    ui = (ProfileUi *) user_data;
+    p_ui = (ProfileUi *) user_data;
 
     /* Get a new name */
-    ui->btn_action = 1;
-    gtk_widget_hide(ui->cmd_btn_grid);
-    gtk_widget_show_all(ui->nm_box);
+    p_ui->btn_action = 1;
+    gtk_widget_hide(p_ui->cmd_btn_grid);
+    gtk_widget_show_all(p_ui->nm_box);
 
     /* Set entry to a (possibly default) name */
-    set_profile_nm(ui);
+    set_profile_nm(p_ui);
 
     return;
 }
@@ -877,26 +877,26 @@ void OnProfileSaveAs(GtkWidget *btn, gpointer user_data)
 
 void OnProfileDel(GtkWidget *btn, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
     gint res;
 
     /* Get data */
-    ui = (ProfileUi *) user_data;
+    p_ui = (ProfileUi *) user_data;
 
     /* Confirm */
-    res = query_dialog(ui->window, "Confirm delete profile '%s'?", ui->cur_cbox_txt);
+    res = query_dialog(p_ui->window, "Confirm delete profile '%s'?", p_ui->cur_cbox_txt);
 
     if (res == GTK_RESPONSE_NO)
     	return;
 
     /* Default preference */
-    reset_default_profile(ui->cur_cbox_txt, LAST_SESSION, ui);
+    reset_default_profile(p_ui->cur_cbox_txt, LAST_SESSION, p_ui);
 
     /* Delete file */
-    delete_profile(ui->cur_cbox_txt, ui);
+    delete_profile(p_ui->cur_cbox_txt, p_ui);
 
     /* Remove from list */
-    del_profile_list(ui);
+    del_profile_list(p_ui);
 
     return;
 }
@@ -906,18 +906,18 @@ void OnProfileDel(GtkWidget *btn, gpointer user_data)
 
 void OnProfileRename(GtkWidget *btn, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
 
     /* Get data */
-    ui = (ProfileUi *) user_data;
+    p_ui = (ProfileUi *) user_data;
 
     /* Get a new name */
-    ui->btn_action = 2;
-    gtk_widget_hide(ui->cmd_btn_grid);
-    gtk_widget_show_all(ui->nm_box);
+    p_ui->btn_action = 2;
+    gtk_widget_hide(p_ui->cmd_btn_grid);
+    gtk_widget_show_all(p_ui->nm_box);
 
     /* Set entry to a (possibly default) name */
-    set_profile_nm(ui);
+    set_profile_nm(p_ui);
 
     return;
 }
@@ -929,24 +929,24 @@ void OnProfileRename(GtkWidget *btn, gpointer user_data)
 
 void OnProfileClose(GtkWidget *window, gpointer user_data)
 { 
-    ProfileUi *ui;
+    ProfileUi *p_ui;
     MainUi *m_ui;
 
     /* Get data */
-    ui = (ProfileUi *) g_object_get_data (G_OBJECT (window), "ui");
-    m_ui = g_object_get_data (G_OBJECT(ui->main_window), "ui");
+    p_ui = (ProfileUi *) g_object_get_data (G_OBJECT (window), "ui");
+    m_ui = g_object_get_data (G_OBJECT(p_ui->main_window), "ui");
 
     /* Close the window, free the screen data and block any secondary close signal */
-    g_signal_handler_block (window, ui->close_hndlr_id);
+    g_signal_handler_block (window, p_ui->close_hndlr_id);
 
     deregister_window(window);
     gtk_window_close(GTK_WINDOW(window));
     
-    load_profiles(m_ui->cbox_profile, ui->cur_profile, m_ui->preset_hndlr_id, TRUE);
+    load_profiles(m_ui->cbox_profile, p_ui->cur_profile, m_ui->preset_hndlr_id, TRUE);
 	
-    g_free(ui->cur_profile);
-    g_free(ui->cur_cbox_txt);
-    free(ui);
+    g_free(p_ui->cur_profile);
+    g_free(p_ui->cur_cbox_txt);
+    free(p_ui);
 
     return;
 }

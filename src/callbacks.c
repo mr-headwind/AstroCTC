@@ -539,10 +539,11 @@ void OnPrefs(GtkWidget *menu_item, gpointer user_data)
 
 /* Callback - Reset Night Vision (only applies when switched on) */
 
-gboolean OnNvExpose(GtkWidget *widget, cairo_t *crx, gpointer user_data)
+gboolean OnNvExpose(GtkWidget *widget, cairo_t *cr, gpointer user_data)
 {  
     MainUi *m_ui;
     GtkAllocation allocation;
+    //cairo_t *crx;
 
     /* Get data */
     m_ui = (MainUi *) user_data;
@@ -550,10 +551,9 @@ gboolean OnNvExpose(GtkWidget *widget, cairo_t *crx, gpointer user_data)
     /* Initial */
     g_signal_handler_block (m_ui->window, m_ui->nvexp_hndlr_id);
     GdkWindow *window = gtk_widget_get_window (m_ui->window);
-    cairo_t *cr;
 
     gtk_widget_get_allocation (m_ui->window, &allocation);
-    cr = gdk_cairo_create (window);
+    //crx = gdk_cairo_create (window);
 
     /* Redraw to original */
     gtk_widget_draw (m_ui->window, cr);
@@ -561,9 +561,10 @@ gboolean OnNvExpose(GtkWidget *widget, cairo_t *crx, gpointer user_data)
     /* Restore night vision */
     cairo_set_source_rgba (cr, NIGHT.red, NIGHT.green, NIGHT.blue, NIGHT.alpha);
     cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
+    //cairo_set_operator (cr, CAIRO_OPERATOR_ADD);
     cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
     cairo_paint (cr);
-    cairo_destroy (cr);
+    //cairo_destroy (crx);
 
     /* Monitor for more exposures */
     g_signal_handler_unblock (m_ui->window, m_ui->nvexp_hndlr_id);

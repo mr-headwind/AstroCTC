@@ -200,7 +200,7 @@ void snap_details(SnapUi *s_ui)
 
     /* At 1 second delay is recommended */
     label = gtk_label_new ("(At least 1 second is recommended)");
-    gtk_widget_set_name(label, "data_6i");
+    gtk_widget_set_name(label, "lbl_8");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
 
     gtk_grid_attach(GTK_GRID (s_ui->snap_cntr), label, 3, row, 1, 1);
@@ -220,7 +220,7 @@ GtkWidget * snap_label(char *title, GtkWidget *grid, int row)
     GtkWidget *label;
 
     label = gtk_label_new (title);
-    gtk_widget_set_name(label, "title_7");
+    gtk_widget_set_name(label, "lbl_6");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_widget_set_margin_end (label, 2);
 
@@ -274,17 +274,17 @@ void delay_option(int row, SnapUi *s_ui)
     gtk_widget_set_margin_end (grp_box, 40);
 
     label = gtk_label_new ("every");
-    gtk_widget_set_name (label, "data_4");
+    gtk_widget_set_name (label, "lbl_1");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_END);
     gtk_box_pack_start (GTK_BOX (grp_box), label, FALSE, FALSE, 0);
 
     label = gtk_label_new ("frames");
-    gtk_widget_set_name (label, "data_4");
+    gtk_widget_set_name (label, "lbl_1");
     gtk_widget_set_halign(GTK_WIDGET (label), GTK_ALIGN_START);
     gtk_box_pack_end (GTK_BOX (grp_box), label, FALSE, FALSE, 0);
 
     s_ui->grp_delay = gtk_entry_new();
-    gtk_widget_set_name (label, "ent_2");
+    gtk_widget_set_name (label, "ent_1");
     gtk_entry_set_max_length(GTK_ENTRY (s_ui->grp_delay), 5);
     gtk_entry_set_width_chars(GTK_ENTRY (s_ui->grp_delay), 5);
     gtk_entry_set_text (GTK_ENTRY (s_ui->grp_delay), "1");

@@ -67,6 +67,7 @@ GtkWidget * about_ui_hdr(AboutUi *);
 GtkWidget * about_ui_misc(AboutUi *);
 GtkWidget * about_ui_tabnb(AboutUi *);
 GtkWidget * new_page(int);
+GtkWidget * page_label(const char *);
 void add_lic_link(GtkTextBuffer **, GtkWidget **);
 void OnAboutClose(GtkWidget*, gpointer);
 
@@ -131,7 +132,7 @@ AboutUi * new_about_ui()
 
 /* Create the user interface and set the CallBacks */
 
-void about_ui(AboutUi *p_ui)
+void about_ui(AboutUi *a_ui)
 {  
     GtkWidget *close_btn;  
     GtkWidget *hdr_box, *misc_box;  
@@ -148,26 +149,26 @@ void about_ui(AboutUi *p_ui)
     int rc;
 
     /* Set up the UI window */
-    p_ui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);  
-    gtk_window_set_title(GTK_WINDOW(p_ui->window), ABOUT_UI);
-    gtk_window_set_position(GTK_WINDOW(p_ui->window), GTK_WIN_POS_NONE);
-    gtk_window_set_default_size(GTK_WINDOW(p_ui->window), 360, 370);
-    gtk_container_set_border_width(GTK_CONTAINER(p_ui->window), 10);
-    gtk_window_set_transient_for (GTK_WINDOW (p_ui->window), GTK_WINDOW (p_ui->main_window));
-    gtk_window_set_modal (GTK_WINDOW (p_ui->window), TRUE);
+    a_ui->window = gtk_window_new(GTK_WINDOW_TOPLEVEL);  
+    gtk_window_set_title(GTK_WINDOW(a_ui->window), ABOUT_UI);
+    gtk_window_set_position(GTK_WINDOW(a_ui->window), GTK_WIN_POS_NONE);
+    gtk_window_set_default_size(GTK_WINDOW(a_ui->window), 360, 370);
+    gtk_container_set_border_width(GTK_CONTAINER(a_ui->window), 10);
+    gtk_window_set_transient_for (GTK_WINDOW (a_ui->window), GTK_WINDOW (a_ui->main_window));
+    gtk_window_set_modal (GTK_WINDOW (a_ui->window), TRUE);
 
     /* Header */
-    hdr_box = about_ui_hdr(p_ui);
+    hdr_box = about_ui_hdr(a_ui);
 
     /* General information */
-    misc_box = about_ui_misc(p_ui);
+    misc_box = about_ui_misc(a_ui);
 
     /* License and Credits */
-    tab_nb = about_ui_tabnb(p_ui);
+    tab_nb = about_ui_tabnb(a_ui);
     
     /* Close button */
     close_btn = gtk_button_new_with_label("  Close  ");
-    g_signal_connect(close_btn, "clicked", G_CALLBACK(OnAboutClose), p_ui);
+    g_signal_connect(close_btn, "clicked", G_CALLBACK(OnAboutClose), a_ui);
     bbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_widget_set_halign (bbox, GTK_ALIGN_CENTER);
     gtk_box_pack_end (GTK_BOX (bbox), close_btn, FALSE, FALSE, 0);
@@ -180,10 +181,10 @@ void about_ui(AboutUi *p_ui)
     gtk_box_pack_start (GTK_BOX (mbox), tab_nb, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (mbox), bbox, FALSE, FALSE, 0);
 
-    gtk_container_add(GTK_CONTAINER(p_ui->window), mbox);  
+    gtk_container_add(GTK_CONTAINER(a_ui->window), mbox);  
 
     /* Exit when window closed */
-    p_ui->close_hndlr_id = g_signal_connect(p_ui->window, "destroy", G_CALLBACK(OnAboutClose), p_ui);  
+    a_ui->close_hndlr_id = g_signal_connect(a_ui->window, "destroy", G_CALLBACK(OnAboutClose), a_ui);  
 
     return;
 }
@@ -191,7 +192,7 @@ void about_ui(AboutUi *p_ui)
 
 /* Header information - icon, application, version */
 
-GtkWidget * about_ui_hdr(AboutUi *p_ui)
+GtkWidget * about_ui_hdr(AboutUi *a_ui)
 {  
     GtkWidget *hdr_box, *tbox;
     GtkWidget *label_t, *label_v;
@@ -203,10 +204,10 @@ GtkWidget * about_ui_hdr(AboutUi *p_ui)
     gtk_widget_set_halign (tbox, GTK_ALIGN_START);
 
     label_t = gtk_label_new(TITLE);
-    gtk_widget_set_name(label_t, "title_6");
+    gtk_widget_set_name(label_t, "lbl_10");
 
     label_v = gtk_label_new(VERSION);
-    gtk_widget_set_name(label_v, "title_6");
+    gtk_widget_set_name(label_v, "lbl_10");
 
     gtk_box_pack_start (GTK_BOX (tbox), label_t, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (tbox), label_v, FALSE, FALSE, 0);
@@ -216,14 +217,14 @@ GtkWidget * about_ui_hdr(AboutUi *p_ui)
     strlower(TITLE, s);
     app_icon = g_strconcat (PACKAGE_DATA_DIR, "/pixmaps/", s, "/astroctc.png",NULL);
     free(s);
-    p_ui->icon = gtk_image_new_from_file(app_icon);
+    a_ui->icon = gtk_image_new_from_file(app_icon);
     g_free(app_icon);
-    gtk_widget_set_margin_end(GTK_WIDGET (p_ui->icon), 20);
+    gtk_widget_set_margin_end(GTK_WIDGET (a_ui->icon), 20);
 
     /* Pack */
     hdr_box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_widget_set_halign (hdr_box, GTK_ALIGN_START);
-    gtk_box_pack_start (GTK_BOX (hdr_box), p_ui->icon, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (hdr_box), a_ui->icon, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (hdr_box), tbox, FALSE, FALSE, 0);
 
     return hdr_box;
@@ -232,7 +233,7 @@ GtkWidget * about_ui_hdr(AboutUi *p_ui)
 
 /* General information - decsription, homepage */
 
-GtkWidget * about_ui_misc(AboutUi *p_ui)
+GtkWidget * about_ui_misc(AboutUi *a_ui)
 {  
     int i;
     GtkWidget *misc_box, *tbox, *wbox;
@@ -257,16 +258,16 @@ GtkWidget * about_ui_misc(AboutUi *p_ui)
     for(i = 0; i < desc_max; i++)
     {
 	label_t[i] = gtk_label_new(desc[i]);
-	gtk_widget_set_name(label_t[i], "data_4");
+	gtk_widget_set_name(label_t[i], "lbl_1");
 	gtk_widget_set_halign (label_t[i], GTK_ALIGN_START);
 	gtk_box_pack_start (GTK_BOX (tbox), label_t[i], FALSE, FALSE, 0);
     }
 
     /* Web page */
-    p_ui->home_page = gtk_link_button_new_with_label (APP_URI, "Web page");
+    a_ui->home_page = gtk_link_button_new_with_label (APP_URI, "Web page");
     wbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_widget_set_halign (wbox, GTK_ALIGN_CENTER);
-    gtk_box_pack_start (GTK_BOX (wbox), p_ui->home_page, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (wbox), a_ui->home_page, FALSE, FALSE, 0);
 
     /* Pack */
     gtk_box_pack_start (GTK_BOX (misc_box), tbox, TRUE, TRUE, 5);
@@ -278,7 +279,7 @@ GtkWidget * about_ui_misc(AboutUi *p_ui)
 
 /* License and Credits */
 
-GtkWidget * about_ui_tabnb(AboutUi *p_ui)
+GtkWidget * about_ui_tabnb(AboutUi *a_ui)
 {  
     int i;
     GtkWidget *tab_nb;
@@ -292,7 +293,7 @@ GtkWidget * about_ui_tabnb(AboutUi *p_ui)
     {
 	if (gtk_notebook_append_page (GTK_NOTEBOOK (tab_nb), 
 				      new_page(i), 
-				      gtk_label_new (about_text[i][0])) == -1)
+				      page_label (about_text[i][0])) == -1)
 	    return NULL;
     }
 
@@ -341,6 +342,19 @@ GtkWidget * new_page(int i)
 }
 
 
+/* License and Credits */
+
+GtkWidget * page_label(const char *txt)
+{  
+    GtkWidget *lbl;
+
+    lbl = gtk_label_new (txt);
+    gtk_widget_set_name(lbl, "lbl_7");
+
+    return lbl;
+}
+
+
 /* Add links to the License page */
 
 void add_lic_link(GtkTextBuffer **txt_buffer, GtkWidget **txt_view)
@@ -368,13 +382,13 @@ void add_lic_link(GtkTextBuffer **txt_buffer, GtkWidget **txt_view)
 
 void OnAboutClose(GtkWidget *w, gpointer user_data)
 { 
-    AboutUi *p_ui;
+    AboutUi *a_ui;
 
-    p_ui = (AboutUi *) user_data;
+    a_ui = (AboutUi *) user_data;
 
-    g_signal_handler_block (p_ui->window, p_ui->close_hndlr_id);
-    deregister_window(p_ui->window);
-    gtk_window_close(GTK_WINDOW(p_ui->window));
+    g_signal_handler_block (a_ui->window, a_ui->close_hndlr_id);
+    deregister_window(a_ui->window);
+    gtk_window_close(GTK_WINDOW(a_ui->window));
 
     return;
 }

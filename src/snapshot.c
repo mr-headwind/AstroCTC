@@ -130,7 +130,7 @@ extern int xioctl(int, int, void *);
 extern void log_msg(char*, char*, char*, GtkWidget*);
 extern void dttm_stamp(char *, size_t);
 extern int get_user_pref(char *, char **);
-extern void get_file_name(char *, char *, char *, char *, char, char, char);
+extern void get_file_name(char *, int, char *, char *, char *, char, char, char);
 extern int64_t msec_time();
 extern void set_capture_btns(MainUi *, int, int);
 extern void printBits(size_t const, void const * const);
@@ -971,7 +971,8 @@ int image_output(int img_id, char *tm_stmp, snap_capt_t *capt, MainUi *m_ui)
 
     /* File name */
     sprintf(img_id_s, "%03d", img_id);
-    get_file_name(capt->fn, img_id_s, (char *) capt->obj_title, tm_stmp, capt->id, capt->tt, capt->ts);
+    get_file_name(capt->fn, (int) sizeof(capt->fn), img_id_s, (char *) capt->obj_title, 
+    	    	  tm_stmp, capt->id, capt->tt, capt->ts);
     sprintf(capt->out_name, "%s/%s.%s", capt->locn, capt->fn, capt->codec);
 
     /* Main formats or FITS */
