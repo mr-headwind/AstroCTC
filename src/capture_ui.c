@@ -238,8 +238,6 @@ void capt_entry(char *nm, GtkWidget **ent, GtkWidget *grid, int row, CaptUi *c_u
 
 void capt_radio(char *desc, char *nm, GtkWidget *grid, int row, CaptUi *c_ui)
 {  
-    int i;
-    char s[10];
     GtkWidget *radio;
 
     if (row == 0)

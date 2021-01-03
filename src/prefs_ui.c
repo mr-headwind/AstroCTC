@@ -1200,7 +1200,7 @@ int write_user_prefs(GtkWidget *window)
     app_dir = app_dir_path();
     app_dir_len = strlen(app_dir);
     pref_fn = (char *) malloc(app_dir_len + 19);
-    sprintf(pref_fn, "%s/user_preferences", app_dir);
+    sprintf(pref_fn, "%s/%s", app_dir, USER_PREFS);
 
     /* New or overwrite file */
     if ((fd = fopen(pref_fn, "w")) == (FILE *) NULL)

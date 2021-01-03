@@ -575,7 +575,7 @@ void set_encoder_props(video_capt_t *capt, GstElement **encoder, MainUi *m_ui)
     int i, idx, pref_total, len, pr_type, i_val;
     double f_val;
     char key[PREF_KEY_SZ];
-    char s[50];
+    char s[51];
     char *p, *nm, *nm_val;
 
     /* Total user default setting for the encoder */
@@ -1590,7 +1590,7 @@ void * monitor_frames(void *arg)
     guint64 frames;
     const gchar *s;
     char *info_txt;
-    char new_status[100];
+    char new_status[150];
     
     /* Base information text */
     ret_mon = TRUE;
@@ -1644,7 +1644,7 @@ void * monitor_unltd(void *arg)
     CamData *cam_data;
     const gchar *s;
     char *info_txt;
-    char new_status[100];
+    char new_status[150];
     time_t start_time;
     double tmp_pause, total_pause;
     

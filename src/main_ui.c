@@ -1759,20 +1759,14 @@ int reset_cntl_panel(MainUi *m_ui, CamData *cam_data)
 
     child_widgets = g_list_last(child_widgets);
 
-printf("%s reset_cntl_panel 1\n", debug_hdr); fflush(stdout);
     while (child_widgets != NULL)
     {
 	widget = child_widgets->data;
 	widget_name = gtk_widget_get_name (widget);
 
-printf("%s reset_cntl_panel 2\n", debug_hdr); fflush(stdout);
 	if ((widget_name != NULL) && (strcmp(widget_name, "GtkLabel") != 0))
-{
-printf("%s reset_cntl_panel 2a  nm: %s\n", debug_hdr, widget_name); fflush(stdout);
 	    gtk_widget_destroy (widget);
-}
 
-printf("%s reset_cntl_panel 3\n", debug_hdr); fflush(stdout);
 	child_widgets = g_list_previous(child_widgets);
     }
 
@@ -1780,7 +1774,6 @@ printf("%s reset_cntl_panel 3\n", debug_hdr); fflush(stdout);
 
     /* Recreate the new control widgets */
     row = 2;
-printf("%s reset_cntl_panel 4\n", debug_hdr); fflush(stdout);
     video_settings(&row, cam_data, m_ui);
     exposure_settings(&row, cam_data, m_ui);
 

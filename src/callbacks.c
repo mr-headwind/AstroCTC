@@ -295,7 +295,7 @@ void OnCamRestart(GtkWidget *cam_detail, gpointer user_data)
 }  
 
 
-/* Callback - Rescan for cammeras */
+/* Callback - Rescan for cameras */
 
 void OnCamScan(GtkWidget *cam_scan, gpointer user_data)
 {  

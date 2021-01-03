@@ -117,7 +117,7 @@ typedef struct _ImgCapture
     long height;
     long img_sz_bytes;
     const gchar *obj_title;
-    char out_name[256];
+    char out_name[512];
     char fn[100];
     long snap_max;
     long snap_count;
@@ -138,7 +138,7 @@ typedef struct _ImgCapture
 typedef struct _VideoCapture
 {
     char tm_stmp[50];
-    char out_name[256];
+    char out_name[512];
     char fn[100];
     codec_t *codec_data;
     const gchar *obj_title;
