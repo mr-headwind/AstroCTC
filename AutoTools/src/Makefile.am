@@ -22,6 +22,7 @@ astroctc_SOURCES = \
 		snapshot.c          \
 		snapshot_ui.c       \
 		utility.c           \
+		css.c               \
 		view_file_ui.c
 
 astroctc_CFLAGS = $(X_CFLAGS) -Wno-deprecated-declarations

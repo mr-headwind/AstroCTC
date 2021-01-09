@@ -59,38 +59,6 @@ void css_adjust_font_sz(char **);
 
 static const char *debug_hdr = "DEBUG-css.c ";
 
-/*  Yuk! Pain!  !@#$%^  At 18.04 the selectors became proper selector names, not the Gtk name */
-
-/*  16.04
-static char *css_data_fhd = 
-	"@define-color DARK_BLUE rgba(0%,0%,50%,1.0); "
-	"@define-color METAL_GREY rgba(55,83,103,1.0); "
-	"GtkButton, GtkEntry, GtkLabel { font-family: Sans; font-size: 12px; }"
-	"GtkLabel#data_1 { color: @DARK_BLUE; }"
-	"GtkLabel#data_2 { color: #800000; font-family: Sans; font-size: 11px; }"
-	"GtkLabel#data_3 { color: #400080; font-family: Sans; font-size: 10px; }"
-	"GtkLabel#title_1 { font-family: Sans; font-size: 18px; font-weight: bold; }"
-	"GtkLabel#title_2 { font-family: Serif; font-size: 18px; font-style: italic; color: #fa8072; }"
-	"GtkLabel#title_3 { font-family: Sans; font-size: 12px; color: @DARK_BLUE;}"
-	"GtkLabel#title_4 { font-family: Sans; font-size: 12px; font-weight: bold; }"
-	"GtkLabel#title_5 { font-family: Sans; font-size: 12px; color: #e00b40;}"
-	"GtkLabel#status { font-family: Sans; font-size: 12px; color: #b8860b; font-style: italic; }"
-	"GtkEntry#ent_1 { color: @DARK_BLUE; }"
-	"GtkRadioButton#rad_1 { color: @DARK_BLUE; font-family: Sans; font-size: 12px; }"
-	"GtkRadioButton > GtkLabel { color: @DARK_BLUE; font-family: Sans; font-size: 12px; }"
-	"GtkFrame { background-color: #e6e6fa; border-radius: 8px}"
-	"GtkFrame > GtkLabel { color: #800000; font-weight: 500; }"
-	"GtkComboboxText * { color: @METAL_GREY; font-family: Sans; font-size: 12px; }"
-	"GtkProgressBar#pbar_1 { min-width: 180px; color: @DARK_BLUE; font-family: Sans; font-size: 10px; }"
-	"#button_1 * { color: #708090; font-weight: bold; }"
-	"GtkNotebook * { font-family: Sans; font-size: 11px; }"
-	"GtkTextView { font-family: Sans; font-size: 12px; }"
-	"GtkTextView#txtview_1 { font-family: Sans; font-size: 11px; }"
-	"GtkLinkButton { font-family: Sans; font-size: 12px; color: @DARK_BLUE; }";
-*/
-
-/*  18.04  
-*/
 static char *css_data_fhd = 
 	"@define-color DARK_BLUE rgba(0%,0%,50%,1.0); "
 	"@define-color MID_BLUE rgba(50%,50%,100%,1.0); "
@@ -155,7 +123,7 @@ void set_css()
     GError *err = NULL;
     char *css_data;
 
-    css_data = check_screen_res(&sd_flg);
+    //css_data = check_screen_res(&sd_flg);
 
     GtkCssProvider *provider = gtk_css_provider_new();
     GdkDisplay *display = gdk_display_get_default();
@@ -166,7 +134,8 @@ void set_css()
     					      GTK_STYLE_PROVIDER_PRIORITY_USER);
 
     gtk_css_provider_load_from_data(GTK_CSS_PROVIDER(provider),
-				    (const gchar *) css_data,
+				    (const gchar *) css_data_fhd,
+				    //(const gchar *) css_data,
 				    -1,
 				    &err);
 
@@ -176,8 +145,10 @@ void set_css()
     	g_clear_error (&err);
     }
 
+    /*
     if (sd_flg == TRUE)
     	free(css_data);
+    */
 
     g_object_unref(provider);
 
@@ -219,15 +190,6 @@ void get_screen_res(GdkRectangle *workarea)
     gdouble res;
     GdkScreen *scr;
 
-    /* 16.04
-    if ((scr = gdk_screen_get_default ()) == NULL)
-    	return;
-    
-    gdk_screen_get_monitor_workarea (scr, 0, workarea);
-    */
-
-    /* 18.04
-    */
     gdk_monitor_get_workarea (gdk_display_get_primary_monitor (gdk_display_get_default()),
 			      workarea);
 
@@ -241,7 +203,7 @@ void css_adjust_font_sz(char **css)
 {
     int i, j, fn_len, new_fn_len;
     char *p, *p_new, *p_fhd;
-    char num[4];
+    char num[20];
 
     /* Copy to a new css string and extract and adjust the font size */
     *css = (char *) malloc(strlen(css_data_fhd) + 1);
