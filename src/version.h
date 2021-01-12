@@ -27,8 +27,9 @@
 ** History
 **	16-Jun-2016	Initial
 **	07-Jan-2021	Fix some memory issues and convert to use css styling
+**	12-Jan-2021	Clean up css code
 **
 */
 
 
-#define VERSION "0.65"
+#define VERSION "0.67"
