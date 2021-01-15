@@ -716,14 +716,15 @@ int write_meta_file(char capt_type, CamData *cam_data, char *tm_stmp)
     int i;
 
     /* Set file name and open */
-    buf = (char *) malloc(strlen(cam_data->u.v_capt.locn) + strlen(cam_data->u.v_capt.fn) + 20);
-
     if (capt_type == 'v')
     {
+	buf = (char *) malloc(strlen(cam_data->u.v_capt.locn) + strlen(cam_data->u.v_capt.fn) + 20);
  	sprintf(buf, "%s/%s.metadata", cam_data->u.v_capt.locn, cam_data->u.v_capt.fn);
     }
     else if (capt_type == 's')
     {
+	buf = (char *) malloc(strlen(cam_data->u.s_capt.locn) + strlen(cam_data->u.s_capt.fn) + 20);
+
 	if (cam_data->u.s_capt.snap_max == 1)
 	{
 	    sprintf(buf, "%s/%s.metadata", cam_data->u.s_capt.locn, cam_data->u.s_capt.fn);
@@ -837,12 +838,10 @@ void snap_meta(FILE *mf, CamData *cam_data)
     common_meta(mf, cam_data->u.s_capt.obj_title, cam_data->cam->vcaps.card, cam_data->u.s_capt.out_name);
 
     /* Codec format */
-    snprintf(s, max_s, "Codec: %s", cam_data->u.s_capt.codec);
-
     if (strcmp(cam_data->u.s_capt.codec, "jpg") == 0)
-	snprintf(s, max_s, "%s (%u%%)\n", s, cam_data->u.s_capt.jpeg_quality);
+	snprintf(s, max_s, "Codec: %s (%u%%)\n", cam_data->u.s_capt.codec, cam_data->u.s_capt.jpeg_quality);
     else
-	snprintf(s, max_s, "%s\n", s);
+	snprintf(s, max_s, "Codec: %s\n", cam_data->u.s_capt.codec);
 
     fputs(s, mf);
 

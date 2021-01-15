@@ -1,8 +1,8 @@
 Package: astroctc
-Version: 0.61
+Version: 0.68
 Section: base
 Priority: optional
-Architecture: amd64 or i386
+Architecture: amd64
 Depends: libcfitsio-bin, libpng, libcairo, libcairo2, libv4l2, v4l-utils, libjpeg, libpthread, libgtk-3-0, 
          gstreamer1.0-plugins-bad-videoparsers, gstreamer1.0-plugins-base, libgstreamer1.0-0
 Maintainer: Anthony Buckley <tony.buckley000@gmail.com>
